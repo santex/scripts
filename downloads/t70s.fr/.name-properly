@@ -1,0 +1,7 @@
+#!/bin/sh
+
+perlrename -e's/^That_70_s_Show_-_(\d+)-(\d+)_-_/t70s.fr - $1$2 - /' *
+perlrename -e's/^That_70s_Show(?:\.fr)?_-_(\d+)x0(\d+)_-_/t70s.fr - $1$2 - /' *
+perlrename -e's/^That_s_70_s_show_-_(\d+)x(\d\d)_-_/t70s.fr - $1$2 - /i' *
+
+perlrename -e's/_+/ /g' t70s.fr*

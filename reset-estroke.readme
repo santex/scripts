@@ -1,0 +1,15 @@
+tested with estroke 1.21.
+
+1. install estroke and use it.
+
+2. when 30-day evaluation time is over, estroke will refuse to start.
+   uninstall it first.
+
+3. double click reset-estroke.reg to delete estroke's reg keys/vals.
+
+4. reinstall estroke. you can now use it again (for another 30 days).
+
+without the *.reg file, estroke will still refuse to run after
+reinstallation because it "remembers" (using the registry) that it had been
+installed once.
+

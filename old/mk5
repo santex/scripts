@@ -1,0 +1,212 @@
+#!/usr/bin/perl -w
+# mk5 - "Masuk kuping kiri, keluar kuping kanan"
+# Program TCP forwarder multiuser dengan select
+# dimodifikasi dari program 'nonforker' oleh Tom Christiansen
+# (Perl Cookbook)
+
+use Carp qw(verbose);
+use POSIX;
+use IO::Socket;
+use IO::Select;
+use Socket;
+use Fcntl;
+use Getopt::Long;
+
+# opsi yang diterima program
+GetOptions('forward-host=s' => \$forward_host,
+           'forward-port=s' => \$forward_port,
+           'port=i'         => \$port,
+           'greeting'       => \$greeting,
+           'output=s'       => \$output,
+           'listen=i'       => \$listen );
+
+# harga-harga default
+for ($listen)       { $_ = 5 if !defined }
+for ($forward_host) { $_ = "localhost" if !defined }
+for ($forward_port) { $_ = 80 if !defined }
+for ($port)         { $_ = 9000 if !defined }
+for ($greeting)     { $_ = ($forward_port =~ /^21|25|110$/ ? 1:0) 
+                           if !defined }
+for ($output)       { $_ = '-' if !defined }
+
+if ($output eq '-') {
+    *OUTPUT = \*STDOUT
+}
+else {
+    open OUTPUT, ">$output"
+      or die "Tidak bisa membuka `$output' untuk ditulisi: $!\n";
+}
+    
+# buat soket listen utama
+$server = IO::Socket::INET->new(LocalPort => $port,
+                                Reuse     => 1,
+                                Listen    => $listen )
+  or die "Can't make server socket: $@\n";
+
+# begin with empty buffers
+%inbuffer  = ();
+%outbuffer = ();
+
+%pasangan  = ();
+
+nonblock($server);
+$select = IO::Select->new($server);
+
+msg("Saya listen di port $port, forward ke $forward_host:$forward_port",
+  ($greeting ? ", server asli memberi greeting" : ""), "\n");
+
+# Main loop: check reads/accepts, check writes
+while (1) {
+    my $client;
+    my $rv;
+    my $data;
+
+    # check for new information on the connections we have
+
+    # anything to read or accept?
+    foreach $client ($select->can_read(1)) {
+
+        if ($client == $server) {
+            # accept a new connection
+
+            $client = $server->accept() or goto BAD;
+            $select->add($client);
+            nonblock($client);
+
+            msg("Koneksi dari ",
+              $client->peerhost,":",$client->peerport,"\n");
+            
+            # buat koneksi ke server asli
+            my $client2 = IO::Socket::INET->new(
+              PeerAddr => $forward_host,
+              PeerPort => $forward_port )
+              or die "Tidak bisa konek ke server asli: $@\n";
+
+            $select->add($client2);
+            nonblock($client2);
+
+            # kedua soket ini kita 'pasangkan', agar kita bisa 
+            # saling mengirim keluaran yang satu ke yang lain
+            $pasangan{$client}  = $client2;
+            $pasangan{$client2} = $client;
+
+            # jika server asli adalah server yang memberi greeting,
+            # kita ambil dulu greeting-nya.
+            if ($greeting) {
+                my $data;
+                my $rv;
+
+                $rv = $client2->recv($data, POSIX::BUFSIZ, 0);
+                $outbuffer{$client} .= $data;
+            }
+
+        } else {
+            # read data
+            $data = '';
+            $rv   = $client->recv($data, POSIX::BUFSIZ, 0);
+
+            $client2 = $pasangan{$client};
+
+            unless (defined($rv) && length $data) {
+                # This would be the end of file, so close the client
+
+                msg($client->peerhost,':',$client->peerport,
+                    " menutup koneksi. Jadi ",
+                    $client2->peerhost,':',$client2->peerport,
+                    " pun saya tutup.\n");
+
+                delete $inbuffer{$client};
+                delete $outbuffer{$client};
+                $select->remove($client);
+                close $client;
+                
+                # tutup juga pasangannya
+                delete $inbuffer{$client2};
+                delete $outbuffer{$client2};
+                $select->remove($client2);
+                close $client2;
+
+                next;
+            }
+
+            $inbuffer{$client} .= $data;
+
+            # kirim data ke pasangannya
+            $outbuffer{$client2} .= $data;
+
+            # dump percakapan
+            msg2($client, $data);
+        }
+		BAD:
+    }
+
+    # Buffers to flush?
+    foreach $client ($select->can_write(1)) {
+        # Skip this client if we have nothing to say
+        next unless exists $outbuffer{$client};
+
+        $rv = $client->send($outbuffer{$client}, 0);
+        unless (defined $rv) {
+            # Whine, but move on.
+            warn "I was told I could write, but I can't.\n";
+            next;
+        }
+        if ($rv == length $outbuffer{$client} ||
+            $! == POSIX::EWOULDBLOCK) {
+            substr($outbuffer{$client}, 0, $rv) = '';
+            delete $outbuffer{$client} unless length $outbuffer{$client};
+        } else {
+            # Couldn't write all the data, and it wasn't because
+            # it would have blocked.  Shutdown and move on.
+            delete $inbuffer{$client};
+            delete $outbuffer{$client};
+
+            $select->remove($client);
+            close($client);
+            next;
+        }
+    }
+
+    # Out of band data?
+    foreach $client ($select->has_error(0)) {  # arg is timeout
+        # Deal with out-of-band data here, if you want to.
+    }
+}
+
+# nonblock($socket) puts socket into nonblocking mode
+sub nonblock {
+    my $socket = shift;
+    my $flags;
+    
+    $flags = fcntl($socket, F_GETFL, 0)
+            or die "Can't get flags for socket: $!\n";
+    fcntl($socket, F_SETFL, $flags | O_NONBLOCK)
+            or die "Can't make socket nonblocking: $!\n";
+}
+
+# menampilkan pesan program (ada koneksi, putus koneksi, dll)
+sub msg {
+    local $_ = join '', scalar localtime, ': ', @_;
+
+    syswrite OUTPUT, $_, length;
+}
+
+# mencetak hasil percakapan soket
+sub msg2 {
+    my ($sock, $data) = @_;
+    local $_ = join '', 'Dari ', $sock->peerhost,':',$sock->peerport,
+                        " (", length($data), " byte): ", 
+                        '`', filter($data), "'\n";
+
+    syswrite OUTPUT, $_, length;
+#	my $d=length($_)." byte\n"; syswrite OUTPUT, $d, length($d);
+}
+
+# mengganti karakter-karakter kontrol yang berbahaya jika dicetak
+# ke terminal
+sub filter($) {
+    local $_ = shift;
+
+    s/[^\x0D\x0A\x20-\x7F]/./g;
+    $_
+}

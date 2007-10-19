@@ -1,0 +1,23 @@
+#!/usr/bin/perl -l
+
+# 2004-12-12 - ssh but find auth sock when SSH_AUTH_SOCK is not defined
+
+$SSH = "/usr/bin/ssh";
+
+unless (@socks = grep {-r} </tmp/ssh-*/agent.[0-9]*>) {
+  print "$0: WARN: No auth socks found\n";
+}
+
+@socks = sort {(-M $a) <=> (-M $b)} @socks;
+$ENV{SSH_AUTH_SOCK} = $socks[0];
+
+#print "SSH_AUTH_SOCK=$socks[0] $SSH ".join(" ",map {escapeshellarg($_)} @ARGV), "\n";
+#exec  "SSH_AUTH_SOCK=$socks[0] $SSH ".join(" ",map {escapeshellarg($_)} @ARGV);
+
+exec $SSH, @ARGV;
+
+sub escapeshellarg {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

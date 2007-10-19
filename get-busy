@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+# draft
+
+# - convert mpg jadi rmvb/wmv/avi 1/3 kalinya
+# - convert wav jadi mp3
+# - backup
+# - generate movie thumbnails
+# - fsck
+# - updatedb
+
+# - index (google desktop / beagle stuff?)
+# - 
+# - 
+# - 
+
+# - apt-get update, dist-upgrade, ...
+
+# - run some cron jobs early
+#   * web statistics
+#   *
+#   *
+#   *
+#   *
+
+
+# note: ada program loadwatch untuk menjalankan program hanya jika
+# idle.

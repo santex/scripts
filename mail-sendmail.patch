@@ -1,0 +1,56 @@
+--- Sendmail.pm.old	Sat Jul 29 15:33:11 2000
++++ Sendmail.pm	Sat Jul 29 16:16:29 2000
+@@ -20,7 +20,9 @@
+     'smtp'    => [ qw( localhost smtp.site1.csi.com ) ],
+     #'smtp'    => [ qw( mail.mydomain.com ) ], # example
+ 
+-    'from'    => '', # default sender e-mail, used when no From header in mail
++    'from'    => '', # default RFC822 From address, used when no From header in mail
++
++    'sender'  => '', # default envelope sender address
+ 
+     'mime'    => 1, # use MIME encoding by default
+ 
+@@ -45,6 +47,7 @@
+             $default_smtp_server
+             $default_smtp_port
+             $default_sender
++            $default_envsender
+             $TZ
+             $use_MIME
+             $address_rx
+@@ -70,6 +73,7 @@
+                  $default_smtp_server
+                  $default_smtp_port
+                  $default_sender
++                 $default_envsender
+                  $TZ
+                  $address_rx
+                  $debug
+@@ -131,7 +135,7 @@
+ 
+     my (%mail, $k,
+         $smtp, $server, $port, $connected, $localhost,
+-        $message, $fromaddr, $recip, @recipients, $to, $header,
++        $message, $sender, $fromaddr, $recip, @recipients, $to, $header,
+        );
+ 
+     sub fail {
+@@ -194,6 +198,8 @@
+     }
+     $fromaddr = $1;
+ 
++    $sender = $mail{'Sender'} || $default_envsender || $mailcfg{'sender'} || $fromaddr;
++    delete $mail{'Sender'};
+     # add Date header if needed
+     $mail{Date} ||= time_to_date() ;
+     $log .= "Date: $mail{Date}\n";
+@@ -312,7 +318,7 @@
+         return fail("HELO error ($_)")
+     }
+     
+-    print S "mail from: <$fromaddr>\015\012";
++    print S "mail from: <$sender>\015\012";
+     chomp($_ = <S>);
+     if (/^[45]/ or !$_) {
+         return fail("mail From: error ($_)")

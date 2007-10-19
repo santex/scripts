@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Crypt::PasswdMD5;
+use Log::Log4perl qw(:easy);
+
+my $lvl = $ARGV[1] || 'ERROR';
+my $level = ($lvl eq 'FATAL'?$FATAL:$lvl eq 'ERROR'?$ERROR:$lvl eq 'WARN'?$WARN:$lvl eq 'INFO'?$INFO:$lvl eq 'DEBUG'?$DEBUG:0);
+Log::Log4perl->easy_init($level);
+
+my $Password_File = $ARGV[0] || "/etc/proxypasswd";
+my $Password_File_Mtime = 0;
+my %Passwords; # key=username, val=[salt, pass]
+
+$|++;
+
+sub Read_Password_File {
+  local *F;
+
+  DEBUG "Rereading password file...";
+  open F, "$Password_File" or die "Can't open password file: $Password_File: $!\n";
+  $Password_File_Mtime = (-M $Password_File);
+  %Passwords = ();
+  while (<F>) {
+    chomp;
+    my ($user, $pass) = split /\:/, $_, 2;
+    $Passwords{$user} = $pass;
+  }
+}
+
+# returns 1 if password is correct
+sub cmp_pass {
+  my ($pass, $enc) = @_;
+  my $salt;
+
+  #DEBUG "Comparing enc($pass, $salt) with $enc...";
+  if ($enc =~ /^\$apr1\$(.*?)\$/) {
+    # apache MD5
+    $salt = $1;
+    return apache_md5_crypt($pass, $salt) eq $enc;
+  } else {
+    # assume it's crypt()
+    $salt = $enc;
+    return crypt($pass, $salt) eq $enc;
+  }
+}
+
+Read_Password_File();
+
+while (<STDIN>) {
+  Read_Password_File() if $Password_File_Mtime > (-M $Password_File);
+  chomp;
+  my ($user, $pass) = split / /, $_, 2; $user ||= "";
+  if ($Passwords{$user} && cmp_pass($pass, $Passwords{$user})) {
+    print "OK\n";
+  } else {
+    print "ERR\n";
+  }
+}
+

@@ -1,0 +1,7 @@
+#!/usr/bin/perl -0 -pi
+
+# 031017 - de-evilize html: remove <script>, <iframe>
+# todo: remove body onload, onunload, 
+
+s#<iframe[^>]*>(.*?)</iframe>##sig;
+s#<script[^>]*>(.*?)</script>##sig;

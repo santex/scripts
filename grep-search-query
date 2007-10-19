@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+# feed it squid access.log and it will extract search query logs
+
+use URI::Escape;
+use strict;
+
+sub unesc {
+  local $_ = shift;
+  $_ = uri_unescape($_);
+  s/\+/ /g;
+  $_;
+}
+
+while (<>) {
+  my ($time, $ip, $url) = /^(\d+\.\d+) \s+ \d+ \s+ (\d+\.\d+\.\d+\.\d+) \s+ \S+\s+ \S+\s+ \S+\s+ (\S+)/x or next;
+  my ($host, $rest) = $url =~ m!https?://([^/]+)(.*)!i or next;
+  my ($site, $query);
+
+  if ($host =~ /google/i) {
+    $site = "google";
+    $rest =~ m!/search!i or next;
+    $rest =~ /q=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  } elsif ($host =~ /isohunt\.com/i) {
+    $site = "isohunt";
+    $rest =~ m!/torrents\.php! or next;
+    $rest =~ /ihq=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  } elsif ($host =~ /mininova\.org/i) {
+    $site = "mininova";
+    $rest =~ m!/search/([^/]+)/! or next;
+    $query = unesc($1);
+  } elsif ($host =~ /filedonkey\.com/i) {
+    $site = "filedonkey";
+    $rest =~ m!/search\.html! or next;
+    $rest =~ /order=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  } elsif ($host =~ /filehash\.com/i) {
+    $site = "filehash";
+    $rest =~ m!/search/([^/]+)/! or next;
+    $query = unesc($1);
+  } elsif ($host =~ /smartorrent/i) {
+    $site = "smartorrent";
+    $rest =~ m!term=(.+?)(?:&|\z)! or next;
+    $query = unesc($1);
+  }
+
+  next unless $site;
+  printf "%-15s  %-15s  %-30s  %s\n", $site, $ip, (scalar localtime($time)), uri_unescape($query);
+}

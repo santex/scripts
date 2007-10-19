@@ -1,0 +1,4 @@
+#!/usr/bin/perl
+use Storable;
+use Data::Dumper;
+for (@ARGV) { print Dumper retrieve $_ }

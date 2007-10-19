@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use App::Options (
+  option => {
+    byinst_path => {
+      description => "Path to by_inst file (from http://popcon.debian.org)",
+      default => "/u/archive/public/fdoc/d/debian/popcon/latest/by_inst",
+      required => 1,
+    },
+  }
+);
+
+die "Usage: $0 <search-pattern>\n" unless @ARGV;
+
+my $cmd = "apt-cache search ".join(" ", map { esc($_) } @ARGV);
+my @output = map {[[m{(\S+) - }, $1]->[-1], $_]} `$cmd`;
+my %pkgs = map {$_->[0]=>1} @output;
+
+open F, $App::options{byinst_path} or 
+  die "Can't open by_inst file: $App::options{byinst_path}: $!\n";
+
+my %votes;
+while (<F>) {
+  next if /^\s*#/;
+  next unless /^\d+\s+(\S+)\s+(\d+)\s+(\d+)/;
+  my ($pkg, $inst, $vote) = ($1, $2, $3);
+  next unless exists $pkgs{$pkg};
+  $votes{$pkg} = $vote;
+}
+
+#use Data::Dumper; print Dumper \%votes;
+
+print map {$_->[-1]} 
+  sort {$votes{$b->[0]} <=> $votes{$a->[0]}} @output;
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

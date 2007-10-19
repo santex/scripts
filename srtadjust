@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+
+# 030812 - ternyata format srt bisa memuat koordinat juga. note srtshift & srtscale belon difix.
+# 030412
+
+$secs_re = qr/[+-]?\d+(?:\.\d*)?/;
+$hms_re = qr/\d\d?:\d\d?:\d\d?(?:,\d\d\d)?/;
+$hms_re_catch = qr/(\d\d?):(\d\d?):(\d\d?)(?:,(\d\d\d))?/;
+sub hms2secs { local $_=shift; /^$hms_re_catch$/ or return; $1*3600+$2*60+$3+$4*0.001 }
+sub secs2hms { local $_=shift; /^$secs_re$/ or return "00:00:00,000"; my $ms=1000*($_-int($_)); $_=int($_); my $s=$_%60; $_-=$s; $_/=60; my $m=$_%60; $_-=$m; $_/=60; sprintf "%02d:%02d:%02d,%03d",$_,$m,$s,$ms }
+
+###
+
+$|++;
+die "Usage: $0 <time1-in-srt> <time1-actual> <time2-srt> <time2-actual> FILE\n" unless @ARGV >= 4;
+
+($time1_srt, $time1_actual, $time2_srt, $time2_actual) = splice @ARGV,0,4;
+
+for ($time1_srt, $time1_actual, $time2_srt, $time2_actual) {
+	if (/^$secs_re$/) {
+		# already ok
+	} elsif (/^$hms_re$/) {
+		$_ = hms2secs($_);
+	} else {
+		die "FATAL: Invalid value `$_'\n";
+	}
+}
+
+die "Please provide two different srt times!\n" if $time1_srt == $time2_srt;
+die "Please provide two different actual times!\n" if $time1_actual == $time2_actual;
+
+$scale = ($time2_actual-$time1_actual) / ($time2_srt-$time1_srt);
+$shift = $time2_actual - $time2_srt*$scale; # time1 juga boleh
+
+print STDERR "Adjusting: scale factor=$scale, shift=$shift secs.\n";
+
+$para = "";
+while (1) {
+	$_ = <>;
+	if (/\S/) {
+		s/\015//g;
+		$para .= $_;
+	} elsif ($para =~ /\S/) {
+		($no, $hms1, $hms2, $text) = $para =~ /(\d+)\n($hms_re) ---?> ($hms_re)(?:\s*X1:\d+\s+X2:\d+\s+Y1:\d+\s+Y2:\d+\s*)?\n(.+)/s or
+			die "FATAL: Invalid entry in line $.: $para\n";
+		print $no, "\n", 
+			secs2hms(hms2secs($hms1)*$scale + $shift), " --> ", secs2hms(hms2secs($hms2)*$scale + $shift), "\n",
+			$text, "\n";
+		$para = "";
+	} else {
+		$para = "";	
+	}
+	last unless $_;
+}

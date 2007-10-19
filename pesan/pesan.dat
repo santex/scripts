@@ -1,0 +1,282 @@
+;format: t ddmmyyyy 'pesan...' [a z]
+;t=J | U | T; a,z >= 0
+
+;perbarui kartu/surat
+;J 10121999 'Peupeu harus ganti SIM A' 15 0
+;J 10122002 'Peupeu harus ngurus KTP' 30 0
+J 10122006 'Peupeu harus ngurus KTP' 30 0
+J 10122005 'Peupeu harus ngurus SIM A' 30 0
+J 10122005 'Peupeu harus ngurus SIM C' 30 0
+
+;ke dokter gigi (6 bulan)
+;J 20021999 'Peupeu sebaiknya ke dokter gigi' 7 7
+J 13102002 'Peupeu sebaiknya ke dokter gigi' 7 7
+J 13042003 'Peupeu sebaiknya ke dokter gigi' 7 7
+J 13102003 'Peupeu sebaiknya ke dokter gigi' 7 7
+J 13042004 'Peupeu sebaiknya ke dokter gigi' 7 7
+J 13102004 'Peupeu sebaiknya ke dokter gigi' 7 7
+J 13042005 'Peupeu sebaiknya ke dokter gigi' 7 7
+
+;ganti sikat gigi (3 bulan)
+;J 23051997 'Peupeu sebaiknya ganti sikat gigi' 1 14
+J 13072002 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13102002 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13012003 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13042003 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13072003 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13102003 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13012004 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13042004 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13072004 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13102004 'Peupeu sebaiknya ganti sikat gigi' 1 7
+J 13012005 'Peupeu sebaiknya ganti sikat gigi' 1 7
+
+;makan obat cacing (4 bulan)
+J 13082002 'Peupeu sebaiknya makan obat cacing' 7 7
+J 13122002 'Peupeu sebaiknya makan obat cacing' 7 7
+J 13042003 'Peupeu sebaiknya makan obat cacing' 7 7
+J 13082003 'Peupeu sebaiknya makan obat cacing' 7 7
+J 13122003 'Peupeu sebaiknya makan obat cacing' 7 7
+J 13042004 'Peupeu sebaiknya makan obat cacing' 7 7
+J 13082004 'Peupeu sebaiknya makan obat cacing' 7 7
+J 13122004 'Peupeu sebaiknya makan obat cacing' 7 7
+J 13042005 'Peupeu sebaiknya makan obat cacing' 7 7
+
+;spt
+J 31032002 'tanggal terakhir spt' 30 1
+J 31032003 'tanggal terakhir spt' 30 1
+J 31032004 'tanggal terakhir spt' 30 1
+J 31032005 'tanggal terakhir spt' 30 1
+
+;pajak bulanan?
+
+;ultah 
+U 13091978 'Alex'
+U 17121972 'Dhiar'
+;U 200110.. 'Kimba'
+U 29031938 'Mamah'
+U 18051980 'Tommie'
+U 13081996 'Jinny'
+U 30091937 'Papah'
+U 02121976 'Hartono'
+U 10121975 'Peupeu'
+
+;hari-hari raya yang tetap tiap tahun
+T 01011997 'Tahun Baru' 14 1
+T 17081997 'Hari Proklamasi Republik Indonesia' 7 1
+T 25121997 'Hari Natal' 14 1
+
+;hari raya/penting 2002
+J 12022002 'imlek (fakultatif)' 7 1
+J 23022002 'idul adha (hari raya)' 7 1
+J 15032002 'tahun baru hijriah (hari raya)' 7 1
+J 29032002 'jumat agung (hari raya)' 7 1
+J 31032002 'paskah' 7 1
+J 13042002 'nyepi (hari raya)' 7 1
+J 09052002 'kenaikan kristus (hari raya)' 7 1
+J 25052002 'maulid (hari raya)' 7 1
+J 26052002 'waisak (hari raya)' 7 1
+J 04102002 'isra miraj (hari raya)' 7 1
+J 06112002 'permulaan puasa' 7 1
+J 06122002 'lebaran (hari raya)' 7 1
+
+
+
+
+
+
+
+
+
+; OBSOLETE ;
+;tiap 1 bulan
+;J 04031996 'Peupeu sebaiknya bersihin debu ruangan' 1 7
+
+;hari2 raya 2000 (setelah 11 juni :-)
+;J 15062000 'Maulud Nabi Muhammad SAW' 7 1
+;J 25102000 'Isra Miraj' 7 1
+;J 27122000 'Idul Fitri 1421H' 7 1
+
+;hari-hari raya 1999
+J 19011999 'Lebaran 1419H' 7 1
+J 18031999 'Hari Raya Nyepi (1921 Saka)' 7 1
+J 28031999 'Idul Adha (10 Dzulhijah 1419H)' 7 1
+J 02041999 "Jum'at Agung" 7 1
+J 04041999 "Paskah" 7 1
+J 17041999 'Tahun Baru Hijriah (1 Muharam 1419H)' 7 1
+J 13051999 'Kenaikan Yesus Kristus' 7 1
+J 30051999 'Hari Raya Waisyak' 7 1
+J 26061999 'Maulid Nabi Muhammad SAW' 7 1
+J 06111999 "Isra Mi'raj" 7 1
+
+;hari-hari raya 1998
+;J 30011998 'Lebaran (1418H)' 3 1
+;J 29031998 'Hari Raya Nyepi (1920 Saka)' 3 1
+;J 07041998 'Idul Adha (10 Dzulhijah 1418H)' 3 1
+;J 10041998 "Jum'at Agung" 3 1
+;J 12041998 "Paskah" 3 1
+;J 28041998 'Tahun Baru Hijriah (1 Muharam 1418H)' 3 1
+;J 11051998 'Hari Raya Waisyak' 3 1
+;J 21051998 'Kenaikan Yesus Kristus' 3 1
+;J 06071998 'Maulid Nabi Muhammad SAW' 3 1
+;J 17111998 "Isra Mi'raj" 7 1
+
+;hari-hari raya 1997
+;J 09021997 'Lebaran (1417 H)' 3 1
+;J 09041997 'Hari Raya Nyepi (1919 Saka)' 3 1
+;J 28031997 "Jum'at Agung" 3 1
+;J 30031997 "Paskah" 3 1
+;J 18041997 'Idul Adha (10 Dzulhijah 1417H)' 3 1
+;J 08051997 'Kenaikan Yesus Kristus' 3 1
+;J 08051997 'Tahun Baru Hijriah (1 Muharam 1417H)' 3 1
+;J 22051997 'Hari Raya Waisyak' 3 1
+;J 17071997 'Maulid Nabi Muhammad SAW' 3 1
+;J 28111997 "Isra Mi'raj" 7 1
+
+;hari-hari raya 1996
+;J 20021996 'Lebaran (1416 H)' 3 1
+;J 21031996 'Hari Raya Nyepi (1918 Saka)' 3 1
+;J 05041996 "Jum'at Agung" 3 1
+;J 07041996 "Paskah" 3 1
+;J 28041996 'Idul Adha (10 Dzulhijah 1415H)' 3 1
+;J 16051996 'Kenaikan Yesus Kristus' 3 1
+;J 19051996 'Tahun Baru Hijriah (1 Muharam 1416H)' 3 1
+;J 02061996 'Hari Raya Waisyak' 3 1
+;J 28071996 'Maulid Nabi Muhammad SAW' 3 1
+;J 08121996 "Isra Mi'raj" 3 1
+
+;hari-hari raya 1995
+;J 01041995 'Hari Raya Nyepi...' 7 1
+;J 14041995 "Jum'at Agung" 7 1
+;J 16041995 "Paskah" 7 1
+;J 10051995 'Idul Adha (10 Dzulhijah 1415H)' 3 1
+;J 25051995 'Kenaikan Yesus Kristus' 3 1
+;J 31051995 'Tahun Baru Hijriah (1 Muharam 1416H)' 3 1
+;J 15051995 'Hari Raya Waisyak' 3 1
+;J 09081995 'Maulid Nabi Muhammad SAW' 3 1
+;J 20121995 "Isra Mi'raj" 3 1
+
+;240820000
+;J 15092000 "deadline terjemahan Genius!" 30 7
+;000909 - gue salah ngitung? kok udah lewat??? goblok, goblok, goblok!
+;J 10102000 "dapatkan nomor ICQ 88888888" 20 2
+;J 10112000 "dapatkan nomor ICQ 99999999" 20 2
+
+;J 26091997 'LOOKOUT. Peringatan 2000 tahun kelahiran Yesus.' 14 2
+;J 16111997 'International Prayer Day for the Persecuted Church' 3 1
+
+;J 10011998 'Beli kartu sin cia lho, buat bales taun-taun lalu...' 0 30
+
+;tiap 3 bulan
+;J 23051997 'Peupeu sebaiknya bersihin komputer' 1 7
+
+;ulang tahun teman-teman yang baiknya diingat
+;;; = comment-out 11 juni 2000
+;comment-out some more 13 april 2002
+;U 30011975 'Min-Min'
+;;;U 13021976 'Butet'
+;U 21021976 'Ciyunk'
+;U 27021976 'Ferdy'
+;;;U 20031975 'Sisca'
+;U 29031976 'Andi'
+;;;U 20041976 'Endry'
+;U 25041976 'Femmy'
+;;;U 05051976 'Suryo'
+;U 07051975 'Paul'
+;U 02061976 'Naftali'
+;;;U 21051976 'Mey'
+;;;U 07061976 'Tedy'
+;;;U 18061976 'Mariska'
+;U 26061976 'Shelly'
+;;;U 27071976 'Dzigh'
+;;;U 30071976 'Kokoy'
+;U 31071975 'Poppy'
+;;;U 06081975 'Tria'
+;U 10081976 'Cosmas'
+
+;nambah ultah karyawan satunet - 11 juni 2000
+;comment out all 13 april 2002
+;U 12081960 'Bu Riris (Riris Irawati, divisi satunet)'
+;U 24051968 'Pak Gun (Matius Gunadi Henoch, divisi satunet)'
+;U 17111960 'Pak Raymond (Raymond Arian Rondonuwu, divisi satunet)'
+;U 15071967 'Teguh (Teguh Rachmanto, divisi satunet)'
+;U 23061965 'Sumarno (Sumarno, divisi satunet)'
+;U 29021968 'Sukatna (Sukatna, divisi satunet)'
+;U 18111964 'Charles (Charles P. Manurung, divisi satunet)'
+;U 08071969 'Prima (Prima Harison, divisi satunet)'
+;U 06051969 'Charles (Charles Maruli Siahaan, divisi satunet)'
+;U 16021973 'Fajar (Fajar Widhiyanto, divisi satunet)'
+;U 15091967 'Asep (Asep Salahudin Samboja, divisi satunet)'
+;U 31101972 'Kleofas (Kleofas Klewen, divisi satunet)'
+;U 10011973 'Ratri (Ratri Suyani, divisi satunet)'
+;U 13111964 'Novi (Novi Nuryanti, divisi satunet)'
+;U 11041970 'Asih (Asih Nuhayati, divisi satunet)'
+;U 29041971 'Elvy (Elvy Yusanti, divisi satunet)'
+;U 04081972 'Woro (Woro Yudhi Anggrani, divisi satunet)'
+;U 22071970 'Yogi (Yogi Kuswantini, divisi satunet)'
+;U 15101972 'Rini (M. Trihastuti Rini, divisi satunet)'
+;U 17021972 'Eka (Eka Chandrasari, divisi satunet)'
+;U 27111967 'Eko (Eko Warijadi, divisi satunet)'
+;U 27031968 'Woro (Woro Widyaningsih Utami, divisi satunet)'
+;U 27081972 'Puji (Pujianto, divisi satusports)'
+;U 05021976 'Laurens (Laurens Sipahelut, divisi satusports)'
+;U 09121960 'Muchlis (Muhamad Muchlis, divisi satusports)'
+;U 25071970 'Ai (Yuliani Tri Astuti, divisi satusports)'
+;U 31081964 'Raymun Gesit (Gesit Raymundus, divisi satusports)'
+;U 11021971 'Argo (Argo Wibowo, divisi kafegaul)'
+;U 24031971 'Ratna (Ratna Tatiana Dewi, divisi kafegaul)'
+;U 05111973 'Heri (Heri Noviandi, divisi kafegaul)'
+;U 01081975 'Duto (Duto Handoko, divisi kafegaul)'
+;U 22061979 'Rudi (Rudi Adrianto, divisi kafegaul)'
+;U 15091971 'Arief (Arief Amarullah, divisi kafegaul)'
+;U 16101972 'Marwan (Marwan, divisi kafegaul)'
+;U 21111972 'Maria (Maria Masang, divisi kafegaul)'
+;U 14031974 'Rezki (Rezki Nugraheni, divisi kafegaul)'
+;U 30071975 'Lili (Lili Prarezanti, divisi kafegaul)'
+;U 25121975 'Wayan (I Wayan Satia Jaya, divisi kafegaul)'
+;U 13121975 'super vegetta (Idban Secandri, divisi kafegaul)'
+;U 23011976 'Eko (Eko Winyarto, divisi kafegaul)'
+;U 06111973 'Ata (Novita Indriani Soebrata, divisi satuwanita)'
+;U 17031974 'Nina (Nina Nuraisyiah, divisi satuwanita)'
+;U 01091968 'Ida (Eugenia Farida Denura, divisi satuwanita)'
+;U 23091977 'Diana (Diana Rachmah, divisi satuwanita)'
+;U 25081900 'Diana (Diana Agustina, divisi satuwanita)'
+;U 09091960 'Ibu Dini (Siti Resti Handini, divisi satuwanita)'
+;U 26021973 'Gina (Gina Herlina, divisi satuwanita)'
+;U 19061971 'Nuni (Nuni Kurniati Utami, divisi satuwanita)'
+;U 27021970 'Dominick (D. Hagung Prabowo, divisi satuwanita)'
+;U 23021975 'Dewi (Dewi Ika, divisi satuwanita)'
+;U 23051970 'Oka (Oka Zakaria, divisi marketing)'
+;U 06121971 'Dede (Riza Iskandar, divisi marketing)'
+;U 23011973 'Tommy (Tumpal Patton Situmorang, divisi marketing)'
+;U 08051959 'Dinky (Damiano Roosmin, divisi satumed)'
+;U 14031969 'Iwan (Iwan Suryadi Handoko, divisi satumed)'
+;U 08101971 'Merry (Merry Harita, divisi satumed)'
+;U 22111972 'Novi (Noviyanto, divisi satumed)'
+;U 15091973 'Best Friend (Donald Brian I. Tanpati, divisi satumed)'
+;U 24081967 'Marianto (Marianto Samosir, divisi satumed)'
+;U 17121975 'Syamsul (Syamsul Wardi, divisi satumed)'
+;U 05061977 'Rina (Rina Ruslaini, divisi satumed)'
+;U 26091972 'Mardiana (Mardiana Saraswati, divisi satumed)'
+;U 09101964 'Pak Andy (Andy Simon Luhur, divisi head office)'
+;U 15111969 'Fifi (Feterawati Sutedjo, divisi head office)'
+;U 04041974 'Robson (Robson Sinlaeloe, divisi head office)'
+;U 06041974 'Roy (Royke A. Priansyah, divisi head office)'
+;U 08121976 'Aries (Aries Christian, divisi head office)'
+;U 27041974 'Melky (Adrianus ( Melky ), divisi head office)'
+;U 04081969 'Edwin (Edwin Pratomo, divisi IT)'
+;;U 10121975 'Steven (Steven Haryanto, divisi IT)'
+;U 11071976 'Adhi (Yulian Adhi Nugroho, divisi IT)'
+;U 22011974 'Arief (Arief Yuntoro, divisi IT)'
+;U 04051977 'Wiwin (Winardi Masli, divisi IT)'
+;U 26091970 'Adi (P.Y. Adi Prasaja, divisi IT)'
+;U 04051976 'Ewing (Erwin Danuaji, divisi IT)'
+;U 10081976 'Adri (Cosmas Bayuadri, divisi IT)'
+;;;U 09091976 'Arini'
+;U 03101976 'Hendarto'
+;;;U 12101975 'Irma'
+;U 12101975 'Iyin'
+;U 25101976 'Yunghans'
+;U 28101975 'Dedi'
+;U 06111937 'Papah' -- sebenernya si Papah 30 sep
+;U 26121975 'Mpritz'

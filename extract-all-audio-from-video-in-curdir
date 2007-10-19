@@ -1,0 +1,72 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Getopt::Long;
+use Log::Log4perl qw(:easy);
+use Cwd;
+
+# --- globals
+
+my %Opt = (
+           log_level => 'info',
+          );
+
+# --- subs
+
+sub mysystem {
+  INFO "system(): ".join(" ",@_);
+  system @_;
+}
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}
+
+# --- main
+
+GetOptions(
+           'log-level=s' => \$Opt{log_level},
+           'debug' => sub { $Opt{log_level} = 'debug' },
+           'verbose' => sub { $Opt{log_level} = 'info' },
+           'help' => \$Opt{help},
+          );
+if ($Opt{help}) {
+  print <<EOF;
+$0 [options]
+
+Options:
+ --log-level=L  Set verbosity level (fatal/error/warn/info/debug).
+                Default is verbose.
+ --debug        Set verbosity level to debug.
+ --verbose      Set verbosity level to verbose.
+EOF
+  exit 0;
+}
+
+my $log_level;
+if    ($Opt{log_level} eq 'fatal') { $log_level = $FATAL }
+elsif ($Opt{log_level} eq 'error') { $log_level = $ERROR }
+elsif ($Opt{log_level} eq 'warn' ) { $log_level = $WARN  }
+elsif ($Opt{log_level} eq 'info' ) { $log_level = $INFO  }
+elsif ($Opt{log_level} eq 'debug') { $log_level = $DEBUG }
+else  { die "FATAL: Unknown log level: $Opt{log_level}. Use one of: fatal, error, warn, info, debug'\n" }
+Log::Log4perl->easy_init($log_level);
+
+my $cwd = getcwd;
+for my $f (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>) {
+  chdir $cwd;
+  INFO "Processing file: `$f'...";
+  my $d = $f; $d =~ s/\.\w+$/\.mp3/;
+  if (-e $d) {
+    WARN "`$d' already exists, skipped";
+    next;
+  }
+  mysystem "ffmpeg -acodec copy -i ".esc($f)." ".esc($d);
+  if ($?) {
+    ERROR "Failed extracting audio from `$f': $! ($?), skipped\n";
+    next;
+  }
+}

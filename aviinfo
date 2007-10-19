@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+use strict;
+
+# 2004-07-08, from some forum
+
+open (AVI, $ARGV[0]);
+
+my $data = "";
+my $i;
+
+# find hdrl
+for (1..200) {
+  read AVI, $data, 4;
+  last if $data eq "hdrl"
+}
+
+#while ($data ne "hdrl")
+#{ read AVI, $data, 4 }
+
+# find avih
+read AVI, $data, 4;
+
+# waste 4
+read AVI, $data, 4;
+
+# ms per frame
+read AVI, $data, 4;
+#print"ms per frame: " . converttoint($data). "\n";
+my $fps = 1/converttoint($data)*1000000.0;
+print "fps: " . sprintf("%.3f", $fps). "\n";
+
+# waste 12
+read AVI, $data, 12;
+
+# total frames
+read AVI, $data, 4;
+print "total frames: " . converttoint($data). "\n";
+my $time = converttoint($data)/$fps;
+print "total time: " . sprintf("%d s", $time) . "\n";
+
+# waste 12
+read AVI, $data, 12;
+
+# width
+read AVI, $data, 4;
+print "width: " . converttoint($data) . "\n";
+
+# height
+read AVI, $data, 4;
+print "height: " . converttoint($data) . "\n";
+
+sub converttoint {
+  my $total=0;
+  for ($i = 0; $i < length($data); $i++) {
+    my $c = substr($data, $i, 1);
+    my $value = 256**$i * ord($c);
+    $total += $value;
+  }
+  return $total;
+}

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+backup-with-history ~/.kde/share/apps/korganizer /backup/encrypted/steven/quickbackup/korganizer
+

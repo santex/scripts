@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+
+# 031118
+
+# feed this script the output of mldonket's "vr" command and it will output the ed2k link
+
+use URI::Escape;
+
+my @entries;
+my ($filename, $filesize, $filemd4); reset1();
+my $i = 0;
+my $j = 0;
+
+while (<>) {
+  if (/^\[\s*(\d+)\] Donkey (.+)$/) {
+    if ($i) {
+      push @entries, ed2kize();
+      reset1();
+    }
+    $filename = $2;
+    $j = 0; $i++;
+  } elsif (/^\s+(\d+) ([0-9A-Fa-f]{32}) /) {
+    $filesize = $1;
+    $filemd4 = $2;
+    $j++;
+  }
+}
+push @entries, ed2kize() if $j;
+print map { "$_\n" } @entries;
+
+sub reset1 {
+  $filename = "NONAME"; 
+  $filesize = 0;
+  $filemd4 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+}
+
+sub ed2kize {
+  my $n = $filename;
+  $n =~ s/\|/-/g;
+  "ed2k://|file|".uri_escape($n)."|$filesize|".lc($filemd4)."|/";
+}

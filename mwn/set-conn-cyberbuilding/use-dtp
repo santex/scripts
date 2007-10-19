@@ -1,0 +1,32 @@
+#!/usr/bin/perl -Tw
+
+# last updated: 2005-08-18
+
+use FindBin qw($Bin);
+use lib "$Bin";
+BEGIN { ($Bin) = $Bin =~ /(.+)/; require "$Bin/common.pl"; }
+
+print <<_;
+
+Skrip ini akan mengeset default gw ke DTP saja. Gunakan jika koneksi DTP
+hidup tapi server12 atau koneksi internasional milik Indosat mati. Koneksi
+internasional akan cukup lambat, tapi IIX tetap cepat karena lewat DTP.
+
+Tekan ENTER untuk lanjut atau Ctrl-C untuk keluar.
+
+_
+
+$_ = <STDIN> unless @ARGV;
+
+clean_env();
+
+turn_on_eth0();
+
+delete_all_nonlocal_routes();
+
+turn_off_all_tundevs();
+
+print "+ Setting default gw to DTP uplink (202.43.165.21)...\n";
+mysystem "route add default gw 202.43.165.21";
+
+print "+ Done.\n";

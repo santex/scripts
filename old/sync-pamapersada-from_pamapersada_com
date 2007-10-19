@@ -1,0 +1,16 @@
+#!/bin/sh -x
+
+rsync -e ssh -Pavz --delete $* \
+  --exclude 'XXX*.t.*' \
+  --exclude '*.exe' \
+  --exclude '*.bmp' \
+  --exclude 'XXX*.swf' \
+  --exclude '*~' \
+  --exclude 'webmail/*' \
+  --exclude 'XXXimages/banners/*' \
+  --exclude 'XXXimages/article/*' \
+  --exclude 'XXXimages/articlelogo/*' \
+  --exclude 'images/article/upload/*' \
+  --exclude 'images/menu/*' --exclude 'image/equipment/*' --exclude 'menu_id.js' --exclude 'menu_en.js' \
+  t36297@pamapersada.com.12.hostcorporate.com:/s/pamapersada.com/www/ \
+  /home/steven/sites/pamapersada.steven.builder.localdomain/www/

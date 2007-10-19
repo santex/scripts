@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# ganti jika source mwn gak mirip dg yg di sini
+cd /etc/spanel
+
+/c/sbin/spanel-multissh $@ --rsync --user root -- \
+  -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
+  \
+  mail-templates \
+  newsite-template \
+  default-dns-zone.yaml \
+  www \
+  plans.yaml \
+  servers/'[[SERVERID]]'/spanel.yaml \
+  \
+  '[[USER]]@[[IP]]':/etc/spanel/

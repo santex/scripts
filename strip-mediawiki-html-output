@@ -1,0 +1,21 @@
+#!/usr/bin/perl -0777 -p
+
+# buang semua sebelum title
+s#.+?<title#<title#s;
+s#<!-- Saved in .+##s;
+
+s!<body.+?>search</a></div>!!s;
+s!</head>!!;
+
+# buang fluffs: semua stylesheet, link, dll
+s#<(meta|link).+?\s/>##sig;
+s#<(style|link|script).+?</\1>##sig;
+s#<!--.+?-->##sig;
+
+# buang toc
+s!^<table id="toc".+?^</td></tr></table>!!ms;
+    
+# buang edit section links
+s!^<a name=".+>edit</a>\]</span>!<h2>!mig;
+s!^<div class="editsection".+</a>!!mig;
+

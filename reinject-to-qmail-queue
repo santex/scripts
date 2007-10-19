@@ -1,0 +1,171 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Log::Log4perl qw(:easy);
+use Getopt::Long;
+use lib "/c/lib/perl";
+use Mail::QmailQueue;
+use constant MESS_ => 0;
+use constant TODO_ => 1;
+use constant INTD_ => 2;
+use constant INFO_ => 3;
+use constant LOCAL_ => 4;
+use constant REMOTE_ => 5;
+use constant BOUNCE_ => 6;
+$|++;
+
+# --- globals
+
+my $VERSION = 0.01;
+
+my %Opt = (
+           log_level => 'info',
+           path => undef,
+           dry_run => 0,
+          );
+my %Default_Opt = %Opt;
+
+# --- subs
+
+GetOptions(
+           'log-level=s' => \$Opt{log_level},
+           'version' => sub { $Opt{version} = 1 },
+           'debug' => sub { $Opt{log_level} = 'debug' },
+           'verbose' => sub { $Opt{log_level} = 'info' },
+           'help' => \$Opt{help},
+           'path=s' => \$Opt{path},
+           'dry-run' => \$Opt{dry_run},
+          );
+
+if ($Opt{version}) {
+  print "$0 version $VERSION\n";
+  exit 0;
+}
+
+if ($Opt{help}) {
+  print <<EOF;
+$0 - Reinject mails into qmail-queue
+
+Given a qmail-queue-like directory structure (e.g. /backup/qmail-queue),
+this script will try to find messages in it which still have entries in
+mess/, info/, and local/ (or remote/), and inject them to qmail queue.
+
+This is useful if you have a queue structure from another disk which can not
+be used directly as qmail queue due to different inode numbers.
+
+Usage:
+ $0 [options]
+
+Options:
+ --log-level=L  Set verbosity level (fatal/error/warn/info/debug).
+                Default is verbose.
+ --debug        Set verbosity level to debug.
+ --verbose      Set verbosity level to verbose.
+
+ --path         Specify path to the queue-like directory.
+ --dry-run      Don't actually do real stuffs. Just print messages.
+EOF
+  exit 0;
+}
+
+my $log_level;
+if    ($Opt{log_level} eq 'fatal') { $log_level = $FATAL }
+elsif ($Opt{log_level} eq 'error') { $log_level = $ERROR }
+elsif ($Opt{log_level} eq 'warn' ) { $log_level = $WARN  }
+elsif ($Opt{log_level} eq 'info' ) { $log_level = $INFO  }
+elsif ($Opt{log_level} eq 'debug') { $log_level = $DEBUG }
+else  { die "FATAL: Unknown log level: $Opt{log_level}. Use one of: fatal, error, warn, info, debug'\n" }
+Log::Log4perl->easy_init($log_level);
+
+$Opt{path} or do { FATAL "Please specify --path"; exit 1 };
+my $qdir = $Opt{path};
+(-d $qdir) or do { FATAL "Non-existing or invalid path"; exit 1 };
+chdir $qdir or do { FATAL "Can't chdir to `$qdir': $!\n"; exit 1 };
+
+my %inodes = (); # inode => [mess path, todo path, ...]
+my $i;
+
+chdir "bounce"; for (<*>)   {  $i = $_;              $inodes{$i}[BOUNCE_] = $_ } chdir "..";
+
+chdir "info";   for (<*/*>) { ($i = $_) =~ s|\d+/||; $inodes{$i}[INFO_]   = $_ } chdir "..";
+
+chdir "intd";   for (<*>)   {  $i = $_;              $inodes{$i}[INTD_]   = $_ } chdir "..";
+
+chdir "local";  for (<*/*>) { ($i = $_) =~ s|\d+/||; $inodes{$i}[LOCAL_]  = $_ } chdir "..";
+
+#chdir "lock"; ...
+
+# chdir "pid"; ...
+
+chdir "remote"; for (<*/*>) { ($i = $_) =~ s|\d+/||; $inodes{$i}[REMOTE_] = $_ } chdir "..";
+
+chdir "todo";   for (<*>)   {  $i = $_;              $inodes{$i}[TODO_]   = $_ } chdir "..";
+
+my $num_mess = 0;
+my $num_mess_inject = 0;
+my $num_mess_injected = 0;
+chdir "mess";
+MESG: for (<*/*>) {
+  open F, $_ or next;
+  ($i = $_) =~ s|\d+/||;
+  $inodes{$i}[MESS_] = $_;
+  $num_mess++;
+  my $mess = join "", <F>;
+  
+  # envelope sender
+  defined($inodes{$i}[INFO_]) or do {
+    INFO "Message $i does not have info/, skipped";
+    next MESG;
+  };
+
+  open F, "../info/".$inodes{$i}[INFO_] or next;
+  $/ = "\0"; my $sender = <F>; $sender =~ s/^F//; $sender =~ s/\0//;
+  #DEBUG "Message $i: sender = $sender";
+
+  # recipients (local) XXX
+  my $rcpt_exists = 0;
+  for my $f ("local", "remote") {
+    if ($f eq 'local') {
+      defined($inodes{$i}[LOCAL_]) or next;
+      open F, "../local/".$inodes{$i}[LOCAL_] or next;
+      $rcpt_exists++;
+    } else {
+      defined($inodes{$i}[REMOTE_]) or next;
+      open F, "../remote/".$inodes{$i}[REMOTE_] or next;
+      $rcpt_exists++;
+    }
+  }
+  $/ = "\0";
+    
+  $rcpt_exists or do {
+    INFO "Message $i does not have local/ or remote/, skipped";
+    next MESG;
+  };
+    
+  my $nrcpt = 0;
+  my @rcpts = ();
+  while (<F>) {
+    $nrcpt++;
+    my $rcpt = $_; $rcpt =~ s/^T//; $rcpt =~ s/\0//;
+    push @rcpts, $rcpt;
+  }
+  close F;
+  
+  INFO "Sending message $i (From $sender to ".join(", ", @rcpts).") ...";
+  unless ($Opt{dry_run}) {
+    my $qmail = Mail::QmailQueue->new;
+    $qmail->sender($sender);
+    $qmail->to(@rcpts);
+    $qmail->data($mess);
+    my $status = $qmail->send;
+    $num_mess_injected++ if $status;
+  }
+  $num_mess_inject++;
+
+}
+chdir "..";
+
+printf "Number of messages: %d\n", $num_mess;
+printf "Number of messages tried to be injected: %d\n", $num_mess_inject;
+printf "Number of messages successfully injected: %d\n", $num_mess_injected;

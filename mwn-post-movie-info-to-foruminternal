@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Cwd;
+use Log::Log4perl qw(:easy);
+use WWW::Mechanize;
+
+# tadinya mau pakai plugin phpBB, tapi gagal login mulu. kayaknya
+# gara2x gak specify 'button' di submit_form. ya udah, sementara pake
+# Mech mentah aja.
+
+my $FORUM_URL = "https://forum.mwn.localdomain";
+my $PASSWORD_FILE = "/home/steven/mwn/pass.txt";
+
+my $FORUM_USER = "steven";
+my $FORUM_PASS;
+
+# id forum yang ingin dipost
+my $FORUM_ID = 3; # 68=oven, 3=sharing movie
+
+my $DELAY = 4;
+
+Log::Log4perl->easy_init($DEBUG);
+
+# cek argumen
+unless (@ARGV) {
+  print "Usage: $0 <moviedir> ...\n";
+  exit 1;
+}
+
+# ambil password dari file
+open F, $PASSWORD_FILE or die "Can't open password file: $PASSWORD_FILE: $!\n";
+while ($_ = <F>) { last if /steven \@ forum.mwn.localdomain/ }
+LOGDIE "Can't find password (1)\n" unless <F>;
+while (1) { $_ = <F>; last unless /^\s*#/ }
+chomp($FORUM_PASS = $_);
+#DEBUG "pass = $FORUM_PASS";
+LOGDIE "Can't find password (2)\n" unless length($FORUM_PASS);
+
+
+my $mech = new WWW::Mechanize;
+
+$mech->get("$FORUM_URL/login.php");
+$mech->submit_form(
+    form_number => 1,
+    fields      => {
+        username => $FORUM_USER,
+        password => $FORUM_PASS,
+    },
+    button      => 'login',
+);
+#print $mech->content();
+
+my $orig_dir = getcwd();
+
+for my $dir (@ARGV) {
+  chdir $orig_dir;
+
+  chdir $dir or do {
+    WARN "Can't chdir to `$dir', skipped";
+    next;
+  };
+
+  # get new posting form
+  $mech->get("$FORUM_URL/posting.php?mode=newtopic&f=$FORUM_ID");
+  #print $mech->content();
+
+  my $posting = `make-phpbb-movie-posting`;
+  length($posting) or do {
+    WARN "Can't get movie posting information for dir `$dir', skipped";
+    next;
+  };
+
+  # submit it
+  INFO "Posting `$dir' ...";
+  #DEBUG "posting = $posting";
+  $mech->submit_form(
+      form_number => 1,
+      fields      => {
+          subject         => $dir,
+          message         => $posting,
+          disable_html    => "on",
+          disable_bbcode  => undef,
+          disable_smilies => "on",
+      },
+      button      => 'post',
+  );
+
+  #print $mech->content;
+
+  unless ($mech->content =~ /successfully/i) {
+    ERROR "Failed!";
+  }
+
+  sleep($DELAY);
+}
+

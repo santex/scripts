@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+# 031231
+
+die "Usage: $0 <page-name-or-url> ...\n" unless @ARGV;
+
+for (@ARGV) { 
+  if (m#^http://www\.ibphoenix\.com/main\.nfs\?.*page=([A-Za-z0-9_-]+)#) {
+    $url = $_;
+    $pageid = $1;
+  } else {
+    $pageid = $_;
+    $url = "http://www.ibphoenix.com/main.nfs?a=ibphoenix&page=$_";
+  }
+  
+  $cmd = "wget -O- '$url' > $pageid.html";
+  print "$cmd\n";
+  system $cmd;
+}

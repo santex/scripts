@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use strict;
+use URI::Escape;
+use Cwd;
+
+my $URL_PREFIX = "http://steven.hosting.localdomain/download/video";
+
+my $cwd = getcwd;
+my $movie_dir = $cwd; $movie_dir =~ s!.+/!!;
+my @image_files = grep { /\.(jpe?g|gif|png)$/i } <*>;
+my @movie_files = grep { /\.(mpe?g|avi|rmvb|rm|divx|xvid)$/i } <*>;
+
+for (@image_files) {
+  printf "[img]%s/%s/%s[/img]\n\n",
+    $URL_PREFIX,
+    uri_escape($movie_dir),
+    uri_escape($_);
+}
+
+print "Download:\n";
+for (@movie_files) {
+  printf "* [url=%s/%s/%s]%s[/url]\n",
+    $URL_PREFIX,
+    uri_escape($movie_dir),
+    uri_escape($_),
+    $_;
+}
+print "\n";
+
+print "IMDB: \n\n";
+

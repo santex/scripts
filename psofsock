@@ -1,0 +1,7 @@
+#!/bin/sh
+# 000301
+
+pidofsock_param=$1; shift; ps_param=$*
+ps "$ps_param" | \
+perl -e'while(<STDIN>){for$i(@ARGV){print if /\Q$i/ or !$j++}}' \
+`pidofsock "$pidofsock_param" 2>-|cut -d: -f1`

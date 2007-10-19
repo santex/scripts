@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+for(qx(ls -l)){
+  chomp;
+  next unless /^[d-]/;
+  @F=split /\s+/, $_, 9;
+  print "$F[-1] $F[4]\n";
+}

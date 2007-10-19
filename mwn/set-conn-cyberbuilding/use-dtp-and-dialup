@@ -1,0 +1,35 @@
+#!/usr/bin/perl -Tw
+
+# last updated: 2005-08-18
+
+use FindBin qw($Bin);
+use lib "$Bin";
+BEGIN { ($Bin) = $Bin =~ /(.+)/; require "$Bin/common.pl"; }
+
+print <<_;
+
+Skrip ini akan menghapus default gw agar kita dapat menggunakan koneksi
+internasional via dialup. Tapi untuk route-route ke IIX akan tetap
+dilewatkan ke DTP. Gunakan jika server12 atau koneksi internasional Indosat
+mati tapi DTP tetap hidup. Koneksi internasional akan cukup pelan tapi
+koneksi IIX akan cepat karena tetap lewat DTP.
+
+Tekan ENTER untuk lanjut atau Ctrl-C untuk keluar.
+
+_
+
+$_ = <STDIN> unless @ARGV;
+
+clean_env();
+
+turn_on_eth0();
+
+delete_all_nonlocal_routes();
+
+turn_off_all_tundevs();
+
+mysystem "add-iix-routes-to-dtp.sh";
+
+#mysystem "wvdial cbn";
+#mysystem "wvdial telkomnet";
+print "+ Done. Silakan ketik 'wvdial cbn' atau 'wvdial telkomnet'. Sebelumnya pastikan modem telah terpasang di server.\n";

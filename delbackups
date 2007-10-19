@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+use File::Find;
+
+finddepth sub {
+    do { print "$File::Find::dir/$_\n"; unlink $_ } if -f and /.(\.\$\$\$|\.bak|~)$/i;
+}, ".";

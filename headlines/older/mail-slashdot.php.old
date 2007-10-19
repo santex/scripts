@@ -1,0 +1,9 @@
+#!/usr/bin/php -q
+<?php
+$content = join("", file("http://slashdot.org/ultramode.txt"));
+mail(
+	"steven@ruby-lang.or.id",
+	"Slashdot ultramode (".date("Y-m-d H:i:S").")",
+	$content,
+	"From: headlines-slashdot@ruby-lang.or.id\n");
+?>

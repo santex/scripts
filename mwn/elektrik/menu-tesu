@@ -1,0 +1,26 @@
+#!/bin/bash
+
+BINDIR=/u/steven/public/bin/mwn/set-conn-cyberbuilding
+PATH=/usr/local/bin:/usr/bin:/bin:$BINDIR
+
+#tempfile1=`tempfile`
+tempfile1=/tmp/as9d90xciosd
+dialog --menu "menu tesu" 8 40 3 \
+  1 "pakai koneksi dtp" \
+  2 "pakai koneksi dtp + s23" \
+  3 "pakai koneksi dtp + s27" 2> $tempfile1
+
+choice=`cat $tempfile1`
+rm -f $tempfile1
+
+case "$choice" in
+  1)
+    sudo use-dtp
+    ;;
+  2)
+    sudo use-dtp-and-s23-tunnelling
+    ;;
+  3)
+    sudo use-dtp-and-s27-tunnelling
+    ;;
+esac

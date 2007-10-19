@@ -1,0 +1,55 @@
+#!/usr/bin/ruby
+
+# 2004-12-25 - ip source jadi argumen command line. ganti nama skrip.
+
+# 030813 - ubah ip ke 192.168.0.101/192.168.0.102 (semua ip builder kini
+# disamakan baik utk rumah maupun kantor elektrindo)
+
+# 030802 - set time according to 192.168.1.2:17 (daytime service). this is
+# because builder now runs in vmware and its clock is all wrong when it's
+# restored from suspension. we can't use nettime/ntpd on win2k because it
+# needs to validate its time first from the network, and we need builder to
+# connect to the network!
+
+require 'socket'
+
+if ARGV.length != 1
+  puts "Usage: synctime-dateservice <source-ip>"
+  exit 0
+end
+
+ip = ARGV[0]
+t = TCPSocket.new(ip, 'daytime')
+
+str = t.gets
+# windows: '12:02:02 PM 8/7/2003'
+if match = %r{^(\d+):(\d+):(\d+) ([AP]M) (\d+)/(\d+)/(\d+)}.match(str)
+  h = match[4]=='PM' ? (match[1]=='12' ? 12 : match[1].to_i+12) : (match[1]=='12' ? 0 : match[1].to_i)
+  min = match[2]
+  s = match[3]
+  mon = match[5]
+  d = match[6]
+  y = match[7]
+# linux 1: '13 AUG 2003 08:54:16 WIT'
+elsif match = %r{^(\d+) (\w+) (\d+) (\d+):(\d+):(\d+)}.match(str.downcase)
+  d = match[1]
+  mon = {'jan',1,'feb',2,'mar',3,'apr', 4,'may', 5,'jun', 6,
+         'jul',7,'aug',8,'sep',9,'oct',10,'nov',11,'dec',12}[match[2]]
+  y = match[3]
+  h = match[4]
+  min = match[5]
+  s = match[6]
+# linux 2: 'Sat Dec 25 09:22:00 2004'
+elsif match = %r{^(\w+) (\w+) (\d+) (\d+):(\d+):(\d+) (\d+)}.match(str.downcase)
+  d = match[3]
+  mon = {'jan',1,'feb',2,'mar',3,'apr', 4,'may', 5,'jun', 6,
+         'jul',7,'aug',8,'sep',9,'oct',10,'nov',11,'dec',12}[match[2]]
+  y = match[7]
+  h = match[4]
+  min = match[5]
+  s = match[6]
+else raise "Can't match date `#{str}'\n"; end
+
+
+#puts "/bin/date -s '#{mon}/#{d}/#{y} #{h}:#{min}:#{s}'"
+system "/bin/date -s '#{mon}/#{d}/#{y} #{h}:#{min}:#{s}'"

@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+$SIG{ALRM} = sub {
+  system "mplayer '/media/marie/cache/audio/Isabelle Boulay - Du Temps Pour Toi/07 - Du Temps Pour Toi.mp3'";
+  system "sudo shutdown now";
+};
+
+alarm 30;
+system "zenity --error --text 'Motherboard Sensors Alarm'";
+alarm 0;
+

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# bzr svn-push dulu kalo belon...
+cd ~/proj/mwn
+bzr svn-push file:///home/steven/svn/repos-mwn-from-bzr/mwn
+
+rsync --delete -e "ssh -c arcfour" -Pavz \
+  /u/steven/home/svn/repos-mwn-from-bzr \
+  steven@hosting.localdomain:/u/steven/home/svn/

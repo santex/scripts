@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+use strict;
+use File::Slurp;
+
+my $dir = "/home/steven/mwn/pp/snapshot.".`date +'%Y-%m-%d'`;
+chomp($dir);
+
+chdir $dir or die "Can't chdir to `$dir': $!\n";
+
+my %files = map {$_ => 1} <*.html>; delete $files{"all.html"};
+my %found = ();
+
+$/ = undef;
+
+open ALL, ">all.html";
+
+$_ = read_file("Peraturan_perusahaan.html"); $found{"Peraturan_perusahaan.html"}++;
+print ALL $_;
+my @process = ();
+while (/<a href="([A-Za-z0-9_-]+\.html)"/g) {
+  push @process, $1;
+}
+
+for my $f (@process) {
+  $_ = read_file($f);
+  print ALL $_;
+  $found{$f}++;
+}
+
+close ALL;
+
+for (keys %files) {
+  warn "File `$_' has not been included\n" unless $found{$_};
+}

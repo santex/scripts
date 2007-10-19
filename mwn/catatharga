@@ -1,0 +1,10 @@
+#!/bin/sh
+prefix=$HOME/catatharga
+
+path=$prefix/rakitan/`date +"%Y%m%d%H%M%S"`
+mkdir -p $path; cd $path
+wget -q --cache off http://rakitan.com/spart.gif http://rakitan.com/spart2.gif
+
+path=$prefix/uc98/`date +"%Y%m%d%H%M%S"`
+mkdir -p $path; cd $path
+wget -q -nH -r -l1 -H -D www.uc98.com -e robots=off http://www.uc98.com/type.asp

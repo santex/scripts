@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!DOCTYPE rss PUBLIC "-//Netscape Communications//DTD RSS 0.91//EN" "http://my.netscape.com/publish/formats/rss-0.91.dtd">
+<rss version="0.91">
+  <channel>
+    <title>Advogato</title>
+    <link>http://www.advogato.org/article/</link>
+    <description>Recent Advogato articles</description>
+    <language>en-us</language>
+    <item>
+      <title>Joe Celko on the Digital Divide</title>
+      <link>http://www.advogato.org/article/586.html</link>
+      <description>&lt;p&gt;Joe Celko questions both the existence and the importance of the &quot;Digital Divide&quot; in America today.  Saith he: 
+&lt;blockquote&gt;
+If having a PC is &quot;absolutely essential to preserving civil rights and truly democratic processes in this country,&quot; then what were we doing before cheap computing? I thought the Constitution was written on parchment, not a Web site.
+&lt;/blockquote&gt;</description>
+    </item>
+    <item>
+      <title>Thoughts on voting machine fraud</title>
+      <link>http://www.advogato.org/article/585.html</link>
+      <description>I've been having a ponder on some of the problems of systematic voting fraud and came up with a suggestion. Since its not an academically rigorous approach and I don't make voting machines I thought it might be interesting to throw it at people who might care
+</description>
+    </item>
+    <item>
+      <title>Which technical skills are in demmand?</title>
+      <link>http://www.advogato.org/article/584.html</link>
+      <description>Ever wonder which skills and keywords result in the most employment search engine hits?</description>
+    </item>
+    <item>
+      <title>Who's working (and who's not)</title>
+      <link>http://www.advogato.org/article/583.html</link>
+      <description>David Isenberg's latest &lt;a href=&quot;http://isen.com/ &quot;&gt;SMART letter&lt;/a&gt; includes a rather disturbing set of two emails, one from a YAUE (yet another unemployed engineer) and one from inside AT&amp;T where apparently there aren't enough qualified people left on staff to actually roll out the backlogs orders.  David speculates, &quot;&lt;i&gt;Imagine 
+the unleashed progress if the existing telecom workforce were 
+working up to its potential without being (a) laid off or 
+(b) impeded by organizations that are desperately trying to 
+defend their obsolete businesses!&lt;/i&gt;&quot; and &lt;em&gt;that&lt;/em&gt; causes me to speculate, of the people regularly online here on Advogato, how many of us fall into one or both of those categories?</description>
+    </item>
+    <item>
+      <title>Supporting a Windows port from a Unix/Linux point of view</title>
+      <link>http://www.advogato.org/article/582.html</link>
+      <description>I am the lead developer for &lt;a href=&quot;/proj/XPLC/&quot;&gt;XPLC&lt;/a&gt;, working mainly in a Linux (or at least, Unix) environment. One of the goals of XPLC is portability, and while we haven't ported to a great number of environments yet, we maintain a Windows port to keep us honest, figuring that things are different enough in Windows, but I have been facing a number of problems that I am sure others have encountered before.</description>
+    </item>
+    <item>
+      <title>A framework for Open Source projects</title>
+      <link>http://www.advogato.org/article/581.html</link>
+      <description>I recently completed my masters thesis &lt;a href=&quot;http://greg.abstrakt.ch/docs/OSP_framework.pdf&quot;&gt;A Framework for Open Source Projects&lt;/a&gt; (1.5MB PDF). By announcing it here, I hope it can be useful for someone. Feedback welcome.</description>
+    </item>
+    <item>
+      <title>Conditional donations to fund software development</title>
+      <link>http://www.advogato.org/article/580.html</link>
+      <description>&lt;p&gt; Funding the development of free software is a problem.
+While it is usually to the benefit of the community for free software to be
+written, the cost of development often outweighs the benefit to any one
+user of the software.
+
+&lt;p&gt; &lt;p&gt; In this article, I propose a method of overcoming this problem using a
+system of conditional donations, so that a group of users can cooperate to
+fund software development without the need for altruism: this
+is a system that should make sense even to penny pinching bastards! The outcome
+of a small scale test of the system is also described.</description>
+    </item>
+    <item>
+      <title>Priority: Documentation, Subject: Patterns, Language: Perl, Status: Failure</title>
+      <link>http://www.advogato.org/article/579.html</link>
+      <description>Projects I work on are universally doomed to failure. Every company I work for goes out of business (note: shortsell Motorola). Failure doesn't happen in the mode one would ever suspect, which is what makes this interesting. The code is always written in a timely manner and debugged. Perhaps I'm being premature, and I'm certainly venting, but I think its curious to see how a free documentation effort can fail, joining the ranks of commercial software development efforts and every other sort of project. Deaths of past projects and companies are a different story and one less relevant to Free Software development. This is about failing to write documentation.</description>
+    </item>
+    <item>
+      <title>draft document : Good Security Practice for a Free Software release</title>
+      <link>http://www.advogato.org/article/578.html</link>
+      <description>As everybody knows, a lot of trojaned Free Software has been found. A vast majority of them are not using OpenPGP signed checksum file. I'm currently trying to make a basic HOWTO to make a Free Software release including OpenPGP signature. This can minimize the risk (as long as the user is checking the signature ;-). Here is a draft in &lt;a href=&quot;http://www.foo.be/fs-release-doc/security-fsrelease.ps&quot;&gt;PS&lt;/a&gt; and &lt;a href=&quot;http://www.foo.be/fs-release-doc/security-fsrelease.pdf&quot;&gt;PDF&lt;/a&gt; format. 
+
+&lt;p&gt; Don't hesitate to provide comments and feedback following your own experience of the issue. (I hope to include the chapter in the Software Release HOWTO afterwards)</description>
+    </item>
+    <item>
+      <title>Co-developers who fork behind your back</title>
+      <link>http://www.advogato.org/article/577.html</link>
+      <description>&lt;p&gt;Recently I discovered that a co-developer on one of my sourceforge-hosted projects had forked the code and was continuing to develop it in a different CVS repository without my knowledge.</description>
+    </item>
+  </channel>
+</rss>

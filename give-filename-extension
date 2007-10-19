@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+my $VERSION = 20070112;
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}
+
+for (@ARGV) {
+  my $old = $_;
+
+  if (/\.\w+$/) {
+    print "INFO: $_ already has extension, skipped\n";
+    next;
+  }
+
+  my $ext = "";
+  my $cmd = "file -b -i ".esc($_);
+  my $mime = `$cmd`;
+
+  if    ($mime =~ m#text/plain#) { $ext = "txt" }
+  elsif ($mime =~ m#html#) { $ext = "html" }
+  elsif ($mime =~ m#image/jpeg#) { $ext = "jpg" }
+  elsif ($mime =~ m#image/gif#) { $ext = "gif" }
+  elsif ($mime =~ m#image/png#) { $ext = "png" }
+  elsif ($mime =~ m#video/x-msvideo#) { $ext = "avi" }
+  elsif ($mime =~ m#application/x-tar#) { $ext = "tar" }
+  elsif ($mime =~ m#application/vnd\.rn-realmedia#) { $ext = "rm" }
+  elsif ($mime =~ m#application/x-rar#) { $ext = "rar" }
+  elsif ($mime =~ m#video/mp2p#) { $ext = "mpg" }
+
+  if (!$ext) {
+    print "INFO: $_: Can't find out content type, skipped\n";
+    next;
+  }
+
+  $_ = "$old.$ext";
+  if ($old ne $_) {
+    print "INFO: $old -> $_\n";
+    if (-e $_) {
+      print "ERROR: $_ already exists, skipped\n";
+    } else {
+      rename $old, $_ or print "ERROR: Can't rename $old -> $_: $!\n";
+    }
+  }
+}

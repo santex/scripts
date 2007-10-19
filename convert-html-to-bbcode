@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+# saat ini hanya simpel, hanya mendukung <font color> => [color] & <a
+# href>, <b><i><u> dan menghilangkan <br>. untuk mengconvert log chat
+# html gaim.
+
+# todo: html entities: "&gt;" -> ">", dsb.
+
+use strict;
+my @FontStack;
+
+sub repl {
+  my ($tutup, $name, $param) = @_;
+  if ($tutup) {
+    if ($name =~ /^font$/i) {
+      my $s = pop @FontStack;
+      if ($s && $s eq 'color') {
+        return "[/color]";
+      } else {
+        return "";
+      }
+    } elsif ($name =~ /^a$/i) {
+      return "[/url]";
+    } elsif ($name =~ /^[biu]$/i) {
+      return "[/".lc($name)."]";
+    }
+  } elsif ($name =~ /^font$/i) {
+    if ($param =~ /color\s*=\s*(["']?)(\S+)\1/i) {
+      push @FontStack, 'color';
+      return "[color=$2]";
+    } else {
+      push @FontStack, '';
+      return "";
+    }
+  } elsif ($name =~ /^a$/i) {
+    if ($param =~ /href\s*=\s*(["']?)(\S+)\1/i) {
+      return "[url=$2]";
+    } else {
+      return "[url=xxx]";
+    }
+  } elsif ($name =~ /^[biu]$/i) {
+    return "[".lc($name)."]";
+  } elsif ($name =~ /^br$/i) {
+    return "";
+  } else {
+    return "<$tutup$name$param>";
+  }
+}
+
+while (<>) {
+  s{<(/)?(a|font|br|b)\b([^>]*)>}{repl($1, $2, $3)}eig;
+  print;
+}

@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+
+# 030711, inspired & dicomot dari linespeed. program ini melakukan du sb
+# -$ARGV[0] setiap detik lalu menghitung speednya.
+
+use Time::HiRes qw(gettimeofday tv_interval);
+
+die "Usage: $0 <dir-or-file>\n" unless @ARGV==1;
+
+$t0 = [gettimeofday];
+$diff = 0;
+$oldtotal = undef;
+$msg = '';
+while (1) {
+	sleep 1;
+	`du -sb '$ARGV[0]'` =~ /(\d+)/;
+	$diff += defined($oldtotal) ? $1-$oldtotal : 0; $oldtotal = $1;
+	syswrite STDOUT, "\b" x length($msg), length($msg);
+	$interval = tv_interval ($t0, [gettimeofday]);
+	$interval = 0 if $interval <1e-3;
+	$msg = sprintf("%.2fs %dK %.2fK/sec", $interval, $oldtotal/1024.0, $interval ? $diff/1024.0/$interval : 0 );
+	syswrite STDOUT, $msg, length($msg);
+	syswrite STDOUT, "\033[K", 3;
+}

@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+#001107, how many times do i have to write this? :-(
+
+use Getopt::Std;
+
+getopts('hv', \%opt);
+if ($opt{h}) {
+	help_message();
+	exit(0);
+}
+
+for(@ARGV) {
+	if (!-f) {
+		if (-d _) {
+			print STDERR "$0: $_ is a directory\n";
+		} else {
+			print STDERR "$0: $_ is not an ordinary file\n";
+		}
+	}
+	
+	($dir = $_) =~ s#/[^/]
+}
+
+###
+
+sub help_message {
+	print <<USAGE;
+Usage: $0 [-v] [-h]
+-v verbose
+-h this help message
+
+USAGE
+	exit(0);
+}

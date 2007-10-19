@@ -1,0 +1,212 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+use POSIX qw(ceil);
+
+use constant DEFAULT_BLOCK_SIZE => 4096;
+use constant VERSION => 0.011;
+
+my %Opt = (
+
+    #include_user => [],
+    #exclude_user => [],
+    #include_group => [],
+    #exclude_group => [],
+
+    #include_user_pat => [],
+    #exclude_user_pat => [],
+    #include_group_pat => [],
+    #exclude_group_pat => [],
+
+    include_dir_pat => [],
+    exclude_dir_pat => [],
+
+    include_file_pat => [],
+    exclude_file_pat => [],
+
+    block_size => DEFAULT_BLOCK_SIZE,
+
+    action => 'du', # ls
+);
+
+GetOptions(
+    "help" => \$Opt{help},
+    "version" => \$Opt{version},
+
+    "include-dir-pat=s"  => $Opt{include_dir_pat},
+    "dpat=s"             => $Opt{include_dir_pat},
+    "exclude-dir-pat=s"  => $Opt{exclude_dir_pat},
+    "xdpat=s"            => $Opt{exclude_dir_pat},
+    "include-file-pat=s" => $Opt{include_file_pat},
+    "fpat=s"             => $Opt{include_file_pat},
+    "exclude-file-pat=s" => $Opt{exclude_file_pat},
+    "xfpat=s"            => $Opt{exclude_file_pat},
+
+    "block-size=s" => $Opt{block_size},
+
+    "ls" => sub { $Opt{action} = 'ls' },
+);
+
+if ( $Opt{version} ) {
+    print "$0 version ${\(VERSION)}\n";
+    exit 0;
+}
+
+if ( $Opt{help} ) {
+    print <<USAGE;
+$0 - Count total file sizes from ls-lR output.
+
+Usage: $0 [options] < ls-lR
+
+Options:
+  --include-dir-pat=SERVER
+                   Include a dir pattern.
+  --dpat=SERVER
+                   Synonym for --include-dir-pat.
+  --exclude-dir-pat=SERVER
+                   Exclude a dir pattern.
+  --xdpat=SERVER
+                   Synonym for --exclude-dir-pat.
+  --include-file-pat=SERVER
+                   Include a file pattern.
+  --fpat=SERVER
+                   Synonym for --include-file-pat.
+  --exclude-file-pat=SERVER
+                   Exclude a file pattern.
+  --xfpat=SERVER
+                   Synonym for --exclude-file-pat.
+  --block-size=N
+                   Set block size (default: ${\(DEFAULT_BLOCK_SIZE)}
+  --ls             List files instead of totaling
+                   their sizes.
+USAGE
+    exit 0;
+}
+
+for ( @{ $Opt{include_dir_pat} } ) {
+    my $re;
+    eval { $re = qr/$_/i };
+    if ($@) {
+        die "Invalid include_dir_pat pattern `$_': $@";
+        exit 1;
+    }
+    $_ = $re;
+}
+
+for ( @{ $Opt{exclude_dir_pat} } ) {
+    my $re;
+    eval { $re = qr/$_/i };
+    if ($@) {
+        die "Invalid exclude_dir_pat pattern `$_': $@";
+        exit 1;
+    }
+    $_ = $re;
+}
+
+for ( @{ $Opt{include_file_pat} } ) {
+    my $re;
+    eval { $re = qr/$_/i };
+    if ($@) {
+        die "Invalid include_file_pat pattern `$_': $@";
+        exit 1;
+    }
+    $_ = $re;
+}
+
+for ( @{ $Opt{exclude_file_pat} } ) {
+    my $re;
+    eval { $re = qr/$_/i };
+    if ($@) {
+        die "Invalid exclude_file_pat pattern `$_': $@";
+        exit 1;
+    }
+    $_ = $re;
+}
+
+my $dir;
+my $totsize = 0;
+my $totitems = 0;
+my $totiitems = 0;
+LINE:
+while (<>) {
+    chomp;
+
+    next unless /\S/;
+
+    next if /^total \d+/;
+
+    if (/(.+):$/) {
+        $dir = $1;
+        next;
+    }
+
+    if ( my ( $perm, $nlinks, $user, $group, $size, $date, $file, $target )
+        = /^([-dlcpbs][rwxXst-]{9}) \s+
+            (\d+) \s+
+            (\S+) \s+
+            (\S+) \s+
+            (\d+) \s+
+            ( \w+\s+\d+\s\d\d:\d\d | \w+\s+\d+\s+\d+ | \d{4}-\d{2}-\d{2}\s\d\d:\d\d ) \s
+            (.+)/x
+        )
+    {
+        #print "file = '$file'\n";
+        next if $file =~ /^(\.|\.\.)$/;
+
+        $totitems++;
+
+        # are we in the specified dir?
+        next unless defined($dir);
+        if ( @{ $Opt{include_dir_pat} } ) {
+            next LINE unless grep { $dir =~ /$_/ } @{ $Opt{include_dir_pat} };
+        }
+        if ( @{ $Opt{exclude_dir_pat} } ) {
+            for ( @{ $Opt{exclude_dir_pat} } ) {
+                #print "dir:$dir =~ /$_/ ?\n";
+                next LINE if $dir =~ /$_/;
+            }
+        }
+
+        my $is_dir = $perm =~ /^d/;
+
+        # are we supposed to count the file?
+        unless ($is_dir) {
+            if ( @{ $Opt{include_file_pat} } ) {
+                next LINE unless grep { $file =~ /$_/ } @{ $Opt{include_file_pat} };
+            }
+            if ( @{ $Opt{exclude_file_pat} } ) {
+                for ( @{ $Opt{exclude_file_pat} } ) {
+                    next LINE if $file =~ /$_/;
+                }
+            }
+        }
+
+        my $nblocks = 0;
+        $nblocks = ceil($size/$Opt{block_size}) if $size > 0;
+        $totsize += $nblocks*$Opt{block_size};
+        $totiitems++;
+
+        if ($Opt{action} eq 'ls' && !$is_dir) {
+            printf "%s%s\n", (defined($dir) ? "$dir/" : ""), $file;
+        }
+    }
+    else {
+        warn "Can't recognize line $.: $_\n";
+        next;
+    }
+}
+
+if ($Opt{action} eq 'du') {
+    print "Total size: ", human_size($totsize), "\n";
+    print "Total number of counted entries: ", $totiitems, "\n";
+    print "Total number of excluded entries: ", ($totitems-$totiitems), "\n";
+}
+
+sub human_size {
+    my ($size) = @_;
+    if    ($size > 1.1*1024*1024*1024) { sprintf "%.1fG", $size/1024/1024/1024 }
+    elsif ($size > 1.1*1024*1024     ) { sprintf "%.1fM", $size/1024/1024 }
+    elsif ($size > 1.1*1024          ) { sprintf "%.1fK", $size/1024 }
+    else                               { sprintf "%db", $size }
+}

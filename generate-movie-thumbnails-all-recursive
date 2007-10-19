@@ -1,0 +1,3 @@
+#!/bin/sh
+
+find -type f -exec generate-movie-thumbnails --skip --rows=6 {} \;

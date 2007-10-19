@@ -1,0 +1,19 @@
+#!/usr/bin/perl -Tw
+
+$ENV{PATH} = "/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin";
+delete @ENV{qw/IFS CDPATH ENV BASH_ENV/};
+$<=$>; $(=$);
+
+chdir "/etc/sysconfig/network-scripts";
+system "./ifdown eth1";
+sleep 3;
+system "./ifup eth1";
+system "/sbin/route del default gw 202.43.165.21";
+system "/sbin/route add -net 202.43.164.0 netmask 255.255.255.0 gw 202.43.165.21 dev eth0"; # dtp
+system "/sbin/route add -net 202.43.163.0 netmask 255.255.255.0 gw 202.43.165.21 dev eth0";
+system "/sbin/route add -net 202.43.162.0 netmask 255.255.255.0 gw 202.43.165.21 dev eth0";
+system "/sbin/route add -net 202.43.160.0 netmask 255.255.255.0 gw 202.43.165.21 dev eth0";
+system "/sbin/route add -net 202.43.161.0 netmask 255.255.255.0 gw 202.43.165.21 dev eth0";
+system "/sbin/route add -net 202.158.0.0  netmask 255.255.0.0 gw 202.43.165.21 dev eth0"; # cbn
+system "/sbin/route add -net 202.134.0.0  netmask 255.255.0.0 gw 202.43.165.21 dev eth0"; # plasa.com
+system "/sbin/route add -net 202.146.0.0  netmask 255.255.0.0 gw 202.43.165.21 dev eth0"; # centrin

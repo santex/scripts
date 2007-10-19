@@ -1,0 +1,93 @@
+#!/usr/bin/perl
+
+# split CVE single big list file into per-item file, categorized by
+# year.
+
+use warnings;
+use strict;
+use App::Options (
+  option => {
+    split_path => {
+      description => "directory that contains the YYYY/ dirs",
+      default => "/u/steven/public/fdoc/c/cve",
+      type => "string",
+      required => 1,
+    },
+    single_path => {
+      description => "File that contains all the items",
+      default => "/u/steven/public/fdoc/c/cve/allitems.txt",
+      type => "string",
+      required => 1,
+    },
+    overwrite => {
+      description => "whether to override existing YYYY/NUM.txt files",
+      default => 1,
+      type => "boolean",
+      required => 1,
+    },
+    delete => {
+      description => "whether to delete YYYY/NUM.txt files that are not in the single big list, don't use unless you're sure. DANGEROUS!",
+      default => 0,
+      type => "boolean",
+      required => 1,
+    },
+  }
+);
+
+my $n = 0;
+my $nnew = 0;
+my $nupdated = 0;
+my $ndeleted = 0;
+my %memory = ();
+
+chdir $App::options{split_path} or die "FATAL: Can't chdir to $App::options{split_path}\n";
+
+open F, $App::options{single_path} or die "FATAL: Can't open $App::options{single_path}: $!\n";
+local $/ = "======================================================";
+while (my $item = <F>) {
+  my ($year, $num) = $item =~ /^Name: CVE-(\d+)-(\d+)$/m or next;
+  for ($item) { s/^\n+//; s/^=+$//m; s/\n+\z//; }
+  $n++;
+  $memory{"$year/$num.txt"}++;
+
+  mkdir $year unless (-e $year);
+  (-d $year) or die "FATAL: $year is not a directory\n";
+
+  my $new_content = $item . "\n";
+  my $old_content;
+
+  my $write = 0;
+  if (-f "$year/$num.txt") {
+    next unless $App::options{overwrite};
+    open G, "$year/$num.txt"; $old_content = join "", <G>; close G;
+    $write++ if $new_content ne $old_content;
+  } else {
+    $write++;
+  }
+
+  if ($write) {
+    if (-f "$year/$num.txt") { $nupdated++ } else { $nnew++ }
+    open G, ">$year/$num.txt"; print G $new_content; close G;
+  }
+}
+close F;
+
+# delete no longer found entries
+for my $year (grep {-d} <[0-9]*>) {
+  chdir $year or die "FATAL: Can't chdir to $App::options{split_path}/$year\n";
+  for my $file (<[0-9]*[0-9].txt>) {
+    next if $memory{"$year/$file"};
+    if ($App::options{delete}) {
+      unlink $file;
+      $ndeleted++;
+    }
+  }
+  chdir "..";
+}
+
+print "===\n";
+print "Total: $n\n";
+print "Total new: $nnew\n";
+print "Total updated: $nupdated\n";
+print "Total deleted: $ndeleted\n";
+

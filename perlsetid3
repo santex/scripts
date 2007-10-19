@@ -1,0 +1,115 @@
+#!/usr/bin/perl
+
+# 2006-03-07 - diilhami perlrename
+
+use Getopt::Std;
+use Cwd qw(abs_path);
+use File::Spec;
+use MP3::Tag;
+
+getopts('de:hvB');
+
+if ($opt_h) { print <<USAGE; exit 0 }
+Synopsis
+
+ $0 <-e 'code'> mp3file ...
+
+DESCRIPTION
+
+ Set ID3 of MP3 files using Perl code. The Perl code specified in -e
+ ... will be provided with \$file and \$dir, and also given the
+ opportunity to modify \$title, \$artist, \$album, \$genre, \$track,
+ \$year, and \$comment. If any of the ID3 vars above are changed, the
+ ID3 information will be written back to the file (and the original
+ file will be backed up, unless you tell this script not to).
+
+OPTIONS
+
+ -e  Specify code to rename file (\$_), e.g. 's/\.old\$/\.bak/'
+ -B  Don't generate backup files
+ -v  Verbose
+ -d  Dry-run (implies -v)
+ -h  Show this help
+
+EXAMPLES
+
+ # set title to be the same as filename (but lowercased and without
+ # ".mp3" suffix)
+ $0 -e 'for(\$title){\$_=lc \$file; s/\.mp3\$//}' *.mp3
+
+USAGE
+
+die "FATAL: Code (-e) not specified, use -h for help\n" unless $opt_e;
+eval $opt_e; die "FATAL: Code (-e) does not compile: $@\n" if $@;
+
+@files = ();
+
+if ($^O =~ /win32/i) {
+  for (@ARGV) {
+    if (/[*?]/) { push @files, glob $_ } else { push @files, $_ }
+  }
+} else {
+  push @files, @ARGV;
+}
+
+FILE: for my $f (@files) {
+  ($vol, $dir, $file) = File::Spec->splitpath(abs_path $f);
+  $mp3 = MP3::Tag->new($f) or do {
+    warn "WARN: $f: Can't read tag, skipped\n";
+    next;
+  };
+  ( $title,  $track,  $artist,  $album,  $comment,  $year,  $genre) = $mp3->autoinfo();
+  ($Otitle, $Otrack, $Oartist, $Oalbum, $Ocomment, $Oyear, $Ogenre) =
+  ( $title,  $track,  $artist,  $album,  $comment,  $year,  $genre);
+
+  eval $opt_e;
+
+  $changed = 
+    $Otitle ne $title ||
+    $Otrack != $track ||
+    $Oartist ne $artist ||
+    $Oalbum ne $album ||
+    $Ocomment ne $comment ||
+    $Oyear ne $year ||
+    $Ogenre ne $genre;
+
+  if ($opt_v || $opt_d) {
+    if ($changed) {
+      print "$f:";
+      if ($Otitle   ne $title)   { print " title:$Otitle -> $title" }
+      if ($Otrack   != $track)   { print " track:$Otrack -> $track" }
+      if ($Oartist  ne $artist)  { print " artist:$Oartist -> $artist" }
+      if ($Oalbum   ne $album)   { print " album:$Oalbum -> $album" }
+      if ($Ocomment ne $comment) { print " comment:$Ocomment -> $comment" }
+      if ($Oyear    ne $year)    { print " year:$Oyear -> $year" }
+      if ($Ogenre   ne $genre)   { print " genre:$Ogenre -> $genre" }
+      print "\n";
+    } else {
+      print "$f: unchanged\n";
+    }
+  }
+
+  if ($changed && !$opt_d) {
+    unless ($opt_B) {
+      system "cp -a ".escapeshellarg($f)." ".escapeshellarg("$f.bak");
+      if ($?) { warn "ERROR: $f: Can't backup, skipped\n"; next FILE }
+    }
+
+    $mp3->update_tags({
+                       title => $title,
+                       track => $track,
+                       artist => $artist,
+                       album => $album,
+                       comment => $comment,
+                       year => $year,
+                       genre => $genre,
+                      });
+    # warn "ERROR: $f: Can't write ";
+  }
+}
+
+sub escapeshellarg {
+  local $_=shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

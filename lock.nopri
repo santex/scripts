@@ -1,0 +1,36 @@
+#!/usr/bin/python2
+
+import signal
+import sys
+import getpass
+
+line = '-' * 80
+
+def registerSignal():
+  for i in range(0, signal.NSIG):
+    try:
+      signal.signal(i, signal.SIG_IGN)
+    except:
+      pass
+  #signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+def main():
+  print "nopy terminal lock"
+  passwd = getpass.getpass("Enter unlock password: ")
+  registerSignal()
+  print "terminal locked"
+  print line
+  
+  while 1:
+    try:
+      trypasswd = getpass.getpass("Enter password: ")
+      if trypasswd == passwd:
+        print "terminal unlocked"
+        sys.exit(0)
+      else:
+        print "Invalid password"
+    except EOFError:
+      continue
+
+if __name__ == '__main__':
+  main()

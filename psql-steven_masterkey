@@ -1,0 +1,2 @@
+#!/bin/sh
+exec psql --no-psqlrc -q -h localhost -U steven_masterkey steven_masterkey $*

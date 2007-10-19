@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+
+# 20040528 - UNFINISHED
+
+use Getopt::Std;
+
+getopt('bleh:', \%opt);
+
+if ($opt{h}) {
+  print <<_;
+perlsplit - Like 'split' but with flexible part naming
+
+Usage:
+  perlsplit -e EXPR <-b BYTES or -l NUM>
+  perlsplit -h
+
+-e EXPR   EXPR is a Perl code/expression, $_ is supplied with 1, 2,
+          etc. and you change it to become the part filename.
+-b BYTES  Put BYTES bytes per output file. You can use optional
+          suffix like 'k' (kilo), 'm' (mega), 'g' (gigabyte).
+-l NUM    Put NUM lines per output file
+-v        Verbose
+-d        Dry run (don't write any file)
+
+Examples:
+
+perlsplit -b 701M -e '$_="/mnt/cd$_"' bigfile
+gzip -c file | perlsplit -b 100m -e '$_="part$_of5.gz"'
+
+_
+}
+
+if ($opt{b}) {
+  if ($opt{b} =~ s/k$//i) {
+    $bytes = $opt{b} * 1024;
+  } elsif ($opt{b} =~ s/m$//i) {
+    $bytes = $opt{b} * 1024*1024;
+  } elsif ($opt{b} =~ s/g$//i) {
+    $bytes = $opt{b} * 1024*1024*1024;
+  } else {
+    $bytes = $opt{b}+0;
+  }
+} elsif ($opt{l} > 0) {
+  $lines = $opt{l}+0;
+} else {
+  die "$0: FATAL: Please specify either -b or -l\n";
+}
+
+$bytes or $lines or 
+  die "$0: FATAL: Please specify a positive and valid -b or -l\n";
+
+if ($bytes) {
+  $/ = \$bytes;
+  $records = 1;
+} else {
+}
+
+  

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+rsync -e ssh -Pavz --delete \
+  --exclude 'XXX*.t.*' \
+  --exclude '*.exe' \
+  --exclude '*.bmp' \
+  --exclude '*.swf' \
+  --exclude '*~' \
+  --exclude 'webmail/*' \
+  --exclude 'XXXimages/banners/*' \
+  --exclude 'XXXimages/article/*' \
+  --exclude 'XXXimages/articlelogo/*' \
+  --exclude 'images/article/upload/*' \
+  t67828@kijanginnova.com:/s/kijanginnova.com/www/ \
+  /home/steven/sites/innova.steven.builder.localdomain/www/

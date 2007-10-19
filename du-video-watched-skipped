@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+# XXX doesn't yet support hardlinks, but it's not that important.
+
+use File::Find;
+
+find sub {
+  next unless (-f) && !(-l);
+  next unless /\.(rm|rmvb|avi|mpe?g|vob|asf|wmv|mov|dat)$/i;
+  $size = (-s);
+  $total += $size;
+  $watched += $size if $File::Find::dir =~ /\.done/;
+  $skipped += $size if $File::Find::dir =~ /\.skipped/;
+  #print "$File::Find::dir/$_\n";
+}, ".";
+
+$kbps = 1100.0;
+$MB = 1024*1024;
+$GB = 1024*1024*1024.0;
+
+printf "Total    : %5.1f GB (%5.1f hours)\n", $total/$GB, $total/$MB / ($kbps/8.0/1024.0) / 3600;
+printf "Watched  : %5.1f GB (%5.1f hours, %5.1f%%)\n", $watched/$GB, $watched/$MB / ($kbps/8.0/1024.0) / 3600, $watched/$total*100.0;
+printf "Skipped  : %5.1f GB (%5.1f hours, %5.1f%%)\n", $skipped/$GB, $skipped/$MB / ($kbps/8.0/1024.0) / 3600, $skipped/$total*100.0;
+printf "Unwatched: %5.1f GB (%5.1f hours, %5.1f%%)\n", ($total-$watched-$skipped)/$GB, ($total-$watched-$skipped)/$MB / ($kbps/8/1024) / 3600, ($total-$watched-$skipped)/$total*100.0;
+print  "  (assuming 1100kbps, +- 8.1MB/minute)\n";

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+rsync -e ssh -Pavz \
+  --exclude 'XXX*.t.*' \
+  --exclude '*.exe' \
+  --exclude '*.swf' \
+  --exclude '*~' \
+  --exclude 'images/*' \
+  --exclude 'menu_bottom_front.js' \
+  --exclude 'menu_bottom.js' \
+  --exclude 'menu_top_front.js' \
+  --exclude 'menu_top.js' \
+  /home/steven/sites/innova.steven.builder.localdomain/www/ \
+  t67828@kijanginnova.com:/s/kijanginnova.com/www/

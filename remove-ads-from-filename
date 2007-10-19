@@ -1,0 +1,38 @@
+#!/usr/bin/perl -l
+
+# 2005-11-27
+
+@files = ();
+if ($^O =~ /win32/i) {
+    for (@ARGV) {
+        if (/[?*]/) { push @files, glob($_) } else { push @files, $_ }
+    }
+} else {
+    push @files, @ARGV;
+}
+
+@files = grep {-f} @files;
+
+for (@files) {
+    $old = $_;
+
+    if (/_/ && !/ /) {
+        s/_/ /g;
+    } elsif (/\./ && !/ /) {
+        s/\./ /g;
+        s/(.+) /$1./;
+    }
+
+    s/(\s*[^\w]*(mininova\.org|isohunt)[^\w]*\s*)//ig;
+
+    if ($old ne $_) {
+        $i=0;
+        $new = $_;
+        while (-e $new) { # antisipasi bentrok
+            $new = $_.($i ? ".$i":"");
+            $i++;
+        }
+        print "$old -> $new";
+        rename $old, $new;
+    }
+}

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+backup-with-history ~/diary /backup/encrypted/steven/quickbackup/diary
+backup-with-history ~/belajar /backup/encrypted/steven/quickbackup/belajar

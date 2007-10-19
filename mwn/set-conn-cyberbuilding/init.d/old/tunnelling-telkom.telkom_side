@@ -1,0 +1,47 @@
+#!/bin/bash 
+ 
+# this should be the IP address of the remote server 
+REMOTEIP=202.43.165.22
+ 
+# remote ip (private swn IP) 
+REMOTEPRIVATEIP=192.168.0.113
+ 
+# unless you have more than one tunnel, you can just route the 10net out... 
+REMOTENET=192.168.0.0/24
+ 
+# this can be whatever; 
+TUNDEV=tuntlkm
+ 
+# careful; this should be the 'local' ip gw address. 
+GATEWAY=192.168.4.1
+ 
+ 
+start() 
+{ 
+        modprobe ipip 
+ 
+        iptunnel add ${TUNDEV} mode ipip remote ${REMOTEIP} 
+        ifconfig ${TUNDEV} ${GATEWAY} pointopoint ${REMOTEPRIVATEIP} 
+        # Note: check the above syntax; each linux seems to want a slightly different 'pointopoint' syntax. -EricJohanson 
+        route add -net ${REMOTENET} gw ${GATEWAY} dev ${TUNDEV} 
+
+	# tambahan. XXX masih ada yang dihardcode: 192.168.0.0/16
+	echo 1 >/proc/sys/net/ipv4/ip_forward
+	/sbin/iptables -t nat -I POSTROUTING -s 192.168.0.0/16 -j MASQUERADE
+} 
+ 
+stop() 
+{ 
+        iptunnel del ${TUNDEV} 
+        modprobe -r ipip 
+} 
+ 
+case "$1" in 
+        start) 
+                start ;; 
+        stop) 
+                stop ;; 
+        restart) 
+                stop 
+                start ;; 
+esac 

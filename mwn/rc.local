@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# This script will be executed *after* all the other init scripts.
+# You can put your own initialization stuff in here if you don't
+# want to do the full Sys V style init stuff.
+
+/u/steven/public/bin/use-dtp-and-indosat-tunnelling --no-interactive
+
+touch /var/lock/subsys/local
+
+/sbin/iptables -t nat -I POSTROUTING -s 192.168.0.0/16 -j MASQUERADE 
+
+echo 1 >/proc/sys/net/ipv4/ip_forward
+
+# gold jangan ditransparent-proxy karena stupid whmcs mengeluarkan request yg gak diterima squid
+# 12 = alamat baru gold (oct 2007 or jan 2008?), 109 = alamat lama gold
+/sbin/iptables -t nat -I PREROUTING -p tcp -s 192.168.0.109  -j ACCEPT 
+/sbin/iptables -t nat -I PREROUTING -p tcp -s 192.168.0.12   -j ACCEPT 
+/sbin/iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 
+
+/usr/bin/setterm -blength 0
+/sbin/kbdrate -r 30 -d 250
+
+#/sbin/hdparm -d0 /dev/hda
+#/sbin/hdparm -d0 /dev/hdb
+#/sbin/hdparm -d0 /dev/hdc
+#/sbin/hdparm -d0 /dev/hdd
+
+# 040714 - dulu waktu masih pake gabungan 2-disk, sekarang gak lagi
+# vgchange -a y vg1; mount /backup
+
+#030902
+# cd /usr/local/jabber && ./jabberd/jabberd 2>/dev/null &
+
+#030904 - sementara blok dulu outgoing port 25 komputer jimmy, terinfeksi
+#         program yang nyepam terus ke yahoo
+#/sbin/iptables -A OUTPUT -p tcp -s 192.168.0.7 --dport 25 -d ! 192.168.0.0/16 -j DROP
+
+/usr/sbin/ntptimeset -vuS1 -ddd -s
+
+# backup sshd
+/usr/sbin/backup-ssh2d -p 2222
+
+/c/etc/rc.local.common

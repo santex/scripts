@@ -1,0 +1,17 @@
+#!/usr/bin/perl -l
+
+# 031011
+# 040414 - add -q (quiet) option
+# 040620 - add grep {-r} (for multiuser)
+
+use Getopt::Std;
+
+getopts('q', \%opts);
+
+unless (@socks = grep {-r} </tmp/ssh-*/agent.[0-9]*>) {
+  print qq|echo "ssh-existing-agent: WARN, NO SOCK FOUND"| unless $opts{q};
+  exit 1;
+}
+
+@socks = sort {(-M $a) <=> (-M $b)} @socks;
+print qq|export SSH_AUTH_SOCK=$socks[0]|;

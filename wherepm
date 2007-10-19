@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+#000525
+
+if (@ARGV) {
+
+	for(@ARGV) {
+		eval qq( require $_; );
+		if ($@) {
+			print STDERR "$_ is not available? ($@)\n";
+		} else {
+			$key = "$_.pm";
+			$key =~ s#::#/#g;
+			print $INC{$key}, "\n";
+		}
+	}
+
+} else {
+
+	print <<_;
+Use this script to find the location of Perl modules.
+Usage: $0 module ...
+Example: $0 CGI XML::RSS
+_
+
+}
+
+__END__
+todo: allow user to specify lib directories. (i.e. ala perl's -I)
+con: slow. to find the modules, the script has to require them.

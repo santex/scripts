@@ -1,0 +1,7 @@
+#!/usr/bin/perl -0 -pi
+
+# 030810
+
+s#.+<body[^>]*>##si;
+s#<(table|div id="nav").+##si;
+s#</?(div|span)[^>]*>##sig;

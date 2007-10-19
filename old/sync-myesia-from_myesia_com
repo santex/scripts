@@ -1,0 +1,9 @@
+#!/bin/sh
+
+rsync -e ssh -Pavz --delete \
+  --exclude '*.exe' \
+  --exclude '*.swf' \
+  --exclude '*~' \
+  --exclude 'webmail/*' \
+  myesiacom@myesia.com:/s/myesia.com/www/* \
+  /home/steven/sites/myesia.steven.builder.localdomain/www/

@@ -1,0 +1,12 @@
+#!/usr/bin/perl -n
+
+if (($n) = /^[A-Za-z-]{10}\s+\d+\s+\S+\s+\S+\s+(\d+)\s+/) {
+  # ls -l output
+  # -rw-r--r-- 1 root root 237458581 2007-02-18 21:18 Half.Nelson.2006.CD1.rmvb
+  $total += $n;
+} elsif (($n, $unit) = /\b(\d+(?:\.\d+)?)\s*(GB?|MB?)?\s*$/i) {
+  # NAMAFILE SIZE
+  $total += $n * ($unit =~ /g/i ? 1024*1024*1024 : ($unit =~ /m/i ? 1024*1024 : 1));
+}
+
+END { printf "%.1f GB\n", $total/1024/1024/1024 }

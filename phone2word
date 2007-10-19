@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+
+#020806, waktu si alex nyari2 nomor buat support mwn
+
+$|++;
+
+@dictfiles = qw(
+/usr/share/dict/words 
+/home/steven/usr/share/dict/id.words
+/home/steven/usr/share/dict/merek.words
+);
+
+%dig = qw(
+a 2 b 2 c 2
+d 3 e 3 f 3
+g 4 h 4 i 4
+j 5 k 5 l 5
+m 6 n 6 o 6
+p 7 q 7 r 7 s 7
+t 8 u 8 v 8
+w 9 x 9 y 9 z 9
+);
+
+@phones = ();
+for (@ARGV) {
+	s/[ \-\(\)]+//g;
+	($sufx = $_) =~ s/.*[01]([2-9]{3,})$/$1/;
+	do { warn "$0: invalid number `$_', skipped\n"; next } unless $sufx =~ /^[2-9]+$/;
+	@n = split "", $sufx;
+	@w = ();
+	while (@n >= 3) {
+		push @phones, [[@n], $_];
+		push @w, (shift @n);
+	}
+}
+
+exit 1 unless @phones;
+
+for $f (grep {not /#/} @dictfiles) {
+	open F, $f or do { warn "$0: can't open `$f' ($!), skipped\n"; next };
+	while ($l = <F>) {
+		($w = lc $l) =~ s/\s+//sg;
+		$w =~ /^[a-z]+$/ or next;
+		for $p (@phones) {
+			length($w) == @{$p->[0]} or next;
+			$i=0; $j=0;
+			for (split "", $w) {
+				#print "[",$p->[0][$i+1]," vs ",$dig{$_},"] ";
+				$dig{$_} == $p->[0][$i++] or last;
+				$j++;
+			}
+			$i == $j and do {
+				$prf = substr($p->[1], 0, length($p->[1])-length($w));
+				print "$p->[1] = ", (length($prf) ? "$prf-":""), $w, "\n";
+			};
+		}
+	}
+}

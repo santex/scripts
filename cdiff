@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+# 030207, diff with colors
+
+$|++;
+open F, "diff ".join(" ", map {esc($_)} @ARGV)." |";
+while (<F>) {
+  if (/^\+\+\+ / or /^--- /) {
+    print;
+  } elsif (/^\-/) {
+    print "\x1b[1;31m$_\x1b[0m";
+  } elsif (/^\+/) {
+    print "\x1b[1;32m$_\x1b[0m";
+  } else {
+    print;
+  }
+}
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+@cancel = ();
+
+while (<>) {
+  /^\[D(?:onkey)? +(\d+)/ and push @cancel, $1;
+}
+
+print "# for 2.5.3\n";
+print map {"cancel $_\n"} @cancel;
+print "\n";
+print "# for 2.5.4\n";
+print "cancel ", join(" ",@cancel), "\nconfirm yes\n";

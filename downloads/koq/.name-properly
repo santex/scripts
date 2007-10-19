@@ -1,0 +1,3 @@
+#!/bin/sh
+
+perlrename -e's/^The King Of Queens - (\d)x(\d\d)/koq - 0$1$2/i' T*

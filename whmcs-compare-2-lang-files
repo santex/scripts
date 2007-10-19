@@ -1,0 +1,32 @@
+#!/usr/bin/ruby -w
+
+# whmcs sucks, kok suka reorder2x string di lang files sih?
+
+s1 = {}
+s2 = {}
+
+if ARGV.length != 2
+  $stderr.puts "FATAL: Usage: #{$0} <file1> <file2>"
+  exit 1
+end
+
+ARGV.each_with_index do |file, fileno|
+  File.open(file).each_with_index do |line, no|
+    #puts "#{file}: #{line}"
+    line.gsub!(%r(/\*.+?\*/), '')
+    next unless line =~ /\S/
+    unless line =~ /^\s*\$_LANG\[["'](\w+)["']\]\s*=\s*["'](.*)["'];\s*$/
+      $stderr.puts "WARN: Line #{no+1}: Unrecognized, skipped"
+      next
+    end
+  
+    #puts "#{$1} -> #{$2}"
+    (fileno == 0 ? s1 : s2)[$1] = $2
+  end
+end
+
+#p s1.keys
+ 
+(s1.keys - s2.keys).each {|x| puts "-#{x}" }
+(s2.keys - s1.keys).each {|x| puts "+#{x}" }
+

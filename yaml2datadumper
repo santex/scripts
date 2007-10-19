@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+# 031214
+
+use Data::Dumper;
+use YAML::Syck;
+
+$YAML::Syck::ImplicitTyping = 1;
+
+undef $/;
+print Dumper Load(scalar <>);

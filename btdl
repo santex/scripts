@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+# 2005-09-18 - sebutin lagi nama torrent filenya di pertanyaan success/tidak, biar bisa ketauan ini torrent mana
+# 2005-08-02 - nambahin process memory limit 600MB. gw suka liat ada yang jadi 2GB+ sih!
+# 2005-04-07, duh yg bash version sucks and too limited.
+
+use Cwd qw/getcwd abs_path/;
+use Getopt::Long;
+use URI::Escape;
+use strict;
+
+$|++;
+
+my %opt = (
+  upload_speed => 5,
+);
+
+GetOptions(
+  "--max_upload_rate|u=i" => \$opt{upload_speed},
+);
+
+my @fail = ();
+
+FILE: for my $file (@ARGV) {
+  (-e $file) or do { push @fail, "$file: file doesn't exist\n"; next FILE };
+  (-f $file) or do { push @fail, "$file: is not a file\n"; next FILE };
+
+  $file = abs_path($file);
+
+  my $url = "file://".uri_escape($file);
+  $url =~ s!%2F!/!g; # stupid uri_escape escaping / !!!
+
+  my $dir = $file; $dir =~ s!.+/!!; $dir =~ s/\.torrent$//i; $dir = "$dir.dir";
+  (-d $dir) or mkdir $dir, 0755;
+  (-d $dir) or do { push @fail, "$file: can't mkdir $dir: $!\n"; next FILE };
+  chdir $dir or do { push @fail, "$file: can't chdir $dir: $!\n"; next FILE };
+  system "ulimit -v 600000; btdownloadcurses --max_uploads 2 --max_upload_rate $opt{upload_speed} ".escapeshellarg($url);
+  chdir "..";
+
+  PROMPT: while (1) {
+    print "Is this torrent (`$file') successful (Y/N)? ";
+    my $answer = <STDIN>;
+    next unless $answer =~ /^[YN]$/i;
+    if ($answer =~ /Y/i) {
+      unlink $file;
+      last PROMPT;
+    } else {
+      push @fail, "$file: is not successful\n";
+      last PROMPT;
+    }
+  }
+}
+
+print scalar(@fail), " entri(es) failed:\n", map {"$_\n"} @fail;
+
+sub escapeshellarg {
+  local $_ = shift;
+  s/\x27/'"\x27"'/g;
+  "'$_'";
+}
+

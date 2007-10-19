@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+
+# XXX - unfinished
+
+# 2004-07-08 - simultaneously (via fork currently) connect to a certain
+# host+port, write something (data is from stdin), (optionally sleep for a
+# while), then [optionally] read a line from remote socket and print it to
+# stdout, (then optionally sleep again for a while), then disconnect.
+
+use Getopt::Long;
+use IO::Socket;
+use POSIX ":sys_wait_h";
+
+$|++;
+
+%opt = (
+  'concurrency' => 1, 
+  'sleep0' => 0,
+  'sleep1' => 0,
+  'sleep2' => 0,
+  'verbose' => 0,
+  
+  'help' => 0,
+);
+
+GetOptions(
+  "concurrency=i" => \$opt{concurrency},
+  "sleep0=i" => \$opt{sleep0},
+  "sleep1=i" => \$opt{sleep1},
+  "sleep2=i" => \$opt{sleep2},
+  "verbose" => sub { $opt{verbose}=1 },
+  "help" => sub { $opt{help}=1 },
+);
+
+if ($opt{help} || @ARGV != 2) {
+  print <<USAGE;
+multisockprint - print to multiple sockets simultaneously
+
+Usage:
+
+  multisockprint [options] host port < string-to-print
+    
+Options:
+
+ --concurrency N  Starts N simultaneous clients. Defaults to 1.
+ --sleep0 N       Optionally sleep N seconds right after connecting.
+ --sleep1 N       Optionally sleep N seconds right after printing, before reading.
+ --sleep2 N       Optionally sleep N seconds right before disconnecting.
+USAGE
+  exit 0;
+}
+
+($host, $port) = @ARGV;
+$data = join "", <STDIN>;
+
+if ($opt{verbose}) {
+  print "data=$data";
+  print "\n" unless $data =~ /\n$/s;
+}
+
+@pids = ();
+for $i (1..$opt{concurrency}) {
+  $pid = fork;
+  if ($pid == 0) {
+
+    # connect
+    $sock = IO::Socket::INET->new(PeerAddr => $host, PeerPort => $port) or 
+      die "$i: can't connect: $@\n";
+    print "$i: connected\n" if $opt{verbose};
+    if ($opt{sleep0}) { sleep $opt{sleep0} }
+
+    # print
+    if (length($data)) {
+      $sock->printflush($data);
+      print "$i: sending data\n" if $opt{verbose};
+      if ($opt{sleep1}) { sleep $opt{sleep1} }
+    }
+    
+    # read a line of response
+    $output = <$sock>;
+    print "$i: got response: $output";
+    if ($opt{sleep2}) { sleep $opt{sleep2} }
+    
+    # disconnect
+    $sock->close;
+    print "$i: disconnected\n" if $opt{verbose};
+    
+    exit;
+    
+  } else {
+    # parent
+    push @pids, $pid;
+  }
+}
+
+for (@pids) { waitpid($_, 0) }

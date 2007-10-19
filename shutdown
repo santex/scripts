@@ -1,0 +1,37 @@
+#!/usr/bin/ruby
+
+class SystemCommandError < StandardError; end
+
+module Kernel
+  alias_method :orig_system, :system
+  
+  def system(cmd, *args)
+    puts "Executing #{cmd} #{args.join ' '}"
+    orig_system(cmd, *args) # or raise SystemCommandError, "#{$?}"
+  end
+end
+
+def unmounted
+  %x(/usr/bin/bcumount /encrypted)
+  %x(/bin/mount | grep -q ^/encrypted.jbc)
+  $?.exitstatus == 0 or return
+  %x(/usr/bin/bcumount /backup/encrypted)
+  %x(/bin/mount | grep -q ^/backup/encrypted.jbc)
+  $?.exitstatus == 0
+end
+
+step = 0
+until unmounted
+  case step += 1
+  when 1
+    system "/etc/init.d/httpd stop"
+    system "/etc/init.d/squid stop"
+  when 2
+  
+  when 3
+  else
+    raise "I couldn't unmount encrypted partition after several tries, giving up..."
+  end
+end
+
+#system "/sbin/init 0"

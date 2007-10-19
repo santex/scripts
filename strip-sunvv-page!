@@ -1,0 +1,12 @@
+#!/usr/bin/perl -pi~ -0777
+
+# biar yakin, buang dulu crap di awal
+s{\A.+^<tr><td align=center>http://joke.sunvv.com [^\n]+}{}sm;
+
+# ambil content
+m{^<tr><td class="?text"?>(.*?)</td>}ms and $_ = $1;
+
+# strip form
+s{<form.+?</form>}{}sig;
+
+$_ = qq|<meta http-equiv="Content-Type" content="text/html; charset=gb2312">\n$_|;

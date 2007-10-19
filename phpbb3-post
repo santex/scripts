@@ -1,0 +1,116 @@
+#!/usr/bin/perl -w
+
+# this script accepts input in the form of email and post it to a phpbb3 forum
+# website. the post subject will be taken from email header Subject.
+
+# usage: phpbb3-post [options] email1 email2 ...
+#        phpbb3-post [options] - ...
+
+# options can be put in config file or specified on the command line.
+
+use strict;
+use Cwd;
+use File::Slurp;
+use Log::Log4perl qw(:easy);
+#use Mail::Message;
+use Mail::Internet;
+use WWW::Mechanize;
+use App::Options (
+    option => {
+        profile => { type => 'string', required => 0, default => 'default', },
+        username => { type => 'string', required => 1, },
+        password => { type => 'string', required => 1, },
+        base_url => { type => 'string', required => 1, },
+        forum_id => { type => 'string', required => 1, },
+
+        delay => { type => 'int', required => 0, default => 4, },
+
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+    },
+);
+
+if ( $App::options{log_level} eq 'FATAL' ) {
+    Log::Log4perl->easy_init($FATAL);
+}
+elsif ( $App::options{log_level} eq 'ERROR' ) {
+    Log::Log4perl->easy_init($ERROR);
+}
+elsif ( $App::options{log_level} eq 'WARN' ) {
+    Log::Log4perl->easy_init($WARN);
+}
+elsif ( $App::options{log_level} eq 'INFO' ) {
+    Log::Log4perl->easy_init($INFO);
+}
+else { Log::Log4perl->easy_init($DEBUG) }
+
+if (@ARGV == 0) { @ARGV = ("-") }
+
+my $mech = new WWW::Mechanize;
+
+INFO "Logging in as $App::options{username} ...";
+$mech->get("$App::options{base_url}/ucp.php?mode=login");
+$mech->form_with_fields('username');
+$mech->submit_form(
+    #form_name => 'login',
+    #form_number => 2,
+    fields      => {
+        username => $App::options{username},
+        password => $App::options{password},
+    },
+    button => 'login',
+);
+
+#print $mech->content();
+#LOGDIE "Can't login" unless $mech->content =~ /.../;
+
+my $orig_dir = getcwd();
+
+my $i = 0;
+POST: for my $file (@ARGV) {
+    sleep $App::options{delay} if $i++;
+
+    INFO "Posting #$i (forum id: $App::options{forum_id}) ...";
+    my $file_content = $file eq '-' ? [<STDIN>] : read_file($file, array_ref => 1);
+    my $obj = Mail::Internet->new($file_content);
+    if ( !$obj ) {
+        ERROR "Can't parse posting #$i, skipped";
+        next POST;
+    }
+
+    # get new posting form
+    $mech->get(
+        "$App::options{base_url}/posting.php?mode=post&f=$App::options{forum_id}"
+    );
+    sleep 2; # must sleep 2 seconds otherwise phpbb will assume it's cancelled (posting.php line 49)
+
+    my $subj = $obj->head->get("Subject") || "(no subject)";
+    $subj =~ s/\n//g;
+
+    my $mesg = ($obj->body ? join("", @{ $obj->body }) : "(no message)");
+    $mesg =~ s/[\x80-\xff]/_/g; # XXX can't handle accented character right now
+
+    #print $mech->content();
+    #DEBUG "subject=$subj, message=$mesg";
+    $mech->form_with_fields('subject');
+    $mech->submit_form(
+        fields      => {
+            subject => $subj,
+            message => $mesg,
+
+            disable_bbcode    => "on",
+            disable_smilies   => "on",
+        },
+        button => 'post',
+    );
+
+    #print $mech->content;
+
+    unless ( $mech->content
+        =~ m!<div class="panel" id="message">.+(successfully|href="\./viewtopic\.php\?f=\d+&amp;t=\d+)!is
+        )
+    {
+        ERROR "Failed posting #$i";
+        DEBUG $mech->content;
+        next POST;
+    }
+}

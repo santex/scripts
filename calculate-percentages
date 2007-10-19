@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+
+# given lines that contain number and text, sort and calculate the
+# percentages and optionally only show N lines or until X% has been
+# shown.
+
+use strict;
+use warnings;
+use App::Options (
+    option => {
+        show_only => {
+            description => "Only show N lines",
+            type        => "integer",
+            default     => undef,
+            required    => 0,
+        },
+        sort => {
+            description => "Sort",
+            type        => "boolean",
+            default     => 1,
+            required    => 0,
+        },
+        show_until_pct => {
+            description => "Only show until a certain total percentage has been reached",
+            type        => "float",
+            default     => undef,
+            required    => 0,
+        },
+        show_until_quant => {
+            description => "Only show until a certain total quantity has been reached",
+            type        => "float",
+            default     => undef,
+            required    => 0,
+        },
+    }
+);
+use List::MoreUtils;
+
+my @list;
+my %quant = ();
+my $totquant = 0.0;
+while (<>) {
+    chomp;
+    /^\s*(\d+(?:\.\d+)?)\s+(.+)/ or do { warn "WARN: Bad line: $.: $_\n"; next };
+    $quant{$2} += $1;
+    $totquant += $1;
+    if (!$App::options{sort}) {
+        push @list, $2 unless any { $_ eq $2 } @list;
+    }
+}
+
+if ($App::options{sort}) {
+    @list = sort {$quant{$b} <=> $quant{$a}} keys %quant;
+}
+
+my $fmt = "%10.0f (%5.2f%%) %s\n";
+
+my $i = 0;
+my $runtotquant = 0;
+my $runtotpct = 0;
+for (@list) {
+    my $pct = $totquant > 0 ? $quant{$_}/$totquant*100.0 : 0;
+
+    printf $fmt, $quant{$_}, $pct, $_;
+
+    $i++;
+    $runtotquant += $quant{$_};
+    $runtotpct += $pct;
+
+    last if $App::options{show_only} && $i >= $App::options{show_only};
+    last if $App::options{show_until_pct} && $runtotpct >= $App::options{show_until_pct};
+    last if $App::options{show_until_quant} && $runtotquant >= $App::options{show_until_quant};
+}
+
+print "-------------------------\n";
+printf $fmt, $runtotquant, $runtotpct, "TOTAL";

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+rsync --del -e ssh -Pavz $* \
+  --exclude '*~' --exclude '.svn' \
+  --exclude '/images/avatars/' \
+  /home/steven/proj/mwn/foruminternal/ \
+  mwn@forum.mwn.localdomain:sites/forum.mwn.localdomain/ssl/

@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+# 030321
+
+$secs_re = qr/[+-]?\d+(?:\.\d*)?/;
+$hms_re = qr/\d\d?:\d\d?:\d\d?(?:,\d\d\d)?/;
+
+###
+
+die "Usage: $0 numstart FILE\n" unless @ARGV >= 1;
+$num = shift @ARGV;
+
+$para = "";
+$lines = 1;
+while (1) {
+	$_ = <>;
+	if (/\S/ || $lines <= 2) {
+		s/\015//g;
+		$para .= $_;
+		$lines++;
+	} elsif ($para =~ /\S/) {
+		($no, $hms1, $hms2, $text) = $para =~ /(\d+)\n($hms_re) ---?> ($hms_re)\n(.*)/s or
+			die "FATAL: Invalid entry in line $.: $para\n";
+		print "$num\n$hms1 --> $hms2\n$text\n";
+		$num++;
+		$para = "";
+	} else {
+		$para = "";
+		$lines = 1;
+	}
+	last unless $_;
+}

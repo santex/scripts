@@ -1,0 +1,67 @@
+#!/usr/bin/perl
+
+@ARGV==1 or die "Usage: $0 <pid>\n";
+$pid = $ARGV[0];
+$pid =~ /^\d+$/ or die "FATAL: Invalid PID\n";
+
+open F, "/proc/$pid/stat" or die "FATAL: Can't get stat: $!\n";
+$_ = <F> or die "FATAL: stat is empty\n";
+
+($pid, $comm, $state, $ppid, $pgrp, $session, $tty_nr,
+ $tpgid, $flags, $minflt, $cminflt, $majflt, $cmajflt,
+ $utime, $stime, $cutime, $cstime, $priority, $nice,
+ $O, $itrealvalue, $starttime, $vsize, $rss, $rlim,
+ $startcode, $endcode, $startstack, $kstkesp, $kstkeip, $signal,
+ $blocked, $sigignore, $sigcatch, $wchan, $nswap, $cnswap,
+ $exit_signal, $processor) = 
+
+/^(\d+) \s \((.*)\) \s ([RSDZTW]) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s
+  (-?\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s
+  (\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s
+  (0) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s
+  (\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s
+  (\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s (\d+) \s
+  (\d+) \s (\d+)/x
+
+or die "FATAL: Not match!\n";
+
+print <<_;
+pid = $pid
+comm = $comm
+state = $state
+ppid = $ppid
+pgrp = $pgrp
+session = $session
+tty_nr = $tty_nr
+tpgid = $tpgid
+flags = $flags
+minflt = $minflt
+cminflt = $cminflt
+majflt = $majflt
+cmajflt = $cmajflt
+utime = $utime
+stime = $stime
+cutime = $cutime
+cstime = $cstime
+priority = $priority
+nice = $nice
+itrealvalue = $itrealvalue
+starttime = $starttime # = centisecond after uptime (kayaknya)
+vsize = $vsize # byte
+rss = $rss
+rlim = $rlim
+startcode = $startcode
+endcode = $endcode
+startstack = $startstack
+kstkesp = $kstkesp
+kstkeip = $kstkeip
+signal = $signal
+blocked = $blocked
+sigignore = $sigignore
+sigcatch = $sigcatch
+wchan = $wchan
+nswap = $nswap
+cnswap = $cnswap
+exit_signal = $exit_signal
+processor = $processor
+_

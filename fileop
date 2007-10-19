@@ -1,0 +1,70 @@
+#!/usr/bin/ruby
+
+# 031015
+
+require 'getoptlong'
+
+parser = GetoptLong.new
+parser.set_options(
+  ["-h", "--help", GetoptLong::NO_ARGUMENT],
+  ["-u", "--union", GetoptLong::NO_ARGUMENT],
+  ["-i", "--intersect", GetoptLong::NO_ARGUMENT],
+  ["-s", "--subtract", GetoptLong::NO_ARGUMENT])
+
+mode = nil
+loop do
+  opt, arg = parser.get
+  break if not opt
+  case opt
+    when "-h"
+      puts <<_; exit 0
+DESCRIPTION
+
+  Line oriented file operation.
+  
+USAGE
+
+  fileop -h
+  fileop <-u|-i|-s> file1 file2 ...
+
+OPTIONS
+
+  -h, --help       Show this help
+  -u, --union      Union (show all lines, remove duplicates)
+  -i, --intersect  Intersection (show only common lines)
+  -s, --subtract   Subtraction (show lines in first file not in the rest)
+_
+
+    when "-u": mode = :union
+    when "-i": mode = :intersect
+    when "-s": mode = :subtract
+  end
+end
+
+raise "No mode specified" unless mode
+raise "No files specified" if ARGV.length < 1
+raise "Specify at least 2 files" if ARGV.length==1
+
+contents = []
+ARGV.each do |fn|
+  File.open(fn, "r") do |f|
+    contents.push f.readlines
+  end
+end
+
+case mode
+  when :union
+    result = contents.flatten.uniq
+  when :intersect
+    result = contents[0]
+    contents.each do |c|
+      result = result & c
+    end
+  when :subtract
+    result = contents[0]
+    contents[1..-1].each do |c|
+      result = result - c
+    end
+end
+
+puts result

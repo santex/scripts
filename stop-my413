@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if test -e /home/steven/opt/my413/var/*.pid; then
+  kill `cat /home/steven/opt/my413/var/*.pid`
+fi

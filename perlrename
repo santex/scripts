@@ -1,0 +1,114 @@
+#!/usr/bin/perl
+
+# 20031019 - if in win32, do the globbing ourselves
+# 20031015
+
+use warnings;
+use strict;
+use File::Find;
+use Cwd;
+
+my $VERSION = "0.21";
+
+use Getopt::Std;
+my %_opts;
+getopts('de:fhortvV', \%_opts);
+
+if ($_opts{V}) { print "perlrename version $VERSION\n"; exit 0 }
+if ($_opts{h}) { print <<'USAGE'; exit 0 }
+Synopsis
+
+ perlrename <-e 'code'> file ...
+
+Description
+
+ Rename files using Perl code.
+
+Options
+
+ -e  Specify code to rename file (\$_), e.g. 's/\.old\$/\.bak/'
+ -o  Overwrite (by default, ".1", ".2", and so on will be 
+     appended to avoid overwriting existing files.
+ -v  Verbose
+ -t  Only test compile code, do not run it on the arguments
+ -d  Dry-run (implies -v)
+ -h  Show this help
+ -f  Only process files, do not process directories
+ -r  Recursive
+ -V  Print version and exit
+
+Examples
+
+ # rename 200210.mbox to 2002-10.mbox
+ perlrename -e 's/(\d\d\d\d)(\d\d)\.mbox/$1-$2.mbox/' [0-9]*.mbox
+
+USAGE
+
+die "FATAL: Code (-e) not specified, use -h for help\n" unless $_opts{e};
+$_opts{v} = 1 if $_opts{d};
+
+no strict; $_ = "DUMMY"; eval $_opts{e}; use strict;
+die "FATAL: Code (-e) does not compile: $@\n" if $@;
+exit 0 if $_opts{t};
+
+my @_items = ();
+
+if ($^O =~ /win32/i) {
+  for (@ARGV) {
+    if (/[*?]/) { push @_items, glob $_ } else { push @_items, $_ }
+  }
+} else {
+  push @_items, @ARGV;
+}
+
+my %_n = ();
+process_items(@_items);
+
+sub process_items {
+  my @items = @_;
+  for my $item (@items) {
+    if (-d $item) {
+      next if $_opts{f};
+      if ($_opts{r}) {
+        my $cwd = getcwd();
+        if (chdir $item) {
+          print "INFO: chdir `$cwd/$item' ...\n" if $_opts{v};
+          local *D;
+          opendir D, ".";
+          my @d = grep { $_ ne '.' && $_ ne '..' } readdir D;
+          closedir D;
+          process_items(@d);
+          chdir $cwd or die "FATAL: Can't go back to `$cwd': $!\n";
+        } else {
+          warn "WARN: Can't chdir to `$cwd/$item', skipped\n";
+        }
+      }
+    }
+    process_item($item);
+  }
+}
+
+sub process_item {
+  my ($_filename) = @_;
+  local $_ = $_filename;
+
+  my $_old = $_filename;
+  no strict; eval $_opts{e}; use strict;
+  my $_new = $_;
+
+  return if $_old eq $_new;
+
+  my $_cwd = getcwd();
+  unless ($_opts{o}) {
+    my $_i = 1;
+    while (1) {
+      if ((-e $_new) || exists $_n{"$_cwd/$_new"}) { $_new = "$_.$_i"; $_i++ } else { last }
+    }
+    $_n{"$_cwd/$_new"}++;
+  }
+  print "INFO: $_old -> $_new\n" if $_opts{v};
+  unless ($_opts{d}) {
+    my $_res = rename $_old, $_new;
+    warn "ERROR: failed renaming $_old -> $_new\n" unless $_res;
+  }
+}

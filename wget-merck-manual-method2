@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# pertama ambil dulu merck.com-nya
+wgetr www.merck.com/mrkshared/mmanual/sections.jsp
+
+# lalu ekstrak url akamainya, baru ambil terpisah
+perl -MFile::Find -e'$/=undef;
+  find sub {return unless -f;return unless /\.(jsp|html)/;
+  open F,$_; $x=<F>;
+  print "$1\n" while ($x=~m#(http://\S+?akamai\S+?)["\s]#g)}, "."' | sort | uniq >urls.txt
+
+wget -x -i urls.txt
+

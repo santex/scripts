@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+# jalankan skrip ini di direktori yg berisi movie files, image files,
+# dan imdb.url berisi URL ke IMDB movie page.
+
+use strict;
+use URI::Escape;
+use HTML::Entities;
+use Cwd;
+use Log::Log4perl qw(:easy);
+use App::Options (
+  option => {
+    overwrite => {
+      description => "overwrite index.html if already exists",
+      type => "boolean",
+      default => 0,
+    },
+    log_level => {
+      description => "log level",
+      type => "string",
+      required => 1,
+      default => "info",
+    },
+  }
+);
+
+my $log_level;
+my $l = $App::options{log_level};
+if    ($l eq 'fatal') { $log_level = $FATAL }
+elsif ($l eq 'error') { $log_level = $ERROR }
+elsif ($l eq 'warn' ) { $log_level = $WARN  }
+elsif ($l eq 'info' ) { $log_level = $INFO  }
+elsif ($l eq 'debug') { $log_level = $DEBUG }
+else  { die "FATAL: Unknown log level: $l. Use one of: fatal, error, warn, info, debug'\n" }
+Log::Log4perl->easy_init($log_level);
+
+if ((-f "index.html") && !$App::options{overwrite}) {
+  WARN "index.html already exists, aborting ...";
+  exit 0;
+}
+
+my $imdb_url = "";
+if (-f "imdb.url") {
+  open F, "imdb.url"; $imdb_url = <F>; chomp($imdb_url);
+  DEBUG "IMDB URL = $imdb_url";
+  if (-f "imdb.html") {
+    INFO "IMDB page already exists";
+  } else {
+    INFO "Fetching IMDB page ...";
+    system "wget -O imdb.html -i imdb.url";
+  }
+
+  unless (-f "imdb.html") {
+    FATAL "Can't read imdb.html, aborting ...";
+    exit 1;
+  }
+}
+my $imdb_page = "";
+if (open F, "imdb.html") { $imdb_page = join "", <F> }
+
+INFO "Generating index.html ...";
+open HTML, ">index.html";
+
+my $dirname = getcwd; $dirname =~ s!.+/!!;
+my ($title) = $imdb_page =~ m!<title>(.+?)</title>!; $title ||= $dirname;
+print HTML sprintf "<title>%s</title><h1>%s</h1>",
+  encode_entities($title),
+  encode_entities($title);
+
+my @image_files = grep { /\.(jpe?g|gif|png)$/i } <*>;
+my @movie_files = grep { /\.(mpe?g|avi|rmvb|rm|divx|xvid)$/i } <*>;
+my @subtt_files = grep { /\.(srt|sub)$/i } <*>;
+
+print HTML sprintf "<p><b>IMDB page</b>: <a href=\"%s\">%s</a> %s</p>\n",
+  $imdb_url,
+  encode_entities($imdb_url),
+  ((-f "imdb.html") ? "(<a href=imdb.html>local cache</a>)" : "");
+print HTML "</p>\n";
+
+my ($g) = $imdb_page =~ m!<h5>Genre:</h5>\s*(.+?)</div!s; $g ||= "";
+my @g; while ($g =~ m!>(.+?)</a>!g) { my $s = $1; push @g, $s unless $s =~ /\(?more\)?/ }
+if (@g) {
+  print HTML sprintf "<p><b>Genre</b>: %s</p>\n",
+    encode_entities(join ", ", @g);
+}
+
+my ($rating, $num_votes) = $imdb_page =~ m!^<b>([0-9.]+/[0-9.]+)</b>.+?([0-9,]+ votes?)!m;
+if ($rating) {
+  print HTML sprintf "<p><b>Rating</b>: %s (%s)</p>\n",
+    $rating, $num_votes;
+}
+
+my ($plot) = $imdb_page =~ m!<h5>Plot (?:Outline|Summary):</h5>\s*(.+?)<(?:/div|a\s)!s;
+DEBUG "Plot = $plot";
+if ($plot) {
+  print HTML sprintf "<p><b>Plot outline</b>: %s</p>\n",
+    encode_entities($plot);
+}
+
+print HTML "<p><b>Images</b>:<br>\n";
+for (@image_files) {
+  print HTML sprintf "<a href=\"%s\"><img border=0 width=120 src=\"%s\"></a> ",
+    uri_escape($_),
+    uri_escape($_),
+    encode_entities($_);
+}
+print HTML "</p>\n";
+
+print HTML "<p><b>Video files</b>:\n<ul>\n";
+for (@movie_files) {
+  print HTML sprintf "<li><a href=\"%s\">%s</a>",
+    uri_escape($_),
+    encode_entities($_);
+}
+print HTML "</ul></p>\n";
+
+print HTML "<p><b>Subtitles</b>:\n<ul>\n";
+for (@subtt_files) {
+  print HTML sprintf "<li><a href=\"%s\">%s</a>",
+    uri_escape($_),
+    encode_entities($_);
+}
+print HTML "</ul></p>\n";

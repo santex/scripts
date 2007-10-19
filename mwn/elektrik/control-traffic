@@ -1,0 +1,55 @@
+#!/usr/bin/perl -w
+
+use strict;
+use FindBin '$Bin';
+
+my $turn_off = !$ARGV[0];
+
+system qq[iptables -F FORWARD];
+
+exit if $turn_off;
+
+
+# perbolehkan outgoing dari host2x tertentu
+my @hosts;
+push @hosts, 'builder.localdomain'; # testing
+#push @hosts, 'helpdesk1.localdomain'; # utk upload by ftp bagi klien yg numpang, di resepsionis cyber9
+system qq[iptables -A FORWARD -s $_ -j ACCEPT] for @hosts;
+
+# perbolehkan akses ke server2x hosting mwn (utk FTP, karena spt webdev masih butuh plain FTP, karena FTP over ssh2 belum didukung dreamweaver)
+open F, "$Bin/../etc/mwn-hosting-servers-ip.txt";
+while (<F>) {
+    chomp;
+    /^\d+\.\d+\.\d+\.\d+$/ or next;
+    system qq[iptables -A FORWARD -d $_ -j ACCEPT];
+}
+close F;
+
+# perbolehkan ym: server2x yahoo messenger a.l. scs.msg.yahoo.com, *.msg.dcn.yahoo.com
+system qq[iptables -A FORWARD -d 216.155.193.0/24 -p tcp --dport 5050 -j ACCEPT];
+
+# perbolehkan gtalk: which is jabber (port 5222)
+system qq[iptables -A FORWARD -d talk.google.com -p tcp --dport 5222 -j ACCEPT];
+
+# perbolehkan msn
+system qq[iptables -A FORWARD -d messenger.hotmail.com -p tcp --dport 1863 -j ACCEPT];
+
+# perbolehkan utk refill enom/directi
+system qq[iptables -A FORWARD -d 52.masterwebnet.com -p tcp --dport 1025 -j ACCEPT];
+system qq[iptables -A FORWARD -d 23.masterwebnet.com -p tcp --dport 8082 -j ACCEPT];
+
+# webdev, perlu ftp ke mesin2x ini - 2007-09-25
+#my @ftphosts = qw(219.83.122.87 202.78.201.75);
+#system qq[iptables -A FORWARD -d $_ -j ACCEPT] for @ftphosts;
+
+# dudi, streaming radio elshinta - 2007-09-25
+system qq[iptables -A FORWARD -d 202.158.49.136 -p tcp --dport 1755 -j ACCEPT];
+
+# possible future allows: other IM, ip telephony, spread, ...
+
+
+# forbid semua high port ke luar jaringan
+system qq[iptables -A FORWARD -d '!' 192.168.0.0/24 -p tcp --dport 1024: -j REJECT];
+system qq[iptables -A FORWARD -d '!' 192.168.0.0/24 -p udp --dport 1024: -j REJECT];
+
+__END__

@@ -1,0 +1,6 @@
+#!/usr/bin/perl
+$|++;
+while (<>) {
+  s/^(\d+\.?\d*)(\s)/scalar(localtime $1) . $2/e;
+  print;
+}

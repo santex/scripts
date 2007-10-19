@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/home/steven/opt/pg743/bin/postmaster -p 5433 2>&1 | tai64n | tai64nlocal >> /home/steven/var/log/pgsql/postmaster.log &
