@@ -1,0 +1,2 @@
+#!/bin/bash
+perlrename -e '$i||=0; $i++ unless $TESTING; /.+\.(.+)/; $ext=$1; $_ = $i . (defined($ext) ? ".$ext" : "")' "$@"
