@@ -47,7 +47,7 @@ USAGE
 die "FATAL: Code (-e) not specified, use -h for help\n" unless $_opts{e};
 $_opts{v} = 1 if $_opts{d};
 
-no strict; $_ = "DUMMY"; eval $_opts{e}; use strict;
+no strict; $_ = "DUMMY"; $TESTING = 1; eval $_opts{e}; use strict;
 die "FATAL: Code (-e) does not compile: $@\n" if $@;
 exit 0 if $_opts{t};
 
@@ -93,7 +93,7 @@ sub process_item {
   local $_ = $_filename;
 
   my $_old = $_filename;
-  no strict; eval $_opts{e}; use strict;
+  no strict; $TESTING = 0; eval $_opts{e}; use strict;
   my $_new = $_;
 
   return if $_old eq $_new;
