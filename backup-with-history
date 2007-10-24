@@ -15,6 +15,12 @@ use App::Options (
             default     => "-7,4,3",
             required    => 0,
         },
+        nolink => {
+            description => "Don't do rsync's --link-dest, e.g. when dest doesn't support hardlinks (e.g. sshfs)",
+            type        => "bool",
+            default     => 0,
+            required    => 0,
+        },
     }
 );
 use Cwd qw(abs_path);
@@ -47,10 +53,13 @@ system "mkdir -p " . esc("$dst/current");
 # do it!
 print "Membuat backup terbaru $src ke $dst/ ...\n";
 system "nice -n19 rsync $App::options{rsync_opts} -av --del --force "
-    . "--link-dest "
-    . esc( abs_path("$dst") . "/current" ) . " "
+    . (
+    $App::options{nolink}
+    ? ""
+    : "--link-dest " . esc( abs_path("$dst") . "/current" ) . " "
+    )
     . esc("$src/") . " "
-    . esc("$dst/.work/") . "\n";
+    . esc("$dst/.work/");
 warn "Perintah rsync tidak sukses, sebaiknya Anda periksa\n" if $?;
 
 chdir($dst) or die "Tidak bisa chdir ke $dst: $!\n";
