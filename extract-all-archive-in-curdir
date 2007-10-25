@@ -66,6 +66,7 @@ my %archives = (
     tar => { re => qr/\.(tar)$/i,                cmd => 'tar xf' },
     tgz => { re => qr/\.(tgz|tar\.gz)$/i,        cmd => 'tar xfz' },
     tbz => { re => qr/\.(tbz2?|tb2|tar\.bz2)$/i, cmd => 'tar xfj' },
+    ace => { re => qr/\.(ace)$/i,                cmd => 'unace x' },
 );
 
 my $cwd = getcwd;
