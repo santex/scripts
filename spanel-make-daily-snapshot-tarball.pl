@@ -23,7 +23,7 @@ my $targetp = "$TARGET_DIR/$targetn";
 #   bzr checkout . $targetp/ && \
 #   cd $TARGET_DIR && rm -rf .bzr && \
 
-system qq(rsync -a --del --exclude '*~' --exclude '.bzr' $PROJ_DIR/ $targetp/ && \
+system qq(rsync -a --del --exclude '*~' --exclude '.bzr' --delete-excluded $PROJ_DIR/ $targetp/ && \
   cd $TARGET_DIR && \
   rm -f $targetn.tar.gz && \
   tar cfz $targetn.tar.gz $targetn && \
