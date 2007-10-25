@@ -16,7 +16,7 @@ my $timestamp = strftime "%Y%m%d", localtime;
 my $targetn = "spanel-$Spanel::VERSION-$timestamp";
 my $targetp = "$TARGET_DIR/$targetn";
 
-system qq(rsync -a --del --exclude '*~' --exclude '.svn' $PROJ_DIR/ $targetp/ && \
+system qq(rsync -a --del --exclude '*~' --exclude '.bzr' $PROJ_DIR/ $targetp/ && \
   cd $TARGET_DIR && \
   rm -f $targetn.tar.gz && \
   tar cfz $targetn.tar.gz $targetn && \
