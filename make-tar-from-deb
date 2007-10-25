@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ "$1" == "" ]; then echo "Usage: $0 <nama paket>"; exit 1; fi
+
+dpkg -s $1 >/dev/null 2>/dev/null
+
+if [ "$?" == "1" ]; then echo "Error: Paket '$0' tidak terinstal"; exit 1; fi
+
+dpkg -L $1 | perl -lne'print if -f' | tar cf $1.tar --files-from - -P

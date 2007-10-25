@@ -21,6 +21,12 @@ use App::Options (
             default     => 0,
             required    => 0,
         },
+        nobackup => {
+            description => "Don't do backup, just do the history rotation",
+            type        => "bool",
+            default     => 0,
+            required    => 0,
+        },
     }
 );
 use Cwd qw(abs_path);
@@ -46,30 +52,37 @@ $hist_levels = [split /,\s*/, $App::options{hist_levels}];
 @ARGV == 2 or die "Usage: $0 <src> <dest>\n";
 my ( $src, $dst ) = @ARGV;
 for ( $src, $dst ) {s!/$!!}
-( -d $src ) or die "Src haruslah direktori yang sudah ada: $src\n";
+unless ($App::options{nobackup}) {
+    ( -d $src ) or die "Src haruslah direktori yang sudah ada: $src\n";
+}
 system "mkdir -p " . esc("$dst/current");
 ( -d "$dst/current" ) or die "Gagal membuat creating $dst/current\n";
 
-# do it!
-print "Membuat backup terbaru $src ke $dst/ ...\n";
-system "nice -n19 rsync $App::options{rsync_opts} -av --del --force "
-    . (
-    $App::options{nolink}
-    ? ""
-    : "--link-dest " . esc( abs_path("$dst") . "/current" ) . " "
-    )
-    . esc("$src/") . " "
-    . esc("$dst/.work/");
-warn "Perintah rsync tidak sukses, sebaiknya Anda periksa\n" if $?;
+# do backup!
+unless ( $App::options{nobackup} ) {
+    print "Membuat backup terbaru $src ke $dst/ ...\n";
+    system "nice -n19 rsync $App::options{rsync_opts} -av --del --force "
+        . (
+        $App::options{nolink}
+        ? ""
+        : "--link-dest " . esc( abs_path("$dst") . "/current" ) . " "
+        )
+        . esc("$src/") . " "
+        . esc("$dst/.work/") . "\n";
+    warn "Perintah rsync tidak sukses, sebaiknya Anda periksa\n" if $?;
+}
 
 chdir($dst) or die "Tidak bisa chdir ke $dst: $!\n";
-system "touch .current.timestamp";
-my $now = time;
-my @st  = stat(".current.timestamp");
-my $tstamp
-    = POSIX::strftime( "%Y-%m-%d\@%H:%M:%S+00", gmtime( $st[9] || $now ) );
-rmdir "current" or rename "current", "hist.$tstamp";
-rename ".work", "current";
+
+my $now    = time;
+unless ( $App::options{nobackup} ) {
+    system "touch .current.timestamp";
+    my @st     = stat(".current.timestamp");
+    my $tstamp = POSIX::strftime( "%Y-%m-%d\@%H:%M:%S+00",
+        gmtime( $st[9] || $now ) );
+    rmdir "current" or rename "current", "hist.$tstamp";
+    rename ".work", "current";
+}
 
 print "Menghapus histori backup yang sudah terlalu lama ...\n";
 for my $level ( 1 .. @$hist_levels ) {
