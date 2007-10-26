@@ -16,14 +16,10 @@ my $timestamp = strftime "%Y%m%d", localtime;
 my $targetn = "spanel-$Spanel::VERSION-$timestamp";
 my $targetp = "$TARGET_DIR/$targetn";
 
-# this would be more appropriate as it excludes uncommited changes,
-# but it's slooow. so we'll still use rsync for now:
-#
-#   chdir $PROJ_DIR or die "FATAL: Can't chdir to `$PROJ_DIR': $!\n";
-#   bzr checkout . $targetp/ && \
-#   cd $TARGET_DIR && rm -rf .bzr && \
+chdir $PROJ_DIR or die "FATAL: Can't chdir to `$PROJ_DIR': $!\n";
 
-system qq(rsync -a --del --exclude '*~' --exclude '.bzr' --delete-excluded $PROJ_DIR/ $targetp/ && \
+system qq(
+  bzr export $targetp && \
   cd $TARGET_DIR && \
   rm -f $targetn.tar.gz && \
   tar cfz $targetn.tar.gz $targetn && \
