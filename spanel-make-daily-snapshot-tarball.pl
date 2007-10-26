@@ -12,14 +12,17 @@ BEGIN {
 use lib "$PROJ_DIR/lib/perl";
 use Spanel;
 
-my $timestamp = strftime "%Y%m%d", localtime;
-my $targetn = "spanel-$Spanel::VERSION-$timestamp";
-my $targetp = "$TARGET_DIR/$targetn";
-
 chdir $PROJ_DIR or die "FATAL: Can't chdir to `$PROJ_DIR': $!\n";
 
-system qq(
-  bzr export $targetp && \
+my $rev = `bzr log -r -1 --line | cut -d: -f1`;
+$rev > 0 or die "FATAL: Can't get revision number\n";
+chomp($rev);
+
+my $timestamp = strftime "%Y%m%d", localtime;
+my $targetn = "spanel-$Spanel::VERSION-$timestamp-r$rev";
+my $targetp = "$TARGET_DIR/$targetn";
+
+system qq(bzr export $targetp && \
   cd $TARGET_DIR && \
   rm -f $targetn.tar.gz && \
   tar cfz $targetn.tar.gz $targetn && \
