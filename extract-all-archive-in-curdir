@@ -44,6 +44,8 @@ Options:
                 Default is verbose.
  --debug        Set verbosity level to debug.
  --verbose      Set verbosity level to verbose.
+
+ --delete       Delete archive after extraction.
 EOF
     exit 0;
 }
