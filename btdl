@@ -21,6 +21,18 @@ GetOptions(
 
 my @fail = ();
 
+my $PROGRAM;
+SEARCH: for (qw(btdownloadcurses bittorrent-curses)) {
+    for my $dir (split /:/, $ENV{PATH}) {
+        #print "Checking $dir/$_ ...\n";
+        if (-x "$dir/$_") {
+            $PROGRAM = "$dir/$_";
+            last SEARCH;
+        }
+    }
+}
+die "Can't find bittorrent-curses program, aborting\n" unless $PROGRAM;
+
 FILE: for my $file (@ARGV) {
   (-e $file) or do { push @fail, "$file: file doesn't exist\n"; next FILE };
   (-f $file) or do { push @fail, "$file: is not a file\n"; next FILE };
@@ -34,7 +46,7 @@ FILE: for my $file (@ARGV) {
   (-d $dir) or mkdir $dir, 0755;
   (-d $dir) or do { push @fail, "$file: can't mkdir $dir: $!\n"; next FILE };
   chdir $dir or do { push @fail, "$file: can't chdir $dir: $!\n"; next FILE };
-  system "ulimit -v 600000; btdownloadcurses --max_uploads 2 --max_upload_rate $opt{upload_speed} ".escapeshellarg($url);
+  system "ulimit -v 600000; $PROGRAM --max_uploads 2 --max_upload_rate $opt{upload_speed} ".escapeshellarg($url);
   chdir "..";
 
   PROMPT: while (1) {
