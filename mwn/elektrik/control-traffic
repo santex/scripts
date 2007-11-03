@@ -20,7 +20,9 @@ system qq[iptables -A FORWARD -s $_ -j ACCEPT] for @hosts;
 open F, "$Bin/../etc/mwn-hosting-servers-ip.txt";
 while (<F>) {
     chomp;
-    /^\d+\.\d+\.\d+\.\d+$/ or next;
+    next unless /\S/;
+    next if /^#/;
+    /(\d+\.\d+\.\d+\.\d+)/ or next;
     system qq[iptables -A FORWARD -d $_ -j ACCEPT];
 }
 close F;
