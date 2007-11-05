@@ -68,12 +68,12 @@ for (@ARGV) {
   
   print "+ $_ -> $dir\n";
   print "  + making sure line ending is unix-style...\n";
-  system "/home/steven/bin/fromdos.pl $_";
+  system "'from-dos!' $_";
   die "    failed ($?)\n" if $?;
 
   unless ($preserve_delivery) {
     print "  + removing delivery headers from $_...\n";
-    system "/home/steven/bin/strip-delivery-headers.pl $_";
+    system "'strip-delivery-headers!' $_";
     die "    failed ($?)\n" if $?;
   }
 
@@ -85,11 +85,11 @@ for (@ARGV) {
   }
 
   print "  + disabling X-No-Archive headers...\n";
-  system "/home/steven/bin/disable-no-archive.pl $_";
+  system "'disable-no-archive!' $_";
   die "    failed ($?)\n" if $?;
 
   print "  + inserting random Message-ID header to messages that lack one...\n";
-  system "/home/steven/bin/insert-random-message-ids.pl $_";
+  system "'insert-random-message-ids!' $_";
   die "    failed ($?)\n" if $?;
   unless (-d $dir) {mkdir $dir,0755 or do{warn "\n=====cant mkdir $dir, skipped=====\n\n";next}}
 
@@ -111,19 +111,19 @@ for (@ARGV) {
   
   unless ($nocontrive) {
     print "  + contriving <title>s...\n";
-    system "find -maxdepth 1 -name \x27[0-9]*.html\x27 | xargs -n 1000 /home/steven/bin/contrive-hypermail-message-subject.pl";
+    system "find -maxdepth 1 -name \x27[0-9]*.html\x27 | xargs -n 1000 'contrive-hypermail-message-subject!'";
     die "    failed ($?)\n" if $?;
   }
   
   unless ($nohhc) {
     print "  + removing things that might crash html help compiler...\n";
-    system "find -maxdepth 1 -name \x27[0-9]*.html\x27 | xargs -n 1000 /home/steven/bin/remove-hhc-crasher.pl";
+    system "find -maxdepth 1 -name \x27[0-9]*.html\x27 | xargs -n 1000 'remove-hhc-crasher!'";
     die "    failed ($?)\n" if $?;
   }
   
   unless ($nohide) {
     print "  + hiding email addresses...\n";
-    system "find -maxdepth 1 -name \x27*.html\x27 | xargs -n 1000 /home/steven/bin/hide-email-domains.pl";
+    system "find -maxdepth 1 -name \x27*.html\x27 | xargs -n 1000 'hide-email-domains!'";
     die "    failed ($?)\n" if $?;
   }
 
