@@ -27,6 +27,9 @@ while (<F>) {
 }
 close F;
 
+# note: jika A records dari sebuah hostname lebih dari satu, udah
+# otomatis akan dimasukkin semuanya kok oleh iptables.
+
 # perbolehkan ym: server2x yahoo messenger a.l. scs.msg.yahoo.com, *.msg.dcn.yahoo.com
 system qq[iptables -A FORWARD -d 216.155.193.0/24 -p tcp --dport 5050 -j ACCEPT];
 
@@ -35,6 +38,9 @@ system qq[iptables -A FORWARD -d talk.google.com -p tcp --dport 5222 -j ACCEPT];
 
 # perbolehkan msn
 system qq[iptables -A FORWARD -d messenger.hotmail.com -p tcp --dport 1863 -j ACCEPT];
+
+# smtp (ssl) ke gmail
+system qq[iptables -A FORWARD -d smtp.gmail.com -p tcp --dport 1863 -j ACCEPT];
 
 # perbolehkan utk refill enom/directi
 system qq[iptables -A FORWARD -d 52.masterwebnet.com -p tcp --dport 1025 -j ACCEPT];
