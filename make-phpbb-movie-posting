@@ -53,9 +53,10 @@ print "$dirname\n\n";
 print sprintf "[b]%s[/b]\n\n",
   encode_entities($title);
 
-my @image_files = grep { /\.(jpe?g|gif|png)$/i } <*>;
-my @movie_files = grep { /\.(mpe?g|avi|rmvb|rm|divx|xvid)$/i } <*>;
-my @subtt_files = grep { /\.(srt|sub)$/i } <*>;
+my @all_files   = grep { -f } <*>;
+my @image_files = grep { /\.(jpe?g|gif|png)$/i } @all_files;
+my @movie_files = grep { /\.(mpe?g|avi|rmvb|rm|divx|xvid)$/i } @all_files;
+my @subtt_files = grep { /\.(srt|sub)$/i } @all_files;
 
 print sprintf "[b]IMDB page[/b]: [url]%s[/url] %s",
   $imdb_url,
@@ -102,6 +103,15 @@ print "\n";
 
 print "[b]Subtitles[/b]:\n\n";
 for (@subtt_files) {
+  print sprintf "* [url]%s/%s/%s[/url]\n",
+    $App::options{website_url},
+    uri_escape($dirname),
+    uri_escape($_);
+}
+print "\n";
+
+print "[b]All files[/b]:\n\n";
+for (@all_files) {
   print sprintf "* [url]%s/%s/%s[/url]\n",
     $App::options{website_url},
     uri_escape($dirname),

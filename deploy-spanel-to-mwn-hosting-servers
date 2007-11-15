@@ -1,0 +1,3 @@
+#!/bin/bash
+deploy-spanel --has mwn --has hosting --lack intranet --lack demo "$@"
+

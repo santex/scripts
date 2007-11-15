@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+
+system "remove-cnxp-crud-from-filename *";
+
+# try to create imdb.url
+
+unless (-e "imdb.url") {
+    if (<*.txt>) {
+        system "extract-urls-from-text *.txt | grep imdb.com/title/tt > imdb.url";
+        unlink "imdb.url" unless (-s "imdb.url");
+    }
+}
+
+# delete useless files which are small txt and html files usually
+# containing only links to websites.
+
+unlink grep { $_ ne "imdb.url" } <*.url>;
+system "find -size 1k -name '*.htm*' -exec rm {} \;";
+system "find -size 1k -name '*.txt' -exec rm {} \;";
+system "rm -f *.nfo *.sfv";

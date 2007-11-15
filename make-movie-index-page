@@ -67,9 +67,10 @@ print HTML sprintf "<title>%s</title><h1>%s</h1>",
   encode_entities($title),
   encode_entities($title);
 
-my @image_files = grep { /\.(jpe?g|gif|png)$/i } <*>;
-my @movie_files = grep { /\.(mpe?g|avi|rmvb|rm|divx|xvid)$/i } <*>;
-my @subtt_files = grep { /\.(srt|sub)$/i } <*>;
+my @all_files   = grep { -f } <*>;
+my @image_files = grep { /\.(jpe?g|gif|png)$/i } @all_files;
+my @movie_files = grep { /\.(mpe?g|avi|rmvb|rm|divx|xvid)$/i } @all_files;
+my @subtt_files = grep { /\.(srt|sub)$/i } @all_files;
 
 print HTML sprintf "<p><b>IMDB page</b>: <a href=\"%s\">%s</a> %s</p>\n",
   $imdb_url,
@@ -121,3 +122,12 @@ for (@subtt_files) {
     encode_entities($_);
 }
 print HTML "</ul></p>\n";
+
+print HTML "<p><b>All files</b>:\n<ul>\n";
+for (@all_files) {
+  print HTML sprintf "<li><a href=\"%s\">%s</a>",
+    uri_escape($_),
+    encode_entities($_);
+}
+print HTML "</ul></p>\n";
+

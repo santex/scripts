@@ -1,2 +1,2 @@
 #!/bin/sh
-xchm /u/archive/public/fdoc/m/mysql/manual/5.0/refman-5.0-en.chm
+kchmviewer /u/archive/public/fdoc/m/mysql/manual/5.0/refman-5.0-en.chm
