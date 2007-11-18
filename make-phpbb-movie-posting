@@ -118,3 +118,6 @@ for (@all_files) {
     uri_escape($_);
 }
 print "\n";
+
+print "[url=$App::options{website_url}]", $App::options{website_url}, "[/url]\n";
+

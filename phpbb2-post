@@ -1,0 +1,115 @@
+#!/usr/bin/perl -w
+
+# this script accepts input in the form of email and post it to a phpbb2 forum
+# website. the post subject will be taken from email header Subject.
+
+# usage: phpbb2-post [options] email1 email2 ...
+#        phpbb2-post [options] - ...
+
+# options can be put in config file or specified on the command line.
+
+use strict;
+use Cwd;
+use File::Slurp;
+use Log::Log4perl qw(:easy);
+use Mail::Internet;
+use WWW::Mechanize;
+use App::Options (
+    option => {
+        profile => { type => 'string', required => 0, default => 'default', },
+        username => { type => 'string', required => 1, },
+        password => { type => 'string', required => 1, },
+        base_url => { type => 'string', required => 1, },
+        forum_id => { type => 'string', required => 1, },
+
+        delay => { type => 'int', required => 0, default => 4, },
+
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+    },
+);
+
+if ( $App::options{log_level} eq 'FATAL' ) {
+    Log::Log4perl->easy_init($FATAL);
+}
+elsif ( $App::options{log_level} eq 'ERROR' ) {
+    Log::Log4perl->easy_init($ERROR);
+}
+elsif ( $App::options{log_level} eq 'WARN' ) {
+    Log::Log4perl->easy_init($WARN);
+}
+elsif ( $App::options{log_level} eq 'INFO' ) {
+    Log::Log4perl->easy_init($INFO);
+}
+else { Log::Log4perl->easy_init($DEBUG) }
+
+# tadinya mau pakai plugin phpBB, tapi gagal login mulu. kayaknya
+# gara2x gak specify 'button' di submit_form. ya udah, sementara pake
+# Mech mentah aja.
+
+# cek argumen
+unless (@ARGV) {
+    print <<_;
+Usage: $0 [options] email1 email2 ...
+       $0 [options] -
+_
+    exit 1;
+}
+
+my $mech = new WWW::Mechanize;
+
+$mech->get("$App::options{base_url}/login.php");
+$mech->submit_form(
+    form_number => 1,
+    fields      => {
+        username => $App::options{username},
+        password => $App::options{password},
+    },
+    button => 'login',
+);
+
+#print $mech->content();
+
+my $orig_dir = getcwd();
+
+my $i = 0;
+POST: for my $file (@ARGV) {
+    sleep $App::options{delay} if $i++;
+
+    # get new posting form
+    $mech->get(
+        "$App::options{base_url}/posting.php?mode=newtopic&f=$App::options{forum_id}"
+    );
+
+    my $file_content = $file eq '-' ? [<STDIN>] : read_file($file, array_ref => 1);
+    my $obj = Mail::Internet->new($file_content);
+    if ( !$obj ) {
+        ERROR "Can't parse posting #$i, skipped";
+        next POST;
+    }
+    my $subj = $obj->head->get("Subject") || "(no subject)";
+    $subj =~ s/\n//g;
+    my $mesg = ($obj->body ? join("", @{ $obj->body }) : "(no message)");
+    $mesg =~ s/[\x80-\xff]/_/g; # XXX can't handle accented character right now
+
+    # submit it
+    INFO "Posting #$i ...";
+
+    #DEBUG "posting = $posting";
+    $mech->submit_form(
+        form_number => 1,
+        fields      => {
+            subject         => $subj,
+            message         => $mesg,
+            disable_html    => "on",
+            disable_bbcode  => undef,
+            disable_smilies => "on",
+        },
+        button => 'post',
+    );
+
+    #print $mech->content;
+
+    unless ( $mech->content =~ /successfully/i ) {
+        ERROR "Failed posting #$i!";
+    }
+}

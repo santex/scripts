@@ -10,5 +10,5 @@ chdir $dir;
 
 for (@urls) {
     chomp;
-    system qq(wget -p "$_");
+    system qq(wget -q -p "$_");
 }

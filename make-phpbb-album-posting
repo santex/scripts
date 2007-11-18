@@ -1,0 +1,74 @@
+#!/usr/bin/perl
+
+# jalankan skrip ini di direktori yg berisi album files.
+
+use strict;
+use URI::Escape;
+use HTML::Entities;
+use Cwd;
+use Log::Log4perl qw(:easy);
+use App::Options (
+  option => {
+    website_url => {
+      description => "download audio URL",
+      type => "string",
+      default => "http://steven.hosting.localdomain/download/audio",
+    },
+    log_level => {
+      description => "log level",
+      type => "string",
+      required => 1,
+      default => "info",
+    },
+  }
+);
+
+my $log_level;
+my $l = $App::options{log_level};
+if    ($l eq 'fatal') { $log_level = $FATAL }
+elsif ($l eq 'error') { $log_level = $ERROR }
+elsif ($l eq 'warn' ) { $log_level = $WARN  }
+elsif ($l eq 'info' ) { $log_level = $INFO  }
+elsif ($l eq 'debug') { $log_level = $DEBUG }
+else  { die "FATAL: Unknown log level: $l. Use one of: fatal, error, warn, info, debug'\n" }
+Log::Log4perl->easy_init($log_level);
+
+my $dirname = getcwd; $dirname =~ s!.+/!!;
+my ($title) = $dirname;
+print "$dirname\n\n";
+print sprintf "[b]%s[/b]\n\n",
+  encode_entities($title);
+
+my @all_files   = grep { -f } <*>;
+my @image_files = grep { /\.(jpe?g|gif|png)$/i } @all_files;
+my @music_files = grep { /\.(mp[34]|flv|flac|ogg|wma|rm)$/i } @all_files;
+
+print "[b]Images:[/b]\n\n";
+for (@image_files) {
+  print sprintf "[img]%s/%s/%s[/img]\n",
+    $App::options{website_url},
+    uri_escape($dirname),
+    uri_escape($_);
+}
+print "\n\n";
+
+print "[b]Music files[/b]:\n\n";
+for (@music_files) {
+  print sprintf "* [url]%s/%s/%s[/url]\n",
+    $App::options{website_url},
+    uri_escape($dirname),
+    uri_escape($_);
+}
+print "\n";
+
+print "[b]All files[/b]:\n\n";
+for (@all_files) {
+  print sprintf "* [url]%s/%s/%s[/url]\n",
+    $App::options{website_url},
+    uri_escape($dirname),
+    uri_escape($_);
+}
+print "\n";
+
+print "[url=$App::options{website_url}]", $App::options{website_url}, "[/url]\n";
+

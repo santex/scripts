@@ -5,10 +5,13 @@ PATH=/usr/local/bin:/usr/bin:/bin:$BINDIR
 
 #tempfile1=`tempfile`
 tempfile1=/tmp/as9d90xciosd
-dialog --menu "menu tesu" 8 40 3 \
+dialog --menu "menu tesu" 12 40 5 \
   1 "pakai koneksi dtp" \
   2 "pakai koneksi dtp + s23" \
-  3 "pakai koneksi dtp + s27" 2> $tempfile1
+  3 "pakai koneksi dtp + s27" \
+  4 "restart bind (name server)" \
+  5 "restart squid (proxy server)" \
+  2> $tempfile1
 
 choice=`cat $tempfile1`
 rm -f $tempfile1
@@ -22,5 +25,11 @@ case "$choice" in
     ;;
   3)
     sudo use-dtp-and-s27-tunnelling
+    ;;
+  4)
+    sudo /etc/init.d/named restart
+    ;;
+  5)
+    sudo /etc/init.d/squid restart
     ;;
 esac
