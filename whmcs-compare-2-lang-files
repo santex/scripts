@@ -21,12 +21,12 @@ ARGV.each_with_index do |file, fileno|
     end
   
     #puts "#{$1} -> #{$2}"
-    (fileno == 0 ? s1 : s2)[$1] = $2
+    (fileno == 0 ? s1 : s2)[$1] = line
   end
 end
 
 #p s1.keys
  
-(s1.keys - s2.keys).each {|x| puts "-#{x}" }
-(s2.keys - s1.keys).each {|x| puts "+#{x}" }
+(s1.keys - s2.keys).each {|x| puts "-#{s1[x]}" }
+(s2.keys - s1.keys).each {|x| puts "+#{s2[x]}" }
 
