@@ -1,0 +1,74 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Carp;
+use Cwd;
+use File::Slurp;
+use Log::Log4perl qw(:easy);
+use App::Options (
+    option => {
+               tag => { type => 'string', required => 0, default => '' },
+               #dry_run => { type => 'bool', required => 0, default => 0 }, # XXX doesn't work?
+           },
+);
+
+my @files;
+
+Log::Log4perl->easy_init($DEBUG);
+
+# cek argumen
+unless (@ARGV) {
+    print "Usage: $0 [--tag=some_label] <moviedir> ...\n";
+    exit 1;
+}
+
+my $orig_dir = getcwd;
+
+my $tags = $App::options{tag} ? "[$App::options{tag}] " : "";
+
+DIR: for my $dir (@ARGV) {
+    INFO "Processing $dir ...";
+    $dir =~ s#/$##;
+    chdir $orig_dir;
+
+    chdir $dir or do {
+        WARN "Can't chdir to `$dir', skipped";
+        next DIR;
+    };
+
+    ( -f "imdb.html" ) or do {
+        ERROR "There's no imdb.html in dir `$dir', skipped";
+        next DIR;
+    };
+
+    $_ = read_file "imdb.html";
+    unless (m#<title>(.+?)</title>#) {
+        ERROR "Can't scrape title from imdb.html, please check the file, skipped";
+        next DIR;
+    }
+    my $newdir = lc($1);
+    for ($newdir) {
+        s#/[IVX]+\)$#)#; # Same Title In A Year (2006/I)
+        s/\ \((?:v|mini)\)$//i; # Attributes (2006) (V)
+        s/: / - /g; # With: Colon (2006) - difficulty in windows
+        s/^&#34;(.+)&#34;/$1/g; # "Quoted" (2006)
+
+        s{^(an? |the |l(?:a|e|es) |l'|une? |d(?:er|ie|as) |eine? )(.+) \(}
+         {"$2, " . $1 . ($1 eq "l'" ? " " : "")."("}e; # Particle, The (2006) - support en/fr/de
+
+        # XXX, SGML &foo; entities?
+    }
+
+    if ($newdir eq $dir) {
+        INFO "Dir `$dir' is already according to IMDB title, skipped";
+        next DIR;
+    }
+    else {
+        INFO "Renaming `$dir' to `$newdir' ...";
+        if (!$App::options{dry_run}) {
+            unless (rename "../$dir", "../$newdir") {
+                ERROR "Can't rename `$dir' to `$newdir': $!";
+            }
+        }
+    }
+}

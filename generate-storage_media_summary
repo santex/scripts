@@ -34,6 +34,7 @@ storages.each_pair {|name, storage|
     'encrypted' => encrypted,
     'encryption_type' => encryption_type,
     'dont_index' => (storage['dont_index'] ? true : false),
+    'encrypted_dont_index' => (storage['encrypted_dont_index'] ? true : false),
   }
 }
 

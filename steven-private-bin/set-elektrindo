@@ -14,9 +14,9 @@ ISLINUX26=`uname -r | grep -q ^2.6; if [ $? == 0 ]; then echo 1; else echo 0; fi
 ISLINUX24=`uname -r | grep -q ^2.4; if [ $? == 0 ]; then echo 1; else echo 0; fi`
 
 echo "+ Mounting partitions..."
-mount_storage_media marie
+mount_storage_media -i marie
 mount_storage_media
-/home/steven/bin/renice-encrypted-partion
+/home/steven/bin/renice-encrypted-partition
 
 echo "+ Cleaning up pperl files..."
 rm -f ~/.pperl/*; # 2007-08-04

@@ -257,14 +257,17 @@ puts "INFO: Mounting IDE & SATA devices..."
   end
 
   if did_mount_encryptedsub || (opts[:force_index]) # && encryptedsub_is_mounted)
+    p2 = "#{detail['mount_point'] == '/' ? '' : detail['mount_point']}/encrypted"
     to_be_indexed << {
       :label => "#{label}-encrypted",
-      :mpath => "#{detail['mount_point']}/encrypted",
-      :ipath => (detail['encrypted_index_point'] || "#{detail['mount_point']}/encrypted"),
+      :mpath => p2,
+      :ipath => (detail['encrypted_index_point'] || p2),
       :dont_index => detail['encrypted_dont_index']
     }
   end
 }
+
+p to_be_indexed
 
 now = Time.now
 ymd = now.strftime "%Y%m%d%H%M%S"
