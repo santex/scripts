@@ -1,0 +1,6 @@
+#!/usr/bin/perl -0777 -p
+
+# can't handle nested yet, e.g. <foo bar="hey, > this is not the end">
+
+s{<!--.+?-->}{}sg;
+s{<.+?>}{}sg;
