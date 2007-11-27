@@ -95,7 +95,7 @@ for (sort {
     ($downloaded_last_30days{$b} <=> $downloaded_last_30days{$a}) ||
     ($bytes_last_30days{$b} <=> $bytes_last_30days{$a})
           }
-     keys %downloaded_last_7days) {
+     keys %downloaded_last_30days) {
 
     # saat ini oleh phpbb2 ancur tampilannya kalo url_addr mengandung
     # % atau yg karakter aneh lain: [url=x]title[/url]
