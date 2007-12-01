@@ -1,3 +1,13 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Cwd;
+use HTML::Entities;
+use Log::Log4perl qw(:easy);
+use URI::Escape;
+
+Log::Log4perl->easy_init($DEBUG);
+
 my $imdb_url = "";
 if (-f "imdb.url") {
   open F, "imdb.url"; $imdb_url = <F>; chomp($imdb_url);

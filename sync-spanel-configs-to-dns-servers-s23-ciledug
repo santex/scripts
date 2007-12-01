@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SOURCE=/home/steven/proj/mwn/spanel-configs
+SOURCE=/home/steven/proj/mwn/spanel-configs/servers
 
 # note: -rlptD = -a minus -og (owner, group)
 

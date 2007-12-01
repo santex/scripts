@@ -49,7 +49,7 @@ DIR: for my $dir (@ARGV) {
     my $newdir = lc($1);
     for ($newdir) {
         s#/[IVX]+\)$#)#; # Same Title In A Year (2006/I)
-        s/\ \((?:v|mini)\)$//i; # Attributes (2006) (V)
+        s/\ \((?:v|mini|tv)\)$//i; # Attributes (2006) (V)
         s/: / - /g; # With: Colon (2006) - difficulty in windows
         s/^&#34;(.+)&#34;/$1/g; # "Quoted" (2006)
 
