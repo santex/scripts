@@ -52,7 +52,8 @@ DIR: for my $dir (@ARGV) {
         s/\ \((?:v|mini|tv)\)$//i; # Attributes (2006) (V)
         s/: / - /g; # With: Colon (2006) - difficulty in windows
         s/^&#34;(.+)&#34;/$1/g; # "Quoted" (2006)
-
+        # accented/special characters
+        $newdir = remove_acc($newdir);
         s{^(an? |the |l(?:a|e|es) |l'|une? |d(?:er|ie|as) |eine? )(.+) \(}
          {"$2, " . $1 . ($1 eq "l'" ? " " : "")."("}e; # Particle, The (2006) - support en/fr/de
 
@@ -71,4 +72,17 @@ DIR: for my $dir (@ARGV) {
             }
         }
     }
+}
+
+sub remove_acc {
+    local $_ = shift;
+    # future 5.10: jadiin state var?
+    my %chars = (
+                '&#232;' => 'e', # e + accent grave
+                '&#233;' => 'e', # e + accent aigue
+            );
+    my $re = join("|", map {quotemeta} keys %chars);
+    $re = qr/($re)/;
+    s/$re/$chars{$1}/g;
+    $_;
 }

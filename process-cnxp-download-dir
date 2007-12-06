@@ -18,3 +18,8 @@ unless (-e "imdb.url") {
 unlink grep { $_ ne "imdb.url" }
        grep { (-f) && (((-s) <= 500) || /\.(nfo|sfv)$/) } <*>;
 
+# delete other crappy files
+unlink glob("_*padding*_");
+
+# rmvb files that are smaller than 20MB, this is probably ads
+unlink grep { (-s) <= 20_000_000 } <*.rmvb>;
