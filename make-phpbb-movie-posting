@@ -58,9 +58,9 @@ my @image_files = grep { /\.(jpe?g|gif|png)$/i } @all_files;
 my @movie_files = grep { /\.(mpe?g|avi|rmvb|rm|divx|xvid)$/i } @all_files;
 my @subtt_files = grep { /\.(srt|sub)$/i } @all_files;
 
-print sprintf "[b]IMDB page[/b]: [url]%s[/url] %s",
+print sprintf "[b]IMDB page[/b]: %s %s",
   $imdb_url,
-  ((-f "imdb.html") ? sprintf("(local cache: [url]%s/%s/imdb.html[/url])", $App::options{website_url}, uri_escape($dirname)) : "");
+  ((-f "imdb.html") ? sprintf("(local cache: %s/%s/imdb.html)", $App::options{website_url}, uri_escape($dirname)) : "");
 print "\n\n";
 
 my ($g) = $imdb_page =~ m!<h5>Genre:</h5>\s*(.+?)</div!s; $g ||= "";
@@ -94,7 +94,7 @@ print "\n\n";
 
 print "[b]Video files[/b]:\n\n";
 for (@movie_files) {
-  print sprintf "* [url]%s/%s/%s[/url]\n",
+  print sprintf "* %s/%s/%s\n",
     $App::options{website_url},
     uri_escape($dirname),
     uri_escape($_);
@@ -103,7 +103,7 @@ print "\n";
 
 print "[b]Subtitles[/b]:\n\n";
 for (@subtt_files) {
-  print sprintf "* [url]%s/%s/%s[/url]\n",
+  print sprintf "* %s/%s/%s\n",
     $App::options{website_url},
     uri_escape($dirname),
     uri_escape($_);
@@ -112,12 +112,12 @@ print "\n";
 
 print "[b]All files[/b]:\n\n";
 for (@all_files) {
-  print sprintf "* [url]%s/%s/%s[/url]\n",
+  print sprintf "* %s/%s/%s\n",
     $App::options{website_url},
     uri_escape($dirname),
     uri_escape($_);
 }
 print "\n";
 
-print "[url=$App::options{website_url}]", $App::options{website_url}, "[/url]\n";
+print "$App::options{website_url}\n";
 

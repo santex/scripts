@@ -7,7 +7,7 @@ use App::Options (
   option => {
     ics_dir => {
       description => "Directory that contains .ics files",
-      default => "/home/steven/.kde/share/apps/korganizer",
+      default => "/home/steven/organizer",
       required => 1,
     },
     log_level => {

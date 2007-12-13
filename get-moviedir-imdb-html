@@ -1,0 +1,50 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Carp;
+use Cwd;
+use File::Slurp;
+use Log::Log4perl qw(:easy);
+use App::Options (
+    option => {
+               override => { type => 'bool', required => 0, default => 0 }, # XXX doesn't work?
+               #dry_run => { type => 'bool', required => 0, default => 0 }, # XXX doesn't work?
+           },
+);
+
+my @files;
+
+Log::Log4perl->easy_init($DEBUG);
+
+# cek argumen
+unless (@ARGV) {
+    print "Usage: $0 [options] <moviedir> ...\n";
+    exit 1;
+}
+
+my $orig_dir = getcwd;
+
+DIR: for my $dir (@ARGV) {
+    INFO "Processing $dir ...";
+    $dir =~ s#/$##;
+    chdir $orig_dir;
+
+    chdir $dir or do {
+        WARN "Can't chdir to `$dir', skipped";
+        next DIR;
+    };
+
+    ( ( -f "imdb.html" ) && !$App::options{override} ) and do {
+        INFO "There's already imdb.html in dir `$dir', skipped";
+        next DIR;
+    };
+
+    ( -f "imdb.url" ) or do {
+        INFO "There's no imdb.url in dir `$dir', skipped";
+        next DIR;
+    };
+
+    system "wget -O imdb.html -i imdb.url";
+}
+
+__END__
