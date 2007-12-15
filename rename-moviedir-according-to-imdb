@@ -82,6 +82,8 @@ sub remove_acc {
                 '&#233;' => 'e', # e + accent aigue
                 '&#234;' => 'e', # e + accent circonflexe
                 '&#224;' => 'a', # a + accent grave
+
+                '&#38;' => '&',
             );
     my $re = join("|", map {quotemeta} keys %chars);
     $re = qr/($re)/;

@@ -54,19 +54,15 @@ print "\n\n";
 
 print "[b]Music files[/b]:\n\n";
 for (@music_files) {
-  print sprintf "* [url]%s/%s/%s[/url]\n",
-    $App::options{website_url},
-    uri_escape($dirname),
-    uri_escape($_);
+  print sprintf "%s\n",
+    $_;
 }
 print "\n";
 
 print "[b]All files[/b]:\n\n";
 for (@all_files) {
-  print sprintf "* [url]%s/%s/%s[/url]\n",
-    $App::options{website_url},
-    uri_escape($dirname),
-    uri_escape($_);
+  print sprintf "%s\n",
+    $_;
 }
 print "\n";
 
