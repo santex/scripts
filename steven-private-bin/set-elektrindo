@@ -21,12 +21,12 @@ mount_storage_media
 echo "+ Cleaning up pperl files..."
 rm -f ~/.pperl/*; # 2007-08-04
 
-echo "+ Setting 192.168.0.101 as default gateway..."
-while test `route -n | grep -q '192.168.0.\(101\|103\)'; echo $?` -eq 0; do
-  route del default gw 192.168.0.101
+echo "+ Setting 192.168.0.1 as default gateway..."
+while test `route -n | grep -q '192.168.0.\(1\|103\)'; echo $?` -eq 0; do
+  route del default gw 192.168.0.1
   route del default gw 192.168.0.103
 done
-route add default gw 192.168.0.101
+route add default gw 192.168.0.1
 #iptables -F; iptables -t nat -F
 
 echo "+ Setting DNS resolver ..."
@@ -38,7 +38,7 @@ echo "+ Setting DNS resolver ..."
 
 #dnscache
 # elektrik is consulted for some zones
-for d in ciledug.com localdomain; do echo 192.168.0.101 > /etc/dnscache/root/servers/$d; done
+for d in ciledug.com localdomain; do echo 192.168.0.1 > /etc/dnscache/root/servers/$d; done
 /etc/init.d/dnscache restart
 
 

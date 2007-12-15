@@ -31,8 +31,8 @@ for d in ciledug.com localdomain; do rm -f /etc/dnscache/root/servers/$d; done
 
 
 echo "+ Deleting default gateway..."
-while test `route -n | grep -q '192.168.0.\(101\|103\)'; echo $?` -eq 0; do
-  route del default gw 192.168.0.101
+while test `route -n | grep -q '192.168.0.\(1\|103\)'; echo $?` -eq 0; do
+  route del default gw 192.168.0.1
   route del default gw 192.168.0.103
 done
 
