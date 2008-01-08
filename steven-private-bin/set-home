@@ -26,7 +26,7 @@ echo "+ Setting up DNS resolver ..."
 
 #dnscache
 # elektrik is NOT consulted for some zones
-for d in ciledug.com localdomain; do rm -f /etc/dnscache/root/servers/$d; done
+for d in ciledug.com localdomain 168.192.in-addr.arpa; do rm -f /etc/dnscache/root/servers/$d; done
 /etc/init.d/dnscache restart
 
 
