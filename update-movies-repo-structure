@@ -48,7 +48,10 @@ DIR: for my $dir ( grep {-d} <*> ) {
     my $is_skipped = ( -f ".SKIPPED" );
 
     ( -f "imdb.html" ) or do {
-        ERROR "There's no imdb.html in dir `$dir', skipped";
+        WARN "There's no imdb.html in dir `$dir', putting it under uncategorized";
+        my $dir2 = "$root_dir/uncategorized";
+        dir($dir2)->mkpath( 1, 0755 );
+        symlink "../pool/$dir", "$dir2/$dir";
         next DIR;
     };
 
