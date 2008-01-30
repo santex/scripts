@@ -82,6 +82,10 @@ sub remove_acc {
                 '&#233;' => 'e', # e + accent aigue
                 '&#234;' => 'e', # e + accent circonflexe
                 '&#224;' => 'a', # a + accent grave
+                '&#228;' => 'a', # a + trema (umlaut)
+                '&#196;' => 'a', # A + trema
+                '&#238;' => 'i', # i + accent circonflexe
+                '&#244;' => 'o', # o + trema
 
                 '&#38;' => '&',
             );
