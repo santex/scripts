@@ -40,16 +40,16 @@ echo "+ Setting auto-shutdown for IDE & SATA drives..."
 # 241=30', 242=60'
 df | perl -slane 'system "hdparm -S 242 $1" if $F[0] =~ m#^(/dev/(hd\w|sd\w))\d# && !$done{$1}'
 
-echo "+ Starting squid..."
-if test `ps ax | grep -q [s]quid; echo $?` -ne 0; then
-  /etc/init.d/squid start
-fi
+#echo "+ Starting squid..."
+#if test `ps ax | grep -q [s]quid; echo $?` -ne 0; then
+#  /etc/init.d/squid start
+#fi
 
-echo "+ Starting samba..."
-/etc/init.d/samba start
+#echo "+ Starting samba..."
+#/etc/init.d/samba start
 
-echo "+ Starting ssh ..."
-/etc/init.d/ssh start
+#echo "+ Starting ssh ..."
+#/etc/init.d/ssh start
 
 echo "+ touch /etc/server=builder+home..."
 rm -f /etc/server=builder+*

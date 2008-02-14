@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd /home/steven/bin/mwn
+
+ping -c2 hosting.localdomain 2>&1 >/dev/null
+if [ $? != 0 ]; then exit; fi
+
+eval `../ssh-existing-agent`
+./sync-repos_spanel-2hostinglocaldomain
+./sync-repos_mwn-2hostinglocaldomain

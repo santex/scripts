@@ -1,6 +1,0 @@
-#!/bin/sh
-
-for p in apache2 clamav-daemon clamav-freshclam cgiexecd mysql postgresql-8.1 proftpd qmail spanel-smtpd squid; do
-  /etc/init.d/$p stop
-done
-

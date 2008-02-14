@@ -5,8 +5,9 @@ rsync -e ssh -Pavz \
   ~/proj/spanel/lib/php/sh_functions.inc.php mwnwhmcs@gold:
 
 ssh mwnwhmcs@gold masterkey/bin/masterkey-install \
+  --branch test \
   --source /home/mwnwhmcs/masterkey \
-  --target /s/prod.whmcs.mwn.localdomain/www/ \
+  --target /s/test.whmcs.mwn.localdomain/www/ \
   --sh-functions-path /home/mwnwhmcs/sh_functions.inc.php \
   install \
   $*

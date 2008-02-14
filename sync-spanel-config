@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # ganti jika source mwn gak mirip dg yg di sini
-cd /etc/spanel
+cd /home/steven/proj/mwn/spanel-configs
+
+# owner jangan dipreserve :)
 
 /c/sbin/spanel-multissh $@ --rsync --user root -- \
   -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \

@@ -1,0 +1,13 @@
+#!/bin/sh
+rsync -e ssh -Pavz --del --delete-excluded --force --exclude '/.bzr' --exclude '*~' \
+  ~/proj/mwn/masterkey mwnwhmcs@gold:
+rsync -e ssh -Pavz \
+  ~/proj/spanel/lib/php/sh_functions.inc.php mwnwhmcs@gold:
+
+ssh mwnwhmcs@gold masterkey/bin/masterkey-install \
+  --branch prod \
+  --source /home/mwnwhmcs/masterkey \
+  --target /s/prod.whmcs.mwn.localdomain/www/ \
+  --sh-functions-path /home/mwnwhmcs/sh_functions.inc.php \
+  install \
+  $*
