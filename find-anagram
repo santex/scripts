@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+# supply it with a list of names, it will print you the anagrams
+
+# from: http://brad.livejournal.com/2354680.html
+
+use strict;
+my %by_anagram;
+while (<>) {
+    chomp;
+    s/\s.*//;
+    my $name = $_;
+    my $sorted_name = join('', sort split //, $name);
+    push @{$by_anagram{$sorted_name}}, $name;
+}
+
+foreach my $sn (grep { @{$by_anagram{$_}} > 1 } keys %by_anagram) {
+    print "@{$by_anagram{$sn}}\n";
+}
