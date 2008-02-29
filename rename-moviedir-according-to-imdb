@@ -78,16 +78,15 @@ sub remove_acc {
     local $_ = shift;
     # future 5.10: jadiin state var?
     my %chars = (
+                '&#38;' => '&',
+                '&#196;' => 'a', # A + trema
+                '&#224;' => 'a', # a + accent grave
+                '&#228;' => 'a', # a + trema (umlaut)
                 '&#232;' => 'e', # e + accent grave
                 '&#233;' => 'e', # e + accent aigue
                 '&#234;' => 'e', # e + accent circonflexe
-                '&#224;' => 'a', # a + accent grave
-                '&#228;' => 'a', # a + trema (umlaut)
-                '&#196;' => 'a', # A + trema
                 '&#238;' => 'i', # i + accent circonflexe
                 '&#244;' => 'o', # o + trema
-
-                '&#38;' => '&',
             );
     my $re = join("|", map {quotemeta} keys %chars);
     $re = qr/($re)/;
