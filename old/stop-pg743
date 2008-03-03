@@ -1,5 +1,0 @@
-#!/bin/bash
-
-if test -e $PGDATA/postmaster.pid; then
-  kill `cat $PGDATA/postmaster.pid`
-fi
