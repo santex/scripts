@@ -1,0 +1,10 @@
+#!/usr/bin/perl -0777 -l
+
+@ARGV = <*/imdb.html>;
+
+while (<>) {
+    ($title)=m!<title>(.+?)</title>!;
+    ($score)=m#^<b>(\d\.\d)/10</b>#m;
+    %genres=();while(m!/Sections/Genres/(.+?)/!g) {$genres{$1}++}
+    print "$score $title (".join(", ",keys %genres).")\n";
+}

@@ -4,6 +4,10 @@
 cd ~/proj/mwn
 bzr svn-push file:///home/steven/svn/repos-mwn-from-bzr/mwn
 
+rsync --del -e "ssh -c arcfour" -Pavz \
+  /u/steven/home/proj/mwn \
+  steven@hosting.localdomain:/u/steven/public/bzr/
+
 rsync --delete -e "ssh -c arcfour" -Pavz \
   /u/steven/home/svn/repos-mwn-from-bzr \
   steven@hosting.localdomain:/u/steven/home/svn/
