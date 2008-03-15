@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#websafe_filenames.pl $* *
+perlrename $* -e's/^(according to jim) (\d\d\d)/$1 - 0$2/' *
+perlrename $* -e's/^according\.to\.jim\.s(\d\d)e(\d\d)/according to jim - $1$2/' *

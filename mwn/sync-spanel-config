@@ -9,7 +9,7 @@ cd /home/steven/proj/mwn/spanel-configs
   -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
   \
   mail-templates \
-  newsite-template \
+  newaccount-templates \
   default-dns-zone.yaml \
   www \
   plans.yaml \
