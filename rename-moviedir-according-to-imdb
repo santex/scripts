@@ -79,6 +79,7 @@ sub remove_acc {
     # future 5.10: jadiin state var?
     my %chars = (
                 '&#38;' => '&',
+                '&#194;' => 'a', # A + accent circonflexe
                 '&#196;' => 'a', # A + trema
                 '&#224;' => 'a', # a + accent grave
                 '&#228;' => 'a', # a + trema (umlaut)

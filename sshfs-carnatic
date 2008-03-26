@@ -1,0 +1,2 @@
+#!/bin/bash
+sshfs user1@carnatic:/ /media/carnatic

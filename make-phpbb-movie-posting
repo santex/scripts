@@ -16,9 +16,9 @@ use App::Options (
       default => 0,
     },
     website_url => {
-      description => "download video URL",
+      description => "download movie URL",
       type => "string",
-      default => "http://steven.hosting.localdomain/download/video",
+      default => "http://steven.hosting.localdomain/download/video/movies",
     },
     log_level => {
       description => "log level",

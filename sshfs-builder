@@ -1,0 +1,2 @@
+#!/bin/bash
+sshfs steven@builder:/ /media/builder

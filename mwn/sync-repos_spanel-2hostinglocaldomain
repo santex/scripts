@@ -1,13 +1,5 @@
 #!/bin/sh
 
-# bzr svn-push dulu kalo belon...
-cd ~/proj/spanel
-bzr svn-push /home/steven/svn/repos-spanel-from-bzr/spanel
-
 rsync --del -e "ssh -c arcfour" -Pavz \
   /u/steven/home/proj/spanel \
   steven@hosting.localdomain:/u/steven/public/bzr/
-
-rsync --delete -e "ssh -c arcfour" -Pavz \
-  /u/steven/home/svn/repos-spanel-from-bzr \
-  steven@hosting.localdomain:/u/steven/home/svn/
