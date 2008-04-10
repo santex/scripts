@@ -16,32 +16,42 @@ $ndays_now = calc_ndays($day_now,$mon_now,$year_now);
 while (<>) {
   next unless /\S/;
   next if /^[#;]/;
-  do { warn "Line $.: not match!: $_"; next; } unless /^([JUT]) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(?: (\d+) (\d+))?\s*$/;
-  ($t, $mday, $mon, $year, $msg, $a, $b) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6, $7);
-  warn "Line $.: must have a and b: $_" if $t ne 'U' and (!defined($a) or !defined($b));
-  $a = 0 if !defined($a); $b = 0 if !defined($b); do{$a=7;$b=1} if $t eq 'U';
-  if ($t ne 'J') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
-  
+  do { warn "Line $.: not match!: $_"; next; } unless
+      /^([JUT]) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(?: (\d+) (\d+))?\s*$/ or
+      /^(BIRTHDAY|ONETIME|YEARLY) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(\s-?\d+)*$/;
+  if ($1 eq 'J' || $1 eq 'U' || $1 eq 'T') {
+      ($t, $mday, $mon, $year, $msg, $a, $b) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6, $7);
+      warn "Line $.: must have a and b: $_" if $t ne 'U' and (!defined($a) or !defined($b));
+      $a = 0 if !defined($a); $b = 0 if !defined($b); do{$a=7;$b=1} if $t eq 'U';
+      if ($t ne 'J') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
+      @d = (-$a..$b);
+  } else {
+      ($t, $mday, $mon, $year, $msg, $days_list) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6);
+      @d = split /[,;]\s*|\s+/, $days_list;
+      @d = (0) unless @d;
+      if ($t ne 'ONETIME') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
+  }
   $done=0;
   L:
   for $y (@y) {
     last if $done;
     $ndays = calc_ndays($mday,$mon,$y);
-    print "DEBUG: $t, $mday, $mon, $year|$year2, $msg, $a, $b, $ndays_now ? ${\($ndays-$a)}-${\($ndays+$b)}" if $debug;
 
-    if (($ndays_now >= $ndays-$a) and ($ndays_now <= $ndays+$b)) {
+    if (grep { $ndays_now == $ndays+$_ } @d) {
       $done++;
       print " hit!" if $debug;
       $msg1 = $ndays_now == $ndays ? "hari ini" :
               (abs($ndays_now-$ndays) . " hari " . ($ndays_now > $ndays ? "yl":"lagi"));
-      $msg2 = $t eq 'U' ? "$msg ultah yang ke-".($year_now-$year) : $msg;
-      
+      $msg2 = $t eq 'U' ? "$msg ultah yang ke-".($year_now-$year) :
+              $t eq 'BIRTHDAY' ? "$msg ultah" :
+              $msg;
+
       push @matches, [$ndays-$ndays_now, "$msg1: $msg2 ($mday-$mon-$y)\n"];
     }
     print "\n" if $debug;
   }
 }
-  
+
 if (@matches) {
   $body = join "", map {$_->[1]} sort {$a->[0] <=> $b->[0]} @matches;
 } else {
