@@ -1,3 +1,0 @@
-#!/bin/bash
-
-/home/steven/opt/pg800/bin/pg_ctl stop -D "$PGDATA" -m fast

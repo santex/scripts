@@ -1,4 +1,4 @@
-#!/usr/bin/perl -0777 -p
+#!/usr/bin/perl -0777 -pi~
 
 # buang semua sebelum title
 s#.+?<title#<title#s;

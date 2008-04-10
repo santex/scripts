@@ -1,3 +1,0 @@
-#!/bin/sh
-
-backup-with-history ~/Desktop /backup/encrypted/steven/quickbackup/Desktop
