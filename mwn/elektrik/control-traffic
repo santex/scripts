@@ -13,6 +13,7 @@ exit if $turn_off;
 # perbolehkan outgoing dari host2x tertentu
 my @hosts;
 push @hosts, 'builder.localdomain'; # testing
+push @hosts, 'dudi.localdomain'; # kadang butuh ngakses hkp, dll
 #push @hosts, 'helpdesk1.localdomain'; # utk upload by ftp bagi klien yg numpang, di resepsionis cyber9
 system qq[iptables -A FORWARD -s $_ -j ACCEPT] for @hosts;
 
@@ -54,6 +55,13 @@ system qq[iptables -A FORWARD -d 23.masterwebnet.com -p tcp --dport 8082 -j ACCE
 system qq[iptables -A FORWARD -d 202.158.49.136 -p tcp --dport 1755 -j ACCEPT];
 
 # possible future allows: other IM, ip telephony, spread, ...
+
+# dudi, akses ke cpanel dan whm
+system qq[iptables -A FORWARD -p tcp --dport 2082 -j ACCEPT];
+system qq[iptables -A FORWARD -p tcp --dport 2083 -j ACCEPT];
+system qq[iptables -A FORWARD -p tcp --dport 2086 -j ACCEPT];
+system qq[iptables -A FORWARD -p tcp --dport 2087 -j ACCEPT];
+system qq[iptables -A FORWARD -p tcp --dport 2095 -j ACCEPT];
 
 
 # forbid semua high port ke luar jaringan
