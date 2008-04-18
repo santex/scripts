@@ -1,0 +1,14 @@
+#!/usr/bin/php
+<?php
+
+if (!extension_loaded('tidy')) dl('tidy.so');
+echo 1;
+$tidy = new tidy();
+echo 2;
+$tidy->parseFile("/tmp/1.php");
+echo 3;
+$tidy->cleanRepair();
+echo 4;
+echo $tidy;
+
+?>

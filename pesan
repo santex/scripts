@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-$debug = 0;
+$debug = $ENV{DEBUG};
 $stdout_instead = 1;
 #($day_now,$mon_now,$year_now)=(29,3,2003);
 
@@ -18,18 +18,20 @@ while (<>) {
   next if /^[#;]/;
   do { warn "Line $.: not match!: $_"; next; } unless
       /^([JUT]) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(?: (\d+) (\d+))?\s*$/ or
-      /^(BIRTHDAY|ONETIME|YEARLY) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(\s-?\d+)*$/;
+      /^(BIRTHDAY|ONETIME|YEARLY) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(.*)$/;
   if ($1 eq 'J' || $1 eq 'U' || $1 eq 'T') {
       ($t, $mday, $mon, $year, $msg, $a, $b) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6, $7);
       warn "Line $.: must have a and b: $_" if $t ne 'U' and (!defined($a) or !defined($b));
       $a = 0 if !defined($a); $b = 0 if !defined($b); do{$a=7;$b=1} if $t eq 'U';
       if ($t ne 'J') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
       @d = (-$a..$b);
+      print "DEBUG: $t, $mday, $mon, $year, $msg, $a, $b" if $debug;
   } else {
       ($t, $mday, $mon, $year, $msg, $days_list) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6);
-      @d = split /[,;]\s*|\s+/, $days_list;
+      @d = $days_list =~ /(-?\d+)/g;
       @d = (0) unless @d;
       if ($t ne 'ONETIME') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
+      print "DEBUG: $t, $mday, $mon, $year, $msg, $days_list=[${\(join ', ', @d)}]" if $debug;
   }
   $done=0;
   L:

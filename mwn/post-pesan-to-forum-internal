@@ -1,0 +1,50 @@
+#!/usr/bin/perl -w
+
+use strict;
+use File::Temp qw/tempfile/;
+use FindBin '$Bin';
+use Log::Log4perl qw(:easy);
+use POSIX;
+
+use App::Options (
+    option => {
+        data_file => { type => 'string', required => 1 },
+        topic_id  => { type => 'int', required => 1 },
+        tag       => { type => 'string', required => 0, default => '' },
+    },
+);
+
+my @files;
+
+Log::Log4perl->easy_init($DEBUG);
+
+LOGDIE "Can't find data file `$App::options{data_file}'"
+    unless -f $App::options{data_file};
+
+my $tags = $App::options{tag} ? "[$App::options{tag}] " : "";
+
+my $tgl = POSIX::strftime("%Y-%m-%d", localtime);
+
+my $cmd = "pesan ".esc($App::options{data_file});
+my $msg = `$cmd`;
+length($msg) or goto SKIP1;
+
+# ---
+my ( $fh, $filename ) = tempfile();
+print $fh "Subject: ${tags}pesan pengingat untuk tanggal $tgl\n";
+print $fh "\n";
+print $fh $msg;
+push @files, $filename;
+# ---
+
+# send it!
+system "phpbb2-post --profile=noforum --topic_id=$App::options{topic_id} " . join( " ", @files );
+unlink @files;
+
+SKIP1: 1;
+
+sub esc {
+    local $_ = shift;
+    s/'/'"'"'/g;
+    "'$_'";
+}

@@ -2,6 +2,7 @@
 
 rsync --del -e ssh -Pavz $* \
   --exclude '*~' --exclude '.svn' \
+  --exclude '/config.php' \
   --exclude '/images/avatars/' \
   /home/steven/proj/mwn/foruminternal/ \
   mwn@forum.mwn.localdomain:sites/forum.mwn.localdomain/ssl/

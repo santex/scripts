@@ -11,6 +11,7 @@ cd /home/steven/proj/mwn/spanel-configs
   mail-templates \
   newaccount-templates \
   default-dns-zone.yaml \
+  dns-zone-templates \
   www \
   plans.yaml \
   servers/'[[SERVERID]]'/spanel.yaml \
