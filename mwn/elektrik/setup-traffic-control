@@ -9,16 +9,17 @@ use LWP::Simple;
 # --- begin config
 my @GROUPS = (
               # name => (jangan panjang2x karena acl di squid max 31 chars), ips=>['IP', 'IP-IP', 'HOSTNAME', ...]
+              # HATI-HATI, squid tidak menerima CNAME utk dstdomain!
               {name => 'dns_server', ips => ['192.168.0.2-192.168.0.3']},
               {name => 'smtp_server', ips => ['smtp.localdomain']},
-              {name => 'forum_server', ips => ['forum.mwn.localdomain']},
+              {name => 'forum_server', ips => ['gold.localdomain']},
               {name => 'archive_server', ips => ['bismutha.localdomain']},
-              {name => 'hosting_server', ips => ['hosting.localdomain']},
-              {name => 'login_server', ips => ['login.localdomain']},
-              {name => 'mkey_server', ips => ['prod.whmcs.mwn.localdomain']},
-              {name => 'monitor_server', ips => ['monitor.localdomain']},
+              {name => 'hosting_server', ips => ['bismuthb.localdomain']},
+              {name => 'login_server', ips => ['bismutha.localdomain']},
+              {name => 'mkey_server', ips => ['xenon.localdomain']},
+              {name => 'monitor_server', ips => ['ciledug.localdomain']},
               {name => 'test_servers', ips => ['192.168.0.51-192.168.0.59']},
-              {name => 'test_steven', ips => ['192.168.0.142']},
+              {name => 'test_steven', ips => []},
               {name => 'operator', ips => ['jamal.localdomain']},
               {name => 'kentongan', ips => ['kentongan.localdomain']},
               {name => 'admin_workstations', ips => []}, # akan diisi dari list admin yg absen
@@ -27,6 +28,7 @@ my @GROUPS = (
               # wifi = .200 - .254
               # other servers = .2 - .50
 );
+
 # --- end config
 
 sub cmd($);
@@ -180,10 +182,12 @@ for ("c_mkey_server") {
         Flush_Current_Chain();
         Allow_Smtp(); # ngirim2 email langsung, gak lewat smtp.localdomain
     }
-    Squid_Rule("allow", "dstdomain .whmcs.com"); # utk cek lisensi
-    Squid_Rule("allow", "dstdomain .directi.com .enom.com"); # utk konek ke registrar
-    Squid_Rule("allow", "dstdomain ".join(" ", @MWN_SPANEL_SERVERS, @MWN_CPANEL_SERVERS)); # utk server commands
-    Squid_Rule("deny");
+    # biar aman, gw allow all dulu deh
+    #Squid_Rule("allow", "dstdomain .whmcs.com"); # utk cek lisensi
+    #Squid_Rule("allow", "dstdomain .directi.com .enom.com"); # utk konek ke registrar
+    #Squid_Rule("allow", "dstdomain ".join(" ", @MWN_SPANEL_SERVERS, @MWN_CPANEL_SERVERS)); # utk server commands
+    #Squid_Rule("deny");
+    Squid_Rule("allow");
 }
 
 
@@ -267,6 +271,7 @@ for ("c_workstations") {
         Allow_Whois(); # utk tesu doang sebetulnya
         Allow_Proxy_Mwn(); # utk billing doang sebetulnya
         Allow_Https();
+        Allow_Pop3();
         #Allow_Smtp(); # utk ngetes smtp dari hosting.localdomain aja kali ye
         Allow_Ssh(); # temp? utk login ke server2x colo klien misalnya
         Allow_P2P() if !$IS_OFFICE_HOUR;
@@ -371,7 +376,7 @@ sub Allow_Ftp {
 #    Allow_Ports('1755', '202.158.49.136');
 #}
 
-sub Allow_Pop   { Allow_Ports('110', @_) }
+sub Allow_Pop3  { Allow_Ports('110', @_) }
 sub Allow_Smtp  { Allow_Ports('25,995', @_) }
 sub Allow_Ssh   { Allow_Ports('22', @_) }
 sub Allow_Http  { Allow_Ports('80,443', @_) }
