@@ -1,4 +1,0 @@
-#!/bin/bash
-dst=an@elektrik
-
-scp control-traffic $dst:/home/steven/bin/
