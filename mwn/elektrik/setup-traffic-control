@@ -45,6 +45,7 @@ my $IS_OFFICE_HOUR = $wday>=1 && $wday<=5 && $hour>=7 && $hour<=18;
 my $Current_Chain = "FORWARD";
 my %Opts;
 my $Squid = "";
+my %Squid_Acls = ();
 
 GetOptions(
            '--fast' => \$Opts{fast},
@@ -96,9 +97,11 @@ for my $group (@GROUPS) {
             #cmd qq[iptables -A FORWARD --src-range $_ -j $group->{name}];
             cmd qq[iptables -A FORWARD -s $1$_ -j c_$group->{name}] for ($2..$3);
             $Squid .= "acl stc_$group->{name} src $1$_\n" for ($2..$3);
+            $Squid_Acls{"c_$group->{name}"}++;
         } else {
             cmd qq[iptables -A FORWARD -s $ip -j c_$group->{name}];
             $Squid .= "acl stc_$group->{name} ".($ip =~ /^\d+\.\d+\.\d+\.\d+$/ ? "src $ip" : "srcdomain $ip")."\n";
+            $Squid_Acls{"c_$group->{name}"}++;
         }
     }
 }
@@ -181,6 +184,7 @@ for ("c_mkey_server") {
     unless ($Opts{fast}) {
         Flush_Current_Chain();
         Allow_Smtp(); # ngirim2 email langsung, gak lewat smtp.localdomain
+        Allow_Https(); # tmp?
     }
     # biar aman, gw allow all dulu deh
     #Squid_Rule("allow", "dstdomain .whmcs.com"); # utk cek lisensi
@@ -405,7 +409,8 @@ sub Squid_Rule {
         $i++;
         $Squid .= "acl st${Current_Chain}_${I}_$i $_\n";
     }
-    $Squid .= "http_access $allow_or_deny st$Current_Chain".join("", map {" st${Current_Chain}_${I}_$_"} 1..$i)."\n";
+    $Squid .= "http_access $allow_or_deny st$Current_Chain".join("", map {" st${Current_Chain}_${I}_$_"} 1..$i)."\n"
+        if exists $Squid_Acls{$Current_Chain};
 }
 
 sub cmd($) {
