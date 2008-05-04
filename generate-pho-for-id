@@ -1,0 +1,191 @@
+#!/usr/bin/perl -w
+
+# hasilnya masih jauh dari memuaskan. perlu timing yg lebih detil/spesifik
+
+use strict;
+
+my %Phonemes = (
+    # patS = start of word, patM = middle of word, patE = end of word
+    p  => {symbol=>'p',  patS=>[qw//],
+                         patM=>[qw/139 0 108 14 106 86 108/],
+                         patE=>[qw//], },
+
+    b  => {symbol=>'b',  patS=>[qw//],
+                         patM=>[qw/85 0 115 23 114 46 111 70 110 93 107/],
+                         patE=>[qw//], },
+
+    t  => {symbol=>'t',  patS=>[qw//],
+                         patM=>[qw/120 0 115 66 55 83 54 99 54/],
+                         patE=>[qw/88 0 97/], },
+
+    d  => {symbol=>'d',  patS=>[qw/55 35 117 71 105/],
+                         patM=>[qw/63 0 124 31 120 62 117 94 120/],
+                         patE=>[qw//], },
+
+    k  => {symbol=>'k',  patS=>[qw/97 82 131/],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+    g  => {symbol=>'g',  patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+
+    c  => {symbol=>'tS', patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//],
+                         follow=>'j'},
+
+    j  => {symbol=>'dZ', patS=>[qw//],
+                         patM=>[qw/88 0 110 90 111/],
+                         patE=>[qw//], },
+
+    f  => {symbol=>'f',  patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+    s  => {symbol=>'s',  patS=>[qw/126 94 116/],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+    z  => {symbol=>'z',  patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+    h  => {symbol=>'h',  patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//],
+                         follow=>'j'},
+
+
+    m  => {symbol=>'m',  patS=>[qw//],
+                         patM=>[qw/74 0 97 26 98 53 99 80 98/],
+                         patE=>[qw//], },
+
+    n  => {symbol=>'n',  patS=>[qw//],
+                         patM=>[qw/102 0 108 19 109 38 108 58 108 77 108 97 10/],
+                         patE=>[qw//], },
+
+    ng => {symbol=>'N',  patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw/126 0 113 15 115 31 116 47 116 63 115 78 114 94 112/], },
+
+    r  => {symbol=>'r',  patS=>[qw//],
+                         patM=>[qw/59 0 122 33 121 67 117/],
+                         patE=>[qw/100 0 80 39 91 59 91/], },
+
+    l  => {symbol=>'l',  patS=>[qw//],
+                         patM=>[qw/21 0 101 94 100/],
+                         patE=>[qw//], },
+
+    w  => {symbol=>'w',  patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+    y  => {symbol=>'j',  patS=>[qw//],
+                         patM=>[qw/116 0 123 17 124 34 125 51 126 68 130 85 131/],
+                         patE=>[qw//], },
+
+    ny => {symbol=>'nY', patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+
+    a  => {symbol=>'V',  patS=>[qw//],
+                         patM=>[qw/86 0 119 23 121 46 122 69 122 92 123/],
+                         patE=>[qw/120 0 132 16 133 33 133 49 134 66 135 82 134 99 133/], },
+
+    e  => {symbol=>'@',  patS=>[qw//],
+                         patM=>[qw/44 0 124 45 128 90 128/],
+                         patE=>[qw//], },
+
+    E  => {symbol=>'e',  patS=>[qw//],
+                         patM=>[qw/128 0 106 15 105 31 105 46 105 62 105 78 105 93 104/],
+                         patE=>[qw//], },
+
+    i  => {symbol=>'I',  patS=>[qw/106 18 107 37 111 56 113 75 111 94 108/],
+                         patM=>[qw//],
+                         patE=>[qw/117 0 93 16 94 33 93 50 92 67 93/],
+                         follow=>'a', },
+
+    o  => {symbol=>'Q',  patS=>[qw//],
+                         patM=>[qw/104 0 108 19 106 38 105 57 104 76 104 96 104/],
+                         patE=>[qw//], },
+
+    u  => {symbol=>'U',  patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//],
+                         follow => 'a'},
+
+
+    ai => {symbol=>'aI', patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+    oi => {symbol=>'OI', patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+
+    au => {symbol=>'aU', patS=>[qw//],
+                         patM=>[qw//],
+                         patE=>[qw//], },
+);
+
+sub gen_phonem {
+    my ($phonem) = @_;
+    my ($p, $pos) = $phonem =~ /^(\w+)([SME]?)$/ or die "BUG: Unknown phoneme notation: $phonem";
+    my $p0 = $p;
+    exists $Phonemes{$p} or die "BUG: Unknown phoneme $p";
+    my $ph0 = $Phonemes{$p};
+
+    my $ph;
+    if ($Phonemes{$p}{follow}) {
+      exists $Phonemes{ $Phonemes{$p}{follow} } or die "BUG: Phoneme '$p' follow to $Phonemes{$p}{follow} but there is no such phoneme";
+      $ph = $Phonemes{ $Phonemes{$p}{follow} };
+      $p = $Phonemes{$p}{follow};
+    } else {
+      $ph = $Phonemes{$p};
+    }
+
+    $pos = "M" unless $pos;
+    $ph->{"pat$pos"} or die "BUG: pat$pos undefined for phoneme $p0";
+    if ($pos eq 'M' && !@{ $ph->{"pat$pos"} }) {
+      if (@{ $ph->{patE} }) { $pos = "E" }
+      elsif (@{ $ph->{patS} }) { $pos = 'S' }
+      else { die "BUG: None of pat* is defined for phoneme $p0" }
+    }
+    if ($pos eq 'E' && !@{ $ph->{"pat$pos"} }) {
+      if (@{ $ph->{patE} }) { $pos = "E" }
+      elsif (@{ $ph->{patS} }) { $pos = 'S' }
+      else { die "BUG: None of pat* is defined for phoneme $p0" }
+    }
+    if ($pos eq 'S' && !@{ $ph->{"pat$pos"} }) {
+      if (@{ $ph->{patM} }) { $pos = "M" }
+      elsif (@{ $ph->{patE} }) { $pos = 'E' }
+      else { die "BUG: None of pat* is defined for phoneme $p0" }
+    }
+
+    # XXX adjustment utk titik/menurun di akhir kalimat
+    # XXX adjustment utk slow/fast
+
+    print "$ph0->{symbol} ".join(" ", @{ $ph->{"pat$pos"} })."\n";
+}
+
+sub gen_silence_interwords {
+  print "_ 50\n";
+}
+
+sub gen_silence_virgule {
+  print "_ 250\n";
+}
+
+sub gen_silence_period {
+  print "_ 650\n";
+}
+
+#gen_phonem($_) for qw/s a y a s e d a ng k e r j a/;
+#gen_phonem($_) for qw/a k u m a u t i d u r/;
+#gen_phonem($_) for qw/c e l a n a k u b a s a h/;
+#gen_phonem($_) for qw/s e m b i l a n r a t u s t u j u h p u l u h s a t u/;
+gen_phonem($_) for qw/a d a s e m b i l a n b e l a s t i k E t y a ng b e l u m d i j a u a b/;
+gen_silence_period;

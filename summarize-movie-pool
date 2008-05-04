@@ -6,5 +6,6 @@ while (<>) {
     ($title)=m!<title>(.+?)</title>!;
     ($score)=m#^<b>(\d\.\d)/10</b>#m;
     %genres=();while(m!/Sections/Genres/(.+?)/!g) {$genres{$1}++}
-    print "$score $title (".join(", ",keys %genres).")\n";
+    %langs=();while(m!/Sections/Languages/(.+?)/!g) {$langs{$1}++}
+    print "$score $title (G ".join(", ",keys %genres).") (L ".join(", ", keys %langs).")\n";
 }
