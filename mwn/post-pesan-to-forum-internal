@@ -8,7 +8,8 @@ use POSIX;
 
 use App::Options (
     option => {
-        data_file => { type => 'string', required => 1 },
+        stdin     => { type => 'bool', required => 0 },
+        data_file => { type => 'string', required => 0 },
         topic_id  => { type => 'int', required => 1 },
         tag       => { type => 'string', required => 0, default => '' },
     },
@@ -18,14 +19,24 @@ my @files;
 
 Log::Log4perl->easy_init($DEBUG);
 
-LOGDIE "Can't find data file `$App::options{data_file}'"
-    unless -f $App::options{data_file};
+LOGDIE "data_file must be specified unless stdin in specified"
+    if !$App::options{data_file} && !$App::options{stdin};
 
 my $tags = $App::options{tag} ? "[$App::options{tag}] " : "";
 
 my $tgl = POSIX::strftime("%Y-%m-%d", localtime);
 
-my $cmd = "pesan ".esc($App::options{data_file});
+my $cmd;
+if ($App::options{stdin}) {
+    my ( $fh, $filename) = tempfile();
+    print $fh <STDIN>;
+    close $fh;
+    $cmd = "pesan $filename";
+} else {
+    LOGDIE "Can't find data file `$App::options{data_file}'"
+        unless -f $App::options{data_file};
+    $cmd = "pesan ".esc($App::options{data_file});
+}
 my $msg = `$cmd`;
 length($msg) or goto SKIP1;
 
