@@ -1,0 +1,29 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use App::Options (
+    option => {
+        show    => { required => 1, type => "string" },
+        verbose => { required => 0, type => "bool", default => 0, },
+        dry_run => { required => 0, type => "bool", default => 0 }
+    },
+
+);
+
+$App::options{verbose}++ if $App::options{dry_run};
+
+for (@ARGV) {
+    my ($ext) = /\.(\w+)$/;
+    $ext
+        or do { warn "File `$_' doesn't have an extension, skipped\n"; next };
+    /\b(\d\d??)x?(\d\d)\b/i
+        or /S(\d\d?)E(\d\d)/i
+        or do {
+        warn "File `$_' doesn't contain episode number, skipped\n";
+        next;
+        };
+    my $fn = sprintf "%s - %02d%02d.%s", $App::options{show}, $1, $2, $ext;
+    print "$_ -> $fn\n" if $App::options{verbose};
+    rename $_, $fn unless $App::options{dry_run};
+}
