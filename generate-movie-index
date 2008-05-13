@@ -1,0 +1,130 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Carp;
+
+#use Cwd;
+use Fatal qw(chdir open mkdir symlink unlink);
+use File::Slurp;
+use Log::Log4perl qw(:easy);
+use Path::Class;
+use App::Options (
+    option => {
+        root_dir => {
+            type     => 'string',
+            required => 0,
+            default  => '/media/marie/video/movies'
+        },
+        delete => {
+            description => 'delete index dir first',
+            type        => 'bool',
+            required    => 0,
+            default     => 1,
+        },
+
+        dry_run => { type => 'bool', required => 0, default => 0 },
+    },
+);
+
+# movie-repo structure
+# ROOT (e.g. /media/marie/video/movies)
+#   pool/
+#     moviedir/
+#     ...
+#   index/
+#     uncategorized/ (kita tidak tahu language dan genrenya, karena gak ada imdb.html)
+#       movie title (2008) -> symlink to ../../pool/movie title (2008)/
+#     by-lang/
+#       fr/
+#         action-comedy/
+#           movie title (2008) -> symlink to ../../../../pool/movie title (2008)/
+#           ...
+#         biography-drama/
+#         .../
+#       de/
+#       ...
+#     by-genre/
+#       action-comedy/
+#         en/
+#           movie title (2008) -> symlink
+#           ...
+#         de/
+#         ...
+
+my @files;
+
+Log::Log4perl->easy_init($DEBUG);
+
+#my $orig_dir = getcwd;
+my $root_dir = $App::options{root_dir};
+chdir $root_dir;
+
+if ( $App::options{delete} && !$App::options{dry_run} ) {
+    dir("$root_dir/index")->rmtree if ( -e "$root_dir/index" );
+}
+
+for my $pool_dir (<pool*>) {
+    chdir "$root_dir/$pool_dir";
+
+DIR: for my $dir ( grep {-d} <*> ) {
+        INFO "Processing $dir ...";
+
+        chdir "$root_dir/$pool_dir/$dir";
+
+        #my $is_done    = ( -f ".DONE" );
+        #my $is_skipped = ( -f ".SKIPPED" );
+        my $target_dir;
+
+        ( -f "imdb.html" ) or do {
+            WARN
+                "There's no imdb.html in dir `$dir', putting it under uncategorized";
+            $target_dir = "$root_dir/index/uncategorized";
+            unless ( $App::options{dry_run} ) {
+                dir($target_dir)->mkpath( 1, 0755 );
+                symlink "../../$pool_dir/$dir", "$target_dir/$dir";
+            }
+            next DIR;
+        };
+
+        $_ = read_file "imdb.html";
+        my @genres
+            = map {lc} ( $_ =~ m{<a href="/Sections/Genres/([^/]+)/">}g );
+        my $genre_dir;
+        if    ( $genres[1] ) { $genre_dir = "$genres[0]-$genres[1]" }
+        elsif ( $genres[0] ) { $genre_dir = $genres[0] }
+        else { WARN "This movie has no genre?, skipped"; next DIR }
+
+        my @langs
+            = map {lc} ( $_ =~ m{<a href="/Sections/Languages/([^/]+)/">}g );
+        my $lang_dir;
+        if (@langs) {
+            if    ( $langs[0] eq 'cantonese' ) { $lang_dir = "zh-c" }
+            elsif ( $langs[0] eq 'english' )   { $lang_dir = "en" }
+            elsif ( $langs[0] eq 'french' )    { $lang_dir = "fr" }
+            elsif ( $langs[0] eq 'german' )    { $lang_dir = "de" }
+            elsif ( $langs[0] =~ /chinese|mandarin/ )   { $lang_dir = "zh-m" }
+            elsif ( $langs[0] =~ /bahasa|indonesian?/ ) { $lang_dir = "id" }
+            elsif ( $langs[0] =~ /japanese/ )           { $lang_dir = "jp" }
+            elsif ( $langs[0] =~ /korean/ )             { $lang_dir = "ko" }
+            elsif ( $langs[0] =~ /spanish/ )            { $lang_dir = "es" }
+            elsif ( $langs[0] =~ /italian/ )            { $lang_dir = "it" }
+            else                                        { $lang_dir = "etc" }
+        }
+        my @d = glob ".dubbed-to-*";
+        $lang_dir = $1 if $d[0] && $d[0] =~ /\.dubbed-to-([\w-]+)/;
+        do { WARN "This movie has no lang info? skipped"; next DIR }
+            unless $lang_dir;
+
+        $target_dir = "$root_dir/index/by-lang/$lang_dir/$genre_dir";
+        unless ( $App::options{dry_run} ) {
+            dir($target_dir)->mkpath( 1, 0755 );
+            symlink "../../../../$pool_dir/$dir", "$target_dir/$dir";
+        }
+
+        $target_dir = "$root_dir/index/by-genre/$genre_dir/$lang_dir";
+        unless ( $App::options{dry_run} ) {
+            dir($target_dir)->mkpath( 1, 0755 );
+            symlink "../../../../$pool_dir/$dir", "$target_dir/$dir";
+        }
+    }    # each moviedir
+}    # each pooldir
