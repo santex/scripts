@@ -1,0 +1,15 @@
+#!/bin/sh
+prefix=$HOME/whinfo/`date +"%Y-%m-%d"`
+
+path=$prefix/
+mkdir -p $prefix
+cd $prefix || ( echo "Can't cd to '$prefix', aborting"; exit 1 )
+wget -q -O "$prefix/ID.html" -e robots=off http://www.webhosting.info/webhosts/tophosts/Country/ID
+extract-links-from-file-or-url             http://www.webhosting.info/webhosts/tophosts/Country/ID | \
+  grep /webhosts/reports/ | \
+  wget -q --cache off -i-
+
+wget -q -O "$path/global.html" -e robots=off http://www.webhosting.info/webhosts/tophosts/global
+extract-links-from-file-or-url               http://www.webhosting.info/webhosts/tophosts/global | \
+  grep /webhosts/reports/ | \
+  wget -q --cache off -i-
