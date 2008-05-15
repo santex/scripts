@@ -4,5 +4,6 @@
   --source ~/proj/mwn/masterkey \
   --target /s/testmkey.steven.builder.localdomain/www/ \
   --sh-functions-path /home/steven/proj/spanel/lib/php/sh_functions.inc.php \
+  --test-inst \
   install \
   $*
