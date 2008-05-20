@@ -30,6 +30,12 @@ use App::Options (
             required    => 0,
             default     => 0,
         },
+        bgcolor => {
+            description => "page's background color, e.g. white or #123456",
+            type        => "string",
+            required    => 0,
+            default     => undef,
+        },
         # --version dioverride oleh App::Options utk menampilkan versi modul2x perl, sucks
         program_version => {
             description => "show version and exit",
@@ -61,9 +67,9 @@ if ($App::options{program_version}) {
     exit 0;
 }
 
-print "<html><div align=center>\n";
+print "<html><body ".(defined($App::options{bgcolor}) ? "bgcolor=\"$App::options{bgcolor}\"" : "") ."><div align=center>\n";
 print "<!-- generated automatically with $PROGRAM_NAME version $VERSION on ", scalar(localtime), " -->\n";
 for my $img (@ARGV) {
     print "<p><img src=\"".uri_escape($img)."\" /></p>\n";
 }
-print "</div></html>\n";
+print "</div></body></html>\n";
