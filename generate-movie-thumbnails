@@ -142,8 +142,18 @@ MOVIE: for my $movie (@ARGV) {
   my $movie_esc = esc($abs_movie);
 
   # pick output filename
-  my $output = $Opt{output} || "$movie.jpg";
+  my @outputs;
+  push @outputs, $Opt{output} if defined $Opt{output};
+  push @outputs, "$movie.jpg";
+  push @outputs, $movie; $outputs[-1] =~ s/\.\w+$//; $outputs[-1] .= ".jpg";
+  for (@outputs) {
+    if ($Opt{skip_if_exists} && (-e $_)) {
+      INFO "$_ already exists, skipping this movie ...";
+      next MOVIE;
+    }
+  }
   my $i = 0;
+  my $output = $outputs[0];
   while (!$Opt{overwrite} && (-e $output)) {
     if ($Opt{skip_if_exists}) {
       INFO "$output already exists, skipping this movie ...";
