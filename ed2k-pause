@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+@ids = ();
+
+while (<>) {
+  /^\[D(?:onkey)? +(\d+)/ and push @ids, $1;
+}
+
+print "pause ", join(" ",@ids), "\n";

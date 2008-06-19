@@ -10,7 +10,9 @@ use Cwd;
 
 my %Opt = (
            log_level => 'info',
+           bitrate => '128',
           );
+my %DefOpt = %Opt;
 
 # --- subs
 
@@ -31,6 +33,7 @@ GetOptions(
            'log-level=s' => \$Opt{log_level},
            'debug' => sub { $Opt{log_level} = 'debug' },
            'verbose' => sub { $Opt{log_level} = 'info' },
+           'bitrate=i' => \$Opt{bitrate},
            'help' => \$Opt{help},
           );
 if ($Opt{help}) {
@@ -42,6 +45,7 @@ Options:
                 Default is verbose.
  --debug        Set verbosity level to debug.
  --verbose      Set verbosity level to verbose.
+ --bitrate      Set bitrate (default: $DefOpt{bitrate}).
 EOF
   exit 0;
 }
@@ -64,7 +68,13 @@ for my $f (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>) {
     WARN "`$d' already exists, skipped";
     next;
   }
-  mysystem "ffmpeg -acodec copy -i ".esc($f)." ".esc($d);
+  my @opts = ();
+  if ($f =~ /\.rmvb$/) {
+      push @opts, "-ab $Opt{bitrate}";
+  } else {
+      push @opts, "-acodec copy";
+  }
+  mysystem "ffmpeg ".join(" ", @opts)." -i ".esc($f)." ".esc($d);
   if ($?) {
     ERROR "Failed extracting audio from `$f': $! ($?), skipped\n";
     next;

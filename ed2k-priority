@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+# gak bisa? kebaca aja sama <>
+#if (@ARGV != 1) {
+#    print "Usage: $0 <priority> < output of vd\n";
+#    exit 1;
+#    $prio = shift @ARGV;
+#}
+$prio = "XX";
+
+@ids = ();
+
+while (<>) {
+  /^\[D(?:onkey)? +(\d+)/ and push @ids, $1;
+}
+
+print "priority $prio ", join(" ",@ids), "\n";

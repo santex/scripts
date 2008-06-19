@@ -72,4 +72,8 @@ echo "+ Installing sound card driver..."
 if [ "$ISLINUX26" == 1 ]; then modprobe via82cxxx_audio
 else insmod via82cxxx_audio; fi
 
+/etc/init.d/cgiexecd start
+/etc/init.d/mysql start
+/etc/init.d/apache2 start
+
 echo "+ Done."
