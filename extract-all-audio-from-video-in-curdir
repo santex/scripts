@@ -8,13 +8,13 @@ use Cwd;
 
 # --- globals
 
-my %Opt = (
+my %DefOpt = (
            log_level => 'info',
            bitrate => '64',
            samprate => '44000',
            copy => 1,
           );
-my %DefOpt = %Opt;
+my %Opt = %DefOpt;
 
 # --- subs
 
@@ -42,14 +42,19 @@ GetOptions(
           );
 if ($Opt{help}) {
   print <<EOF;
-$0 [options]
+$0 [options] [FILES ...]
+
+If files are not specified, process all movie files in current dir.
 
 Options:
  --log-level=L  Set verbosity level (fatal/error/warn/info/debug).
                 Default is verbose.
+ --nocopy       Do not attempt to just copy the audio from movie
+                 files, but do a re-encoding to MP3
  --debug        Set verbosity level to debug.
  --verbose      Set verbosity level to verbose.
  --bitrate      Set bitrate (default: $DefOpt{bitrate}).
+ --samprate     Set sampling rate (default: $DefOpt{samprate}).
 EOF
   exit 0;
 }
@@ -64,7 +69,9 @@ else  { die "FATAL: Unknown log level: $Opt{log_level}. Use one of: fatal, error
 Log::Log4perl->easy_init($log_level);
 
 my $cwd = getcwd;
-for my $f (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>) {
+my @files;
+if (@ARGV) { @files = @ARGV } else { @files = (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>) }
+for my $f (@files) {
   chdir $cwd;
   INFO "Processing file: `$f'...";
   my $d = $f; $d =~ s/\.\w+$/\.mp3/;
