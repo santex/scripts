@@ -10,7 +10,9 @@ use Cwd;
 
 my %Opt = (
            log_level => 'info',
-           bitrate => '128',
+           bitrate => '64',
+           samprate => '44000',
+           copy => 1,
           );
 my %DefOpt = %Opt;
 
@@ -34,7 +36,9 @@ GetOptions(
            'debug' => sub { $Opt{log_level} = 'debug' },
            'verbose' => sub { $Opt{log_level} = 'info' },
            'bitrate=i' => \$Opt{bitrate},
+           'samprate=i' => \$Opt{samprate},
            'help' => \$Opt{help},
+           'copy!' => \$Opt{copy},
           );
 if ($Opt{help}) {
   print <<EOF;
@@ -69,8 +73,8 @@ for my $f (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>) {
     next;
   }
   my @opts = ();
-  if ($f =~ /\.rmvb$/) {
-      push @opts, "-ab $Opt{bitrate}";
+  if ($f =~ /\.rmvb$/ || !$Opt{copy}) {
+      push @opts, "-ab $Opt{bitrate} -ar $Opt{samprate}";
   } else {
       push @opts, "-acodec copy";
   }
