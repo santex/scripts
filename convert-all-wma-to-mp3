@@ -2,7 +2,13 @@
 
 # 2005-12-25
 
-for (<*.wma>) {
+if (@ARGV) {
+    @files = @ARGV;
+} else {
+    @files = (<*.wma>);
+}
+
+for (@files) {
   if (-f "$_.mp3") {
     print "WARNING: $_.mp3 exists, skipped";
   }

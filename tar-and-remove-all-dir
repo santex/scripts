@@ -2,7 +2,14 @@
 
 # 2004-08-13 - tar all dirs into DIRNAME.tar and remove the dirs.
 
-for (grep {-d} <*>) {
+my @ents;
+if (@ARGV) {
+    @ents = @ARGV;
+} else {
+    @ents = (<*>);
+}
+
+for (grep {-d} @ents) {
   if (-f "$_.tar") {
     print "WARNING: $_.tar exists, skipped";
   }

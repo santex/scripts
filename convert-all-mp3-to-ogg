@@ -25,7 +25,14 @@ EOF
   exit 0;
 }
 
-for my $f (<*.mp3>) {
+my @files;
+if (@ARGV) {
+    @files = @ARGV;
+} else {
+    @files = (<*.mp3>);
+}
+
+for my $f (@files) {
   if (-f "$f.ogg") {
     print "WARNING: $f.ogg exists, skipped";
   }

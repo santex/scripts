@@ -25,7 +25,14 @@ EOF
   exit 0;
 }
 
-FILE: for my $f (<*.ape>) {
+my @files;
+if (@ARGV) {
+    @files = @ARGV;
+} else {
+    @files = (<*.ape>);
+}
+
+FILE: for my $f (@files) {
   my $fc = $f; $fc =~ s/\.ape$/.cue/i;
   if (!(-f $fc)) {
     print "WARNING: $fc doesn't exist, skipped";

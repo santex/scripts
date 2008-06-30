@@ -64,7 +64,14 @@ EOF
 }
 #die "Invalid size, use WxH syntax\n" unless $Opt{size} =~ /^\d+x\d+$/;
 
-for my $f (<*.mpg>, <*.mpeg>, <*.dat>, <*.MPG>, <*.MPEG>, <*.DAT>) {
+my @files;
+if (@ARGV) {
+    @files = @ARGV;
+} else {
+    @files = (<*.mpg>, <*.mpeg>, <*.dat>, <*.MPG>, <*.MPEG>, <*.DAT>);
+}
+
+for my $f (@files) {
   if (-f "$f.avi") {
     print "WARNING: $f.avi exists, skipped";
   }
