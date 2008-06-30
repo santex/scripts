@@ -13,6 +13,7 @@ cd /home/steven/proj/mwn/spanel-configs
   default-dns-zone.yaml \
   dns-zone-templates \
   www \
+  www-templates \
   plans.yaml \
   servers/'[[SERVERID]]'/spanel.yaml \
   \
