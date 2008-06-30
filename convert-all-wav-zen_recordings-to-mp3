@@ -1,2 +1,0 @@
-#!/bin/sh
-convert-all-wav-to-mp3.pl --bitrate 24 --samprate 16000 $*
