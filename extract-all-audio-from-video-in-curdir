@@ -13,6 +13,7 @@ my %DefOpt = (
            bitrate => '64',
            samprate => '44000',
            copy => 1,
+           format => 'mp3',
           );
 my %Opt = %DefOpt;
 
@@ -39,6 +40,7 @@ GetOptions(
            'samprate=i' => \$Opt{samprate},
            'help' => \$Opt{help},
            'copy!' => \$Opt{copy},
+           'format=s' => \$Opt{format},
           );
 if ($Opt{help}) {
   print <<EOF;
@@ -55,6 +57,7 @@ Options:
  --verbose      Set verbosity level to verbose.
  --bitrate      Set bitrate (default: $DefOpt{bitrate}).
  --samprate     Set sampling rate (default: $DefOpt{samprate}).
+ --format F     Set output format (default: $DefOpt{format}).
 EOF
   exit 0;
 }
@@ -74,7 +77,7 @@ if (@ARGV) { @files = @ARGV } else { @files = (<*.ogg>, <*.avi>, <*.mpg>, <*.mpe
 for my $f (@files) {
   chdir $cwd;
   INFO "Processing file: `$f'...";
-  my $d = $f; $d =~ s/\.\w+$/\.mp3/;
+  my $d = $f; $d =~ s/\.\w+$/\.$Opt{format}/;
   if (-e $d) {
     WARN "`$d' already exists, skipped";
     next;

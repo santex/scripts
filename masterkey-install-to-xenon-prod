@@ -7,7 +7,7 @@ rsync -e ssh -Pavz \
 ssh mwnwhmcs@xenon masterkey/bin/masterkey-install \
   --branch prod \
   --source /home/mwnwhmcs/masterkey \
-  --target /s/prod.whmcs.mwn.localdomain/www/ \
+  --target /s/masterkey.masterweb.net/www/ \
   --sh-functions-path /home/mwnwhmcs/sh_functions.inc.php \
   install \
   $*

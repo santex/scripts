@@ -6,12 +6,15 @@ use Getopt::Long;
 my %Opt = (
         samprate => 44100,
         bitrate => 64,
+        encoder => 'lame',
        );
+my %DefOpt = %Opt;
 
 GetOptions(
            'help' => \$Opt{help},
            'bitrate=i' => \$Opt{bitrate},
            'samprate=i' => \$Opt{samprate},
+           'encoder=s' => \$Opt{encoder},
           );
 if ($Opt{help}) {
   print <<EOF;
@@ -33,7 +36,13 @@ for my $f (@files) {
     print "WARNING: $f.mp3 exists, skipped";
   }
   my $esc = esc($f);
-  my $cmd = "ffmpeg -i $esc -ar $Opt{samprate} -ab $Opt{bitrate} $esc.mp3";
+  my $cmd;
+  if ($Opt{encoder} eq 'ffmpeg') {
+      $cmd = "ffmpeg -i $esc -ar $Opt{samprate} -ab $Opt{bitrate} $esc.mp3";
+  } else {
+      $cmd = "lame -b $Opt{bitrate} $esc $esc.mp3";
+  }
+
   print $cmd;
   system $cmd;
 }
