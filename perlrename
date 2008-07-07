@@ -6,9 +6,9 @@
 use warnings;
 use strict;
 use File::Find;
-use Cwd;
+use Cwd qw(abs_path);
 
-my $VERSION = "0.21";
+my $VERSION = "0.23";
 
 use Getopt::Std;
 my %_opts;
@@ -55,7 +55,7 @@ my @_items = ();
 
 if ($^O =~ /win32/i) {
   for (@ARGV) {
-    if (/[*?]/) { push @_items, glob $_ } else { push @_items, $_ }
+    if (/[*?{}\[\]]/) { push @_items, glob $_ } else { push @_items, $_ }
   }
 } else {
   push @_items, @ARGV;
@@ -96,7 +96,7 @@ sub process_item {
   no strict; $TESTING = 0; eval $_opts{e}; use strict;
   my $_new = $_;
 
-  return if $_old eq $_new;
+  return if abs_path($_old) eq abs_path($_new);
 
   my $_cwd = getcwd();
   unless ($_opts{o}) {
