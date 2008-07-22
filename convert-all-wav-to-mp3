@@ -22,8 +22,9 @@ $0 [options]
 
 Options:
  --help       Show this message and exit.
- --bitrate=B  Set bitrate in kbit, default is 96.
- --samprate=B Set sampling rate in Hz, default is 44100.
+ --bitrate=B  Set bitrate in kbit, default is $DefOpt{bitrate}.
+ --samprate=S Set sampling rate in Hz, default is $DefOpt{samprate}.
+ --encoder=E  Set encoder (lame or ffmpeg), default is $DefOpt{encoder}.
 EOF
   exit 0;
 }

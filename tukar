@@ -1,0 +1,8 @@
+#!/bin/bash
+if test $# -ne 2; then
+  echo "Usage: $0 FILE1 FILE2"
+  exit 1
+fi
+
+temp=`tempfile --directory=.`
+mv "$1" $temp && mv "$2" "$1" && mv $temp "$2"
