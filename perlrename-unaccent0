@@ -1,0 +1,4 @@
+#!/bin/bash
+perlrename -e '
+ #82=e/, 8A=e\
+ tr/\x82\x8A/ee/' "$@"
