@@ -1,0 +1,68 @@
+#!/usr/bin/perl
+
+# 040121
+
+$VERSION = "20050121";
+
+use FindBin;
+use lib "$FindBin::Bin/../lib/perl";
+use Mail::Sendmail; # to set envelope sender (return-path) as well, you need a patched Mail::Sendmail
+use IO::Socket::INET;
+use Getopt::Long;
+use File::Slurp;
+
+$subject = "(no subject)";
+$message_file = undef;
+$message = "This is the default message.\n";
+$from = undef;
+$smtp = "localhost";
+$n = 1;
+@to = ();
+$raw_session_file = undef;
+
+GetOptions(
+  "subject=s" => \$subject,
+  "from=s" => \$from,
+  "message=s" => \$message,
+  "message-file=s" => \$message_file,
+  "smtp=s" => \$smtp,
+  'to=s' => \@to,
+  'n=i' => \$n,
+  'raw-session=s' => \$raw_session,
+  'raw-session-file=s' => \$raw_session_file,
+);
+
+%args = (); 
+$args{subject} = $subject;
+$args{smtp} = $smtp;
+if ($message_file) {
+  $args{message} = read_file $message_file;
+} else {
+  $args{message} = $message;
+}
+$args{from} = $args{"return-path"} = $from if defined $from;
+$args{to} = join ", ",@to if @to;
+
+if ($raw_session_file) {
+  $raw_session = read_file $raw_session_file;
+}
+
+for $i (1..$n) {
+  print "Sending mail ($i)\n";
+  if (defined($raw_session)) {
+    $sock = IO::Socket::INET->new(
+                                  PeerAddr => $args{smtp},
+                                  PeerPort => 'smtp(25)',
+                                  Proto => 'tcp'
+                                 ) or die "FATAL: Can't open socket to $args{smtp}:25\n";
+    #$banner = <$sock>;
+    $sock->printflush($raw_session);
+    $sock->printflush("\n") unless $raw_session =~ /\n\z/;
+    $sock->printflush(".\n") unless $raw_session =~ /.\n\z/;
+    while ($resp = <$sock>) { print $resp }
+    $sock->close;
+  } else {
+    sendmail(%args) or die "FATAL: Can't send mail: $Mail::Sendmail::error\n";
+  }
+}
+

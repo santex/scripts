@@ -1,0 +1,47 @@
+#!/usr/bin/perl
+
+# 040410
+
+$VERSION = "20040410";
+
+use FindBin;
+use lib "$FindBin::Bin/../lib/perl";
+use Mail::Sender;
+use Getopt::Long;
+$subject = "(no subject)";
+$message = "This is the default message.\n";
+$from = undef;
+$file = "";
+$smtp = "localhost";
+$n = 1;
+@to = ();
+
+GetOptions(
+  "subject=s" => \$subject,
+  "from=s" => \$from,
+  "message=s" => \$message,
+  "file=s" => \$file,
+  "smtp=s" => \$smtp,
+  'to=s' => \@to,
+  'n=i' => \$n,
+);
+
+die "FATAL: Please specify file\n" unless $file;
+die "FATAL: File doesn't exist\n" unless -f $file;
+
+for $i (1..$n) {
+  %args0 = ();
+  $args0{smtp} = $smtp;
+  $args0{from} = $args{"return-path"} = $from if defined $from;
+  $sender = new Mail::Sender(\%args0);
+
+  %args = (); 
+  $args{msg} = $message;
+  $args{subject} = $subject;
+  $args{to} = join ", ",@to if @to;
+  $args{file} = $file;
+
+  print "Sending mail ($i)\n";
+  $sender->MailFile(\%args);
+  die "FATAL: Can't send mail: $sender->{error_msg} ($sender->{error})\n" if $sender->{error};
+}

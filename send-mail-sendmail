@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+use File::Slurp;
+
+$VERSION = "20061122";
+
+$subject = "(no subject)";
+$message_file = undef;
+$message = "This is the default message.\n";
+$from = undef;
+$smtp = "localhost";
+$n = 1;
+@to = ();
+$raw_session = undef;
+$raw_session_file = undef;
+
+GetOptions(
+  "subject=s" => \$subject,
+  "from=s" => \$from,
+  "message=s" => \$message,
+  "message-file=s" => \$message_file,
+  "smtp=s" => \$smtp,
+  'to=s' => \@to,
+  'n=i' => \$n,
+  'raw-session=s' => \$raw_session,
+  'raw-session-file=s' => \$raw_session_file,
+);
+
+%args = ();
+$args{subject} = $subject;
+$args{smtp} = $smtp;
+if ($message_file) {
+  $args{message} = read_file $message_file;
+} else {
+  $args{message} = $message;
+}
+$args{from} = $args{"return-path"} = $from if defined $from;
+$args{to} = join ", ",@to if @to;
+
+$raw_session = read_file($raw_session_file) if defined($raw_session_file);
+
+if (!defined($raw_session)) {
+  die "Please specify sender\n" unless $from;
+  die "Please specify 1 or more recipients\n" unless $args{to};
+}
+
+for $i (1..$n) {
+  open SENDMAIL, "| /usr/sbin/sendmail -t -i" or die "FATAL: Can't send mail: $! ($?)\n";
+  print "Sending mail ($i)\n";
+  if (defined($raw_session)) {
+    print SENDMAIL $raw_session;
+  } else {
+    print SENDMAIL "From: $args{from}\n";
+    print SENDMAIL "Subject: $args{subject}\n";
+    print SENDMAIL "To: $args{to}\n";
+    print SENDMAIL "\n";
+    print SENDMAIL $args{message};
+  }
+  close SENDMAIL or die "FATAL: Can't send mail: $! (",($?>>8),")\n";
+}
+
