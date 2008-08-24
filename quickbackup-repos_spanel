@@ -1,3 +1,0 @@
-#!/bin/sh
-
-backup-with-history ~/svn/repos-spanel /backup/encrypted/steven/quickbackup/repos-spanel

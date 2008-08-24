@@ -1,0 +1,3 @@
+#!/bin/sh
+
+backup-with-history ~/proj/spanel /backup/encrypted/steven/quickbackup/proj-spanel
