@@ -4,12 +4,17 @@ prefix=$HOME/whinfo/`date +"%Y-%m-%d"`
 path=$prefix/
 mkdir -p $prefix
 cd $prefix || ( echo "Can't cd to '$prefix', aborting"; exit 1 )
-wget -q -O "$prefix/ID.html" -e robots=off http://www.webhosting.info/webhosts/tophosts/Country/ID
-extract-links-from-file-or-url             http://www.webhosting.info/webhosts/tophosts/Country/ID | \
-  grep /webhosts/reports/ | \
+
+url=http://webhosting.info/webhosts/tophosts/Country/ID
+file="$prefix/ID.html"
+wget -q -O "$file" -e robots=off -U Mozilla/4.0 $url
+perl -lne'print $1 if
+  m!href="(http://(?:www\.)?webhosting.info/webhosts/reports/[\w.-]+)"!' "$file" | \
   wget -q --cache off -i-
 
-wget -q -O "$path/global.html" -e robots=off http://www.webhosting.info/webhosts/tophosts/global
-extract-links-from-file-or-url               http://www.webhosting.info/webhosts/tophosts/global | \
-  grep /webhosts/reports/ | \
+url=http://webhosting.info/webhosts/tophosts/global
+file="$path/global.html"
+wget -q -O "$file" -e robots=off -U Mozilla/4.0 $url
+perl -lne'print $1 if
+  m!href="(http://(?:www\.)?webhosting.info/webhosts/reports/[\w.-]+)"!' "$file" | \
   wget -q --cache off -i-
