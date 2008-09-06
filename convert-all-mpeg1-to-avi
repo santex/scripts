@@ -7,14 +7,14 @@ our $VERSION = '0.03 (2007-05-28)';
 
 my %Opt = (
         #vcodec => 'h264',
-        #vbitrate => 386,
-        #abitrate => 64,
+        #vbitrate => 386*1024,
+        #abitrate => 64*1024,
 
         # 384 kbps, sepertiga mpeg...
         # 2007-05-27 - jelek hasilnya.
         #vcodec => 'xvid',
-        #vbitrate => 328,
-        #abitrate => 56,
+        #vbitrate => 328*1024,
+        #abitrate => 56*1024,
 
         # i think ffmpeg's --sameq is useless? it picks too low
         # bitrates for mpeg1 (around 220 kbps for video).
@@ -22,8 +22,8 @@ my %Opt = (
         # current best default: h264 2-pass
         # XXX, h264 doesn't support 2pass? 1pass and 2pass result are identical
         vcodec => 'h264',
-        vbitrate => 328,
-        abitrate => 56,
+        vbitrate => 328*1024,
+        abitrate => 56*1024,
         pass => 1,
 
         acodec => 'mp3',

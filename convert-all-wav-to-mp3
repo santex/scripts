@@ -5,7 +5,7 @@ use Getopt::Long;
 
 my %Opt = (
         samprate => 44100,
-        bitrate => 64,
+        bitrate => 64*1024,
         encoder => 'lame',
        );
 my %DefOpt = %Opt;
@@ -22,7 +22,7 @@ $0 [options]
 
 Options:
  --help       Show this message and exit.
- --bitrate=B  Set bitrate in kbit, default is $DefOpt{bitrate}.
+ --bitrate=B  Set bitrate in bit/s, default is $DefOpt{bitrate}.
  --samprate=S Set sampling rate in Hz, default is $DefOpt{samprate}.
  --encoder=E  Set encoder (lame or ffmpeg), default is $DefOpt{encoder}.
 EOF

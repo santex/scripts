@@ -5,7 +5,7 @@ use Getopt::Long;
 
 my %Opt = (
         samprate => 44100,
-        bitrate => 192,
+        bitrate => 192*1024,
        );
 
 GetOptions(
@@ -19,7 +19,7 @@ $0 [options]
 
 Options:
  --help       Show this message and exit.
- --bitrate=B  Set bitrate in kbit, default is 192.
+ --bitrate=B  Set bitrate in bit/s, default is ${\(192*1024)}.
  --samprate=B Set sampling rate in Hz, default is 44100.
 EOF
   exit 0;

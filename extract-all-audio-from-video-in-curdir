@@ -10,7 +10,7 @@ use Cwd;
 
 my %DefOpt = (
            log_level => 'info',
-           bitrate => '64',
+           bitrate => '64'*1024,
            samprate => '44000',
            copy => 1,
            format => 'mp3',
