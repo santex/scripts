@@ -68,9 +68,9 @@ echo "+ Copying $XCONF to $XFINALCONF..."
 rm -f "$XFINALCONF"
 cp -a "$XCONF" "$XFINALCONF"
 
-echo "+ Installing sound card driver..."
-if [ "$ISLINUX26" == 1 ]; then modprobe via82cxxx_audio
-else insmod via82cxxx_audio; fi
+#echo "+ Installing sound card driver..."
+#if [ "$ISLINUX26" == 1 ]; then modprobe snd_via82xx
+#else insmod snd_via82xx; fi
 
 /etc/init.d/cgiexecd start
 /etc/init.d/mysql start

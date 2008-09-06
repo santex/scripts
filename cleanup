@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+for (@users) {
+  chdir "/home/$user" or next; # XXX user's homedir
+  # .opera/opcache/op*
+  # .opera/cache4/op*
+  # .opera/images/*
+  # .mozilla/firefox/default.*/Cache/*
+
+  # .local/share/Trash/*/<ALL>
+
+  # .thumbnails/{large,normal}/*
+}

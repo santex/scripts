@@ -4,7 +4,7 @@
 
 require 'yaml'
 
-storages = YAML::load(File::open('/home/steven/storage_media_list.yaml').read)
+storages = YAML::load(File::open('/home/steven/notes/storage_media_list.yaml').read)
 summary = {}
 
 storages.each_pair {|name, storage|

@@ -63,10 +63,6 @@ echo "+ Copying xorg.conf.home to xorg.conf..."
 rm -f /etc/X11/xorg.conf
 cp -a /u/steven/private/etc/xorg.conf.home /etc/X11/xorg.conf
 
-echo "+ Installing sound card driver..."
-if [ "$ISLINUX26" == 1 ]; then modprobe i810_audio
-else insmod i810_audio; fi
-
 echo "+ Fixing cdrom driver installation..."
 # hanya lakukan (terutama hdparm) jika ada cdrom tercolok
 # XXX gimana jika bukan tercolok di hdb?

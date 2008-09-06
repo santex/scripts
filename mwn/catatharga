@@ -3,9 +3,7 @@ prefix=$HOME/catatharga
 
 path=$prefix/rakitan/`date +"%Y-%m-%d@%H:%M:%S"`
 mkdir -p "$path"; cd "$path"
-extract-links-from-file-or-url http://rakitan.com/ | \
-  grep /kategori.php | \
-  wget -q --cache off -i-
+wget http://rakitan.com -r -l1 -H -D rakitan.com -nH -A '/index.*,kategori.php*' -q --cache off
 
 #path=$prefix/uc98/`date +"%Y%m%d%H%M%S"`
 #mkdir -p $path; cd $path
