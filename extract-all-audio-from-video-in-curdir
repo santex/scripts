@@ -10,7 +10,7 @@ use Cwd;
 
 my %DefOpt = (
            log_level => 'info',
-           bitrate => '64'*1024,
+           bitrate => '64k',
            samprate => '44000',
            copy => 1,
            format => 'mp3',
@@ -36,7 +36,7 @@ GetOptions(
            'log-level=s' => \$Opt{log_level},
            'debug' => sub { $Opt{log_level} = 'debug' },
            'verbose' => sub { $Opt{log_level} = 'info' },
-           'bitrate=i' => \$Opt{bitrate},
+           'bitrate=s' => \$Opt{bitrate},
            'samprate=i' => \$Opt{samprate},
            'help' => \$Opt{help},
            'copy!' => \$Opt{copy},

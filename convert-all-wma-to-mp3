@@ -13,8 +13,8 @@ for (@files) {
     print "WARNING: $_.mp3 exists, skipped";
   }
   $esc = esc($_);
-  #$cmd = "ffmpeg -i $esc -ab \$[128*1024] $esc.mp3 && rm -f $esc";
-  $cmd = "ffmpeg -i $esc -ab \$[128*1024] $esc.mp3";
+  #$cmd = "ffmpeg -i $esc -ab 128k $esc.mp3 && rm -f $esc";
+  $cmd = "ffmpeg -i $esc -ab 128k $esc.mp3";
   print $cmd;
   system $cmd;
 }

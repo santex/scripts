@@ -5,14 +5,14 @@ use Getopt::Long;
 
 my %Opt = (
         samprate => 44100,
-        bitrate => 64*1024,
+        bitrate => '64k',
         encoder => 'lame',
        );
 my %DefOpt = %Opt;
 
 GetOptions(
            'help' => \$Opt{help},
-           'bitrate=i' => \$Opt{bitrate},
+           'bitrate=s' => \$Opt{bitrate},
            'samprate=i' => \$Opt{samprate},
            'encoder=s' => \$Opt{encoder},
           );
