@@ -2,7 +2,8 @@
 
 use warnings;
 use strict;
-use Carp qw(verbose);
+#use Carp qw(verbose);
+use Carp::Always;
 use App::Options (
   option => {
     ics_dir => {
@@ -45,6 +46,8 @@ FILE: for my $f (<*.ics>) {
   open F, "$f"; my $content = join "", <F>; close F;
   # korganizer sometimes uses unix timestamp that confuses iCal::Parser
   $content =~ s/^DTSTART;VALUE=DATE:\d{8,}\n//mg;
+  # iCal::Parser can't handle korg's time duration format in TRIGGER
+  $content =~ s/^TRIGGER.*\n//mg;
   my $cal = iCal::Parser->new->parse_strings($content);
   next FILE unless $cal;
   if ($cal->{events}) {
