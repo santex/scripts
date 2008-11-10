@@ -1,0 +1,3 @@
+#!/bin/sh
+
+backup-with-history ~/proj/dp /backup/encrypted/steven/quickbackup/proj-dp

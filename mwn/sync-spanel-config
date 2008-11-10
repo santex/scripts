@@ -17,4 +17,4 @@ cd /home/steven/proj/mwn/spanel-configs
   plans.yaml \
   servers/'[[SERVERID]]'/spanel.yaml \
   \
-  '[[USER]]@[[IP]]':/etc/spanel/
+  '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/

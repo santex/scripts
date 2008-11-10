@@ -1,13 +1,13 @@
 #!/bin/sh
 
-SRC=/home/steven/proj/spanel
+SRC=/home/steven/proj/spanel+trans
 # default is home directory
-TARGET=
+TARGET=spanel
 
 echo "Updating source trees (~/spanel on remote servers) ..."
 /c/sbin/spanel-multissh $@ --nouse-ip --rsync --user root -- \
   -Pavz --del --exclude '.svn' --exclude '.bzr' --exclude '*~' \
-  "$SRC" '[[USER]]@[[IP_OR_HOSTNAME]]':$TARGET
+  "$SRC/" '[[USER]]@[[IP_OR_HOSTNAME]]':$TARGET/
 
 echo "Running spanel-install on remote servers ..."
 /c/sbin/spanel-multissh $@ --nouse-ip --user root -- spanel/sbin/spanel-install --nocheck install

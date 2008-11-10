@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+
+# contoh pemakaian: --en corruption --id korupsi
+
+use strict;
+use Getopt::Long;
+#use LWP::Simple;
+use URI::Escape;
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}
+
+my %Opts = ();
+
+GetOptions(
+    'en=s' => \$Opts{en},
+    'id=s' => \$Opts{id},
+    #'fr=s' => \$Opts{fr},
+    # ...
+);
+
+my @Langs = sort keys %Opts;
+
+die "Please mention at least 1 language, e.g. --en.\n" unless @Langs;
+
+my %Res;
+for my $lang (@Langs) {
+    my $url = "http://www.google.com/search?hl=en&lr=lang_$lang&safe=off&q=".uri_escape($Opts{$lang});
+    my $eurl = esc($url);
+    my $ct = `wget -U "Mozilla" -q -O- $eurl`;
+    $ct or die "FATAL: Can't search for $Opts{$lang} ($lang)\n";
+    $ct =~ m#Results <b>\d+</b> - <b>\d+</b> of about <b>([0-9,]+)</b># or die "FATAL: Can't parse result page for $Opts{$lang} ($lang)\n";
+    my $n = $1; $n =~ s/\D//g;
+    $Res{$lang} = $n;
+    printf "%-30s = %12d\n", "$Opts{$lang} ($lang)", $n;
+}
+
+printf "%-30s = %12.2f\n", "$Langs[0] vs $Langs[1]", $Res{$Langs[0]}/$Res{$Langs[1]};

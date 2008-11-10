@@ -1,0 +1,23 @@
+#!/usr/bin/perl 
+
+#use warnings;
+use strict;
+use Net::BitTorrent::File;
+#use YAML::XS;
+use Data::Dumper;
+
+my $totsize = 0;
+for my $file (@ARGV) {
+    next unless -f $file;
+    print "Torrent: $file\n";
+    my $tor = new Net::BitTorrent::File($file);
+    #print Dumper($tor);
+    my $files = $tor->files;
+    #print Dumper($files);
+    for my $f (@$files) {
+        print "  File: $f->{path}[0] ($f->{length})\n";
+        $totsize += $f->{length};
+    }
+}
+printf "Total size: %.1f GB\n", $totsize/1024/1024/1024;
+

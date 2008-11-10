@@ -1,4 +1,5 @@
 #!/bin/bash
 perlrename -e '
+ # XXX gak bener, yang benar adalah pake s/// karena 2bit
  #82=e/, 8A=e\
- tr/\x82\x8A/ee/' "$@"
+ #tr/\x82\x8A\xc3/eea/' "$@"

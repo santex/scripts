@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+$cmd = "";
+for (@ARGV) {
+    if (!length($cmd)) { $cmd = "grep -i '$_' ~/notes/2dl ~/notes/2download-done.txt" }
+    else { $cmd .= " | grep -i '$_'"; }
+}
+
+print "# $cmd\n";
+system $cmd;
+

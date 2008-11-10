@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# file2x yang dikopi dari cdrom biasanya jadi 0444
+
+chmod -R u+w .
+
+

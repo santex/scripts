@@ -11,3 +11,17 @@ ssh mwnwhmcs@xenon masterkey/bin/masterkey-install \
   --sh-functions-path /home/mwnwhmcs/sh_functions.inc.php \
   install \
   $*
+
+ssh root@xenon \
+'for p in /s/masterkey.masterweb.net/www/admin/mobile/sendsms; \
+ do chown root.mwnwhmcs "$p"; chmod 4755 "$p"; done; \
+ rsync -Pav --del \
+   --include "+ admin" \
+   --include "+ admin/mobile" \
+   --include "+ admin/mobile/**" \
+   --include "+ configuration.php" \
+   --include "+ includes" \
+   --include "+ includes/mk-functions.php" \
+   --include "- *" \
+   /s/masterkey.masterweb.net/www/ /usr/local/masterkey/
+'

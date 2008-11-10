@@ -55,6 +55,8 @@ def mount_encrypted(path, mpoint, fstype, opts, enctype)
 
     use_loop = 1 unless path =~ %r(^/dev/)
 
+    system "modprobe loop" if use_loop
+
     # find a free loop device
     loop_num = nil
     if use_loop
@@ -160,8 +162,6 @@ end
 def $log.puts(s)
   orig_puts("#{Time.now}: #{s}")
 end
-
-system "modprobe loop"
 
 # ---
 

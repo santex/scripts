@@ -6,10 +6,11 @@ TMPDIR=/tmp/kbriv
 TARGETHOST=h14763@kbrivientiane.org
 if [ $0 == "prod" ]; then TARGETVHOST=kbrivientiane.org; else TARGETVHOST=staging.kbrivientiane.org; fi
 
-rsync -e ssh -az --exclude '/.bzr' --exclude '*~' --del --force ~/proj/webdev/kaishi/                      $TMPDIR/
-rsync -e ssh -az --exclude '/.bzr' --exclude '*~'               ~/proj/spanel/lib/php/sh_functions.inc.php $TMPDIR/
-rsync -e ssh -az --exclude '/.bzr' --exclude '*~'               ~/proj/webdev/kbri-vientiane/              $TMPDIR/
+rsync -e ssh -az   --exclude '/.bzr' --exclude '*~' --del --force ~/proj/webdev/kaishi/                      $TMPDIR/
+rsync -e ssh -az   --exclude '/.bzr' --exclude '*~'               ~/proj/spanel/lib/php/sh_functions.inc.php $TMPDIR/
+rsync -e ssh -az   --exclude '/.bzr' --exclude '*~'               ~/proj/webdev/kbri-vientiane/              $TMPDIR/
 rsync -e ssh -Pavz --exclude '/.bzr' --exclude '*~' \
   --exclude '/config.inc.php' \
+  --exclude '/upload' \
   --exclude '/data' \
   $TMPDIR/ $TARGETHOST:/s/$TARGETVHOST/www/

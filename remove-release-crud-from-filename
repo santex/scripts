@@ -6,6 +6,11 @@ use strict;
 my $VERSION = 20070526;
 
 my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+shengchengjiayuan[www.dream2008.cn]@
+[scg-cmct]www.dream2008.cn
+www.dream2008.cn@
+www.uubird.com-youyouniaoyingshiluntan-
+[dianyingtiantangwww.dygod.cn]
 [www.ppnow.com]
 [#aznmp3] 
 
@@ -41,6 +46,13 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.jiuzhouke
+.HDTV.XviD-LOL.[VTV]
+.HDTV.XviD-E7
+.HDTV.XviD-2HD
+.DVDRip.XviD-SiNK
+ - tvrip
+ - dvdrip
 .DVDrip[ShareTV]
 .dvdrip.xvid-vfua
 .HDTV.XViD-YesTV
