@@ -1,3 +1,1 @@
-#!/bin/bash
-ulimit -v 750000 -m 750000
-/opt/Komodo-IDE-5/bin/komodo
+start-komodo4-ulimit
