@@ -6,6 +6,8 @@ use App::Options (
     option => {
         dvd_size => { type => 'int', required => 0, default => 4400 },
         fudge    => { type => 'int', required => 0, default => 10 },
+        move     => { type => 'boolean', required => 0, default => 0 },
+        dry_run  => { type => 'boolean', required => 0, default => 0, env => 'DRY_RUN' },
     },
 );
 
@@ -14,6 +16,8 @@ sub esc {
     s/'/'"'"'/g;
     "'$_'";
 }
+
+exit 0 unless @ARGV;
 
 my $bp = Algorithm::BinPack->new(
     binsize => $App::options{dvd_size},
@@ -28,10 +32,31 @@ for my $file ( sort @ARGV ) {
 my $i = 0;
 for my $bin ( $bp->pack_bins ) {
     $i++;
-    print "DVD ke-$i:\n";
+    print "DVD #$i:\n";
     for my $item ( sort { $a->{label} cmp $b->{label} } @{ $bin->{items} } ) {
         printf " %4d %s\n", $item->{size}, $item->{label};
     }
     print " ---\n";
     printf " %4d TOTAL\n\n", $bin->{size};
+}
+
+if ($App::options{move}) {
+    my $i = 0;
+    for my $bin ( $bp->pack_bins ) {
+        $i++;
+        my $j = 0;
+        my $dir;
+        while (1) { $dir = "dvd$i".($j ? ".$j" : ""); last unless -e $dir }
+        mkdir $dir unless $App::options{dry_run};
+        print "Moving DVD #$i to $dir ...\n";
+        for my $item ( @{ $bin->{items} } ) {
+            my $file = $item->{label};
+            $file =~ s!.+/!!;
+            if ($App::options{dry_run}) {
+                print "[DRY_RUN] Moving $file -> $dir/\n";
+            } else {
+                rename $file, "$dir/$file";
+            }
+        }
+    }
 }
