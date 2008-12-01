@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $height = 12;
+
+my @data = @ARGV or die "Usage: $0 <data ...>, e.g. 40 30 21\n";
+
+my $tot = 0; my $max = $data[0]; for (@data) { $tot+=$_; $max = $_ if $max < $_; }
+die "Zero or negative total\n" unless $tot > 0;
+
+for my $line (1..$height) {
+    my $i = 1;
+    for my $n (@data) {
+        print "  " if $i++ > 1;
+        print +(($height-$line) <= $n * $height/$max) ? "##" : "  ";
+    }
+    print "\n";
+}

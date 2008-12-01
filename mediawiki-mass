@@ -1,0 +1,101 @@
+#!/usr/bin/perl -w
+
+# this script performs action on multiple pages. pages are retrieved
+# from the Speciall:Allpages. languages id and en are supported.
+
+use strict;
+use Log::Log4perl qw(:easy);
+use WWW::Mechanize;
+#use URI::Escape;
+use App::Options (
+    option => {
+        profile => { type => 'string', required => 0, default => 'default', },
+        username => { type => 'string', required => 1, },
+        password => { type => 'string', required => 1, },
+        base_url => { type => 'string', required => 1, },
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+
+        page_re => { type => 'string', required => 0, default => '.*' },
+        action => { type => 'string', required => 0, default => 'list' },
+        reason => { type => 'string', required => 0 },
+    },
+);
+
+if ( $App::options{log_level} eq 'FATAL' ) {
+    Log::Log4perl->easy_init($FATAL);
+}
+elsif ( $App::options{log_level} eq 'ERROR' ) {
+    Log::Log4perl->easy_init($ERROR);
+}
+elsif ( $App::options{log_level} eq 'WARN' ) {
+    Log::Log4perl->easy_init($WARN);
+}
+elsif ( $App::options{log_level} eq 'INFO' ) {
+    Log::Log4perl->easy_init($INFO);
+}
+else { Log::Log4perl->easy_init($DEBUG) }
+
+my $page_re = $App::options{page_re};
+eval '$page_re = qr/$page_re/i';
+if ($@) { LOGDIE "Page regex is incorrect: `$page_re'" }
+
+my $action = $App::options{action};
+if ($action eq 'delete' && !$App::options{reason}) {
+    LOGDIE "Give --reason if you want to delete pages";
+}
+
+my $mech = new WWW::Mechanize;
+
+INFO "Logging in as $App::options{username} ...";
+$mech->get("$App::options{base_url}/index.php?title=Special:UserLogin&returnto=Main_Page");
+#$mech->form_with_fields('username');
+$mech->submit_form(
+    form_name => 'userlogin',
+    #form_number => 2,
+    fields      => {
+        wpName => $App::options{username},
+        wpPassword => $App::options{password},
+    },
+    button => 'wpLoginattempt',
+);
+
+#DEBUG $mech->content();
+LOGDIE "Can't login (or language not supported)" unless $mech->content =~ m!>Log out</a>!;
+
+INFO "Getting list of pages ...";
+my @pages = (); # title
+$mech->get("$App::options{base_url}/index.php?title=Special:Allpages");
+#for my $l ($mech->links) {
+#    next unless $l->url =~ /title=
+#}
+# pake regex lebih gampang, karena index.php?title=... digunakan di mana2x
+my $ct = $mech->content;
+push @pages, $1 while $ct =~ m!<td width="33%">(?:<div[^>]+>)?<a href="\S+?\?title=([^"]+)"!g;
+@pages = grep { /$page_re/ } @pages;
+
+if ($action eq 'list') {
+    print map {"$_\n"} @pages;
+    INFO "Number of pages found: ".(@pages+0);
+    exit 0;
+}
+
+if ($action eq 'delete') {
+    my $i = 0;
+    for my $page (@pages) {
+        $i++;
+        INFO "Deleting $i/${\(@pages+0)}: $page ...";
+        $mech->get("$App::options{base_url}/index.php?title=$page&action=delete");
+        $mech->form_with_fields('wpReason');
+        $mech->submit_form(
+            #form_name => 'deleteconfirm',
+            #form_number => 2,
+            fields      => {
+                wpReason => $App::options{reason},
+            },
+            button => 'wpConfirmB',
+        );
+        unless ($mech->content =~ /telah dihapus|has been deleted/) {
+            ERROR "Failed deleting $page";
+        }
+    }
+}

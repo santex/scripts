@@ -2,13 +2,15 @@
 rsync -e ssh -Pavz --del --delete-excluded --force --exclude '/.bzr' --exclude '*~' \
   ~/proj/mwn/masterkey mwnwhmcs@xenon:
 rsync -e ssh -Pavz \
-  ~/proj/spanel/lib/php/sh_functions.inc.php mwnwhmcs@xenon:
+  ~/proj/spanel/lib/php/{sh_functions.inc.php,sh_translation.inc.php} \
+  ~/proj/spanel/lang \
+  mwnwhmcs@xenon:
 
 ssh mwnwhmcs@xenon masterkey/bin/masterkey-install \
   --branch prod \
   --source /home/mwnwhmcs/masterkey \
   --target /s/masterkey.masterweb.net/www/ \
-  --sh-functions-path /home/mwnwhmcs/sh_functions.inc.php \
+  --sh-functions-dir /home/mwnwhmcs \
   install \
   $*
 
@@ -22,6 +24,8 @@ ssh root@xenon \
    --include "+ configuration.php" \
    --include "+ includes" \
    --include "+ includes/mk-functions.php" \
+   --include "+ includes/sh_functions.inc.php" \
+   --include "+ includes/sh_translation.inc.php" \
    --include "- *" \
    /s/masterkey.masterweb.net/www/ /usr/local/masterkey/
 '

@@ -1,0 +1,37 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Algorithm::BinPack;
+use App::Options (
+    option => {
+        dvd_size => { type => 'int', required => 0, default => 4400 },
+        fudge    => { type => 'int', required => 0, default => 10 },
+    },
+);
+
+sub esc {
+    local $_ = shift;
+    s/'/'"'"'/g;
+    "'$_'";
+}
+
+my $bp = Algorithm::BinPack->new(
+    binsize => $App::options{dvd_size},
+    fudge   => $App::options{fudge}
+);
+for my $file ( sort @ARGV ) {
+    my $cmd = 'du -sm ' . esc($file);
+    my ($size) = `$cmd` =~ /(\d+)/;
+    $bp->add_item( label => $file, size => $size );
+}
+
+my $i = 0;
+for my $bin ( $bp->pack_bins ) {
+    $i++;
+    print "DVD ke-$i:\n";
+    for my $item ( sort { $a->{label} cmp $b->{label} } @{ $bin->{items} } ) {
+        printf " %4d %s\n", $item->{size}, $item->{label};
+    }
+    print " ---\n";
+    printf " %4d TOTAL\n\n", $bin->{size};
+}
