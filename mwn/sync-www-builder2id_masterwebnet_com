@@ -1,0 +1,3 @@
+#!/bin/sh
+rsync --exclude '*.psd' --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --delete \
+-e ssh -Pavz $* /home/steven/sites/id-mwn.steven.builder.localdomain/www mwn@id.masterwebnet.com:/s/id.masterwebnet.com/

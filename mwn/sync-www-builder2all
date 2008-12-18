@@ -1,0 +1,3 @@
+#!/bin/sh
+sync-www-builder2id_masterwebnet_com $*
+sync-www-builder2us_masterwebnet_com $*

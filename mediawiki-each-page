@@ -60,7 +60,7 @@ $mech->submit_form(
 );
 
 #DEBUG $mech->content();
-LOGDIE "Can't login (or language not supported)" unless $mech->content =~ m!>Log out</a>!;
+LOGDIE "Can't login (or language not supported)" unless $mech->content =~ m!>(Log out|Keluar log)</a>!;
 
 INFO "Getting list of pages ...";
 my @pages = (); # title

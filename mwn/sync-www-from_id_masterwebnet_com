@@ -1,0 +1,3 @@
+#!/bin/sh
+rsync --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --exclude 'tmp/*' --exclude 'www/tmp/*' --exclude '*.psd' --delete \
+-e ssh -avz $* --progress mwn@id.masterwebnet.com:/s/id.masterwebnet.com/www /home/steven/sites/id-mwn.steven.builder.localdomain/
