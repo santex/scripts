@@ -27,6 +27,6 @@ push @hosts, qw(id.masterweb.net us.masterweb.net masterweb.net);
 @hosts = shuffle @hosts;
 for (0..($#hosts/3)) {
     my $host = $hosts[$_];
-    print "$host\n" if $verbose;
+    print "[", (scalar localtime), "] $host\n" if $verbose;
     system "wget -q http://uptime.netcraft.com/up/graph?site=$host";
 }
