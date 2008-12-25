@@ -1,0 +1,12 @@
+#!/usr/bin/perl -l
+
+use lib '/home/steven/proj/spanel/lib/perl';
+use Spanel::API::Plan;
+use YAML::XS;
+
+if (@ARGV) {
+    print Dump(Spanel::API::Plan::parse($ARGV[0]));
+} else {
+    print "Usage: $0 <nama-file-yaml>";
+    exit 1;
+}
