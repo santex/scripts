@@ -20,7 +20,7 @@ use File::Type;
 
 # --- globals
 
-my $VERSION = 0.06;
+my $VERSION = 0.07;
 
 my %Opt = (
            log_level => 'info',
@@ -34,6 +34,7 @@ my %Opt = (
            guess_length => -1,
            skip_if_exists => 0,
            force => 0,
+           quality => 50,
           );
 my %Default_Opt = %Opt;
 
@@ -73,6 +74,7 @@ GetOptions(
            'guess-length=i' => \$Opt{guess_length},
            'skip-if-exists' => sub { $Opt{skip_if_exists} = 1 },
            'force' => sub { $Opt{force} = 1 },
+           'quality=i' => \$Opt{quality},
           );
 
 if ($Opt{version}) {
@@ -102,6 +104,7 @@ Options:
                 Skip processing the movie if thumbnail file already exists
  --force
                 Try to generate thumbnail even if mime type is not video
+ --quality      JPEG compression quality (default: $Default_Opt{quality}).
 EOF
   exit 0;
 }
@@ -257,5 +260,9 @@ MOVIE: for my $movie (@ARGV) {
   my $thumbwidth  = sprintf("%d",$Opt{width}/$Opt{cols} - 8); $thumbwidth = 10 if $thumbwidth < 10;
   my $thumbheight = sprintf("%d", $thumbwidth * ($movieheight / $moviewidth));
   mysystem "montage -tile $Opt{cols}x$Opt{rows} -geometry ${thumbwidth}x${thumbheight}+2+2 s*.jpg jpeg:$output_esc";
+
+  # compress jpeg. dari 1MB bisa jadi 150k jika q=50, output dari ImageMagick gak optimized
+  INFO "Compressing JPEG ...";
+  mysystem "mv $output_esc $output_esc.tmp && ( jpegtopnm $output_esc.tmp | cjpeg -optimize -quality $Opt{quality} > $output_esc ) && rm -f $output_esc.tmp";
 }
 
