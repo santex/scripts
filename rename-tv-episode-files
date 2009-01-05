@@ -4,7 +4,7 @@ use strict;
 
 use App::Options (
     option => {
-        show    => { required => 1, type => "string" },
+        show    => { required => 0, type => "string", default => 'unknown show', },
         verbose => { required => 0, type => "bool", default => 0, },
         dry_run => { required => 0, type => "bool", default => 0 }
     },
@@ -14,16 +14,23 @@ use App::Options (
 $App::options{verbose}++ if $App::options{dry_run};
 
 for (@ARGV) {
-    my ($ext) = /\.(\w+)$/;
-    $ext
-        or do { warn "File `$_' doesn't have an extension, skipped\n"; next };
-    /\b(\d\d??)x?(\d\d)\b/i
-        or /S(\d\d?)E(\d\d)/i
-        or do {
-        warn "File `$_' doesn't contain episode number, skipped\n";
+    /(.*?)[ _.-]*S(\d\d?)E(\d\d)[ _.-]*(.*)\.(\w+)$/i or
+    /^(.*?)[ _.-]*(\d\d??)x?(\d\d)[ _.-]*(.*)\.(\w+)$/i or do {
+        warn "File `$_' doesn't contain episode number or extension, skipped\n";
         next;
-        };
-    my $fn = sprintf "%s - %02d%02d.%s", $App::options{show}, $1, $2, $ext;
+    };
+    my ($show, $season, $epnum, $title, $ext) = ($1, $2, $3, $4, $5);
+    $show ||= $App::options{show} if $App::options{show};
+    $show = fmt($show) if $show;
+    $title = fmt($title) if $title;
+    my $fn = sprintf "%s - %02d%02d%s.%s", $show, $season, $epnum, ($title ? " - $title" : ""), $ext;
     print "$_ -> $fn\n" if $App::options{verbose};
     rename $_, $fn unless $App::options{dry_run};
+}
+
+sub fmt {
+    my $s = lc shift;
+    return $s if $s =~ /\s/;
+    $s =~ s/[_.]/ /g;
+    $s;
 }
