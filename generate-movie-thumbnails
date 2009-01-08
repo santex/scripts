@@ -20,7 +20,7 @@ use File::Type;
 
 # --- globals
 
-my $VERSION = 0.07;
+my $VERSION = 0.071;
 
 my %Opt = (
            log_level => 'info',
@@ -164,7 +164,7 @@ MOVIE: for my $movie (@ARGV) {
     }
     $i++;
     DEBUG "$output already exists, picking another name ...";
-    $output = "$Opt{output}.$i";
+    $output = "$outputs[0].$i";
   }
   my $abs_output = abs_path($output);
   my $output_esc = esc($abs_output);

@@ -6,6 +6,9 @@ use strict;
 my $VERSION = 20070526;
 
 my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+(youyouniaoyingshiluntan-www.uubird.com)
+_youyouniaoyingshiluntan-www.uubird.com_
+_youyouniaoyingshiluntan-
 shengchengjiayuan[www.dream2008.cn]@
 [scg-cmct]www.dream2008.cn
 www.dream2008.cn@
@@ -46,6 +49,24 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+_www.file24ever.com
+ [www.file24ever.com]
+.HDTV.XviD-MiNT
+.DivX_tvrip
+.XviD-CATV
+.dsr.xvid-octi
+.[Tom-Joad]
+.Ez-BuckTV.[tvu.org.ru]
+.english
+.english.Ez-ShareTV.[tvu.org.ru]
+ (DVD) Medieval
+ DVDrip XVID-Medieval (Osloskop Net)
+ DVDrip XVID-TVep
+ English TVep DVD
+.english.Tom-Joad.[tvu.org.ru]
+ English Medieval DVD
+ (DVD) English Medieval
+ (DVD) TVep
 .XviD.AC3
 .DVB.x264.AAC
 .Xvid.mp3

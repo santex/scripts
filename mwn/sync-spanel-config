@@ -5,7 +5,7 @@ cd /home/steven/proj/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 
-/c/sbin/spanel-multissh $@ --rsync --user root -- \
+/c/sbin/spanel-multissh $@ --rsync --nouse-ip --user root -- \
   -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
   \
   mail-templates \
