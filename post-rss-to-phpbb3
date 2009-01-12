@@ -20,6 +20,7 @@ use App::Options (
         topic_id => { type => 'int', required => 0, default => 0 },
         username => { type => 'string', required => 1 },
         password => { type => 'string', required => 1 },
+        delay => { type => 'int', required => 0, default => 15 }, # default phpbb3
 
         bbcode => { type => 'bool', required => 0, default => 0 },
 
@@ -78,7 +79,7 @@ for my $item (reverse @{ $rss->{item} }) {
     next unless $status eq 'new';
 
     my ($fh, $filename) = tempfile();
-    print $fh "Subject: $item->{title}\n";
+    print $fh "Subject: ".html2bbcode($item->{title})."\n";
     print $fh "\n";
     print $fh "Waktu asli posting blog: $item->{pubDate}\n";
     print $fh "Diposting oleh: ".$item->{'dc:creator'}."\n" if $item->{'dc:creator'};
@@ -100,7 +101,7 @@ for my $item (reverse @{ $rss->{item} }) {
 # send it!
 if (@files) {
     my $cmd = "phpbb3-post".
-        " --delay=15".
+        " --delay=".esc($App::options{delay}).
         " --base_url=".esc($App::options{forum_url}).
         " --username=".esc($App::options{username}).
         " --password=".esc($App::options{password}).
