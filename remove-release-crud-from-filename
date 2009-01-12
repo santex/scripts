@@ -6,6 +6,7 @@ use strict;
 my $VERSION = 20070526;
 
 my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+[SCI]
 (youyouniaoyingshiluntan-www.uubird.com)
 _youyouniaoyingshiluntan-www.uubird.com_
 _youyouniaoyingshiluntan-
@@ -49,6 +50,7 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+ [anime]
 dvdrip[jap]
 -missripz
 [www.zonatorrent.com]
@@ -584,12 +586,16 @@ $re_suffix = qr/(?:$re_suffix)/i;
 for (@ARGV) {
   my $old = $_;
 
-  s/^$re_prefix//; s/^\s+//;
-
   no warnings;
-  s/$re_suffix(\.\w+)?$/$1/;
+  my $old2 = $old;
+  while (1) {
+      s/^$re_prefix//; s/^\s+//;
+      s/$re_suffix(\.\w+)?$/$1/;
+      s/\s+(\.\w+)?$/$1/;
+      last if $old2 eq $_;
+      $old2 = $_;
+  }
   use warnings;
-  s/\s+(\.\w+)?$/$1/;
 
   if ($old ne $_) {
     print "$old -> $_\n";
