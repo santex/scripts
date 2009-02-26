@@ -175,10 +175,11 @@ raise RunTimeError, "Please run me as root" unless
 move_dir_to_encrypted "/home/sloki/user/steven/home"
 move_dir_to_encrypted "/home/sloki/user/steven/sites/steven.builder.localdomain/syslog"
 move_dir_to_encrypted "/home/sloki/user/steven/sites/traps.steven.builder.localdomain/syslog"
-move_dir_to_encrypted "/home/sloki/user/v/home"
-move_dir_to_encrypted "/home/sloki/user/v2/home"
-move_dir_to_encrypted "/home/sloki/user/v3/home"
-move_dir_to_encrypted "/home/sloki/user/slk/home"
+move_dir_to_encrypted "/home/sloki/user/test1/home"
+move_dir_to_encrypted "/home/sloki/user/test2/home"
+move_dir_to_encrypted "/home/sloki/user/test3/home"
+move_dir_to_encrypted "/home/sloki/user/stats/home"
+move_dir_to_encrypted "/home/sloki/user/mwn/home"
 
 # /root
 move_dir_to_encrypted "/root/Desktop"

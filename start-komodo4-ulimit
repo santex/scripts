@@ -1,3 +1,0 @@
-#!/bin/bash
-ulimit -v 750000 -m 750000
-/u/steven/usr/opt/komodo-4.4.1/bin/komodo

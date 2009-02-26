@@ -1,0 +1,7 @@
+#!/bin/bash
+dmesg | grep -q forcedeth || ( echo "Bukan nvidia?"; exit 1 )
+pci_id=`dmesg | grep 'forcedeth [0-9]' | tail -1 | sed 's/.\+ \([0-9.:]\+\): .\+/\1/'`
+#file=/etc/udev/rules.d/*persistent-net.rules
+file=/tmp/test
+sed -i.bak 's/^SUBSYSTEM=="net".*//' $file
+echo 'SUBSYSTEM=="net", DRIVERS=="?*", ID=="'$pci_id'", NAME="eth0"' >> $file

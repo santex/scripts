@@ -50,7 +50,14 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
- [anime]
+.READNFO
+(2008.tvrip.sos)
+(2008.720p.hdtv.ac3-sos)
+RARE  ##
+.LIMITED.DOCU
+ (2005-TVRip-d0x)
+ (2006-TVRip-d0x)
+[anime]
 dvdrip[jap]
 -missripz
 [www.zonatorrent.com]

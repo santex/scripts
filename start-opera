@@ -1,0 +1,5 @@
+#!/bin/bash
+#ulimit -v 1500000 -m 1500000
+# 2009-02-24: kalo dir ini ilang, opera sering ngabisin cpu ngecek2x terus
+mkdir -p /e/u/steven/tmp/.opera/cache4
+aoss opera
