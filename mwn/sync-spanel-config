@@ -5,16 +5,17 @@ cd /home/steven/proj/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 
-/c/sbin/spanel-multissh $@ --rsync --nouse-ip --user root -- \
-  -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
-  \
+/c/sbin/spanel-multissh $@ --rsync --nouse-ip --user root -- -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
   mail-templates \
   newaccount-templates \
   default-dns-zone.yaml \
   dns-zone-templates \
-  www \
-  www-templates \
+  error-pages \
   plans.yaml \
   servers/'[[SERVERID]]'/spanel.yaml \
+  www \
+  www-templates \
   \
   '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+
+sync-spanel-config-apache2 $@

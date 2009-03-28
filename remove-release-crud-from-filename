@@ -50,6 +50,26 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.DVB.XviD.MP3.mvgroup.org
+.DVBC
+.DVB.x264.aac.MVGroup.org
+.DVBC.XviD.MP3.MVGroup.org
+.DivX.mp3.VHS.Hanke
+.WS.PDTV.XviD-PVR
+.TVrip.640x480.xvid.mp3-snach
+.WnA
+.dvdrip.xvid-nosegment
+_tlaloc_tvrip
+.hdtv.ac3.xvid-2hd
+.pdtv.xvid-sys
+-divx-makk
+_Xvid_tatt2s.com
+.WS.PDTV.XviD.MP3.MVGroup.org
+.[XviD]
+_HDTV_XviD~Ekolb
+ [DVDRiP] [XViD] by WingTip
+ DivX
+[WS.PDTV(XviD)]
 .READNFO
 (2008.tvrip.sos)
 (2008.720p.hdtv.ac3-sos)
@@ -597,7 +617,7 @@ for (@ARGV) {
   my $old2 = $old;
   while (1) {
       s/^$re_prefix//; s/^\s+//;
-      s/$re_suffix(\.\w+)?$/$1/;
+      s/$re_suffix(\.\w+)$/$1/;
       s/\s+(\.\w+)?$/$1/;
       last if $old2 eq $_;
       $old2 = $_;

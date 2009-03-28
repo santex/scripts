@@ -17,12 +17,28 @@ my %Opt = (
 
         # current best default: h264 2-pass
         # XXX, h264 doesn't support 2pass? 1pass and 2pass result are identical
-        vcodec => 'h264',
-        vbitrate => '328k',
-        abitrate => '56k',
-        pass => 1,
+        #vcodec => 'h264',
+        #vbitrate => '328k',
+        #abitrate => '56k',
+        #pass => 1,
 
-        acodec => 'mp3',
+        #acodec => 'mp3',
+
+        # 2009-03-06, di debian lenny, x264 hasil build crash mulu
+        # jadi hanya ada xvid. utk low bitrates sebenernya paling
+        # bagus saat ini h264 sih, tapi apa daya. xvid blocky, meski
+        # udah ditambahin blur flag.
+        #vcodec => 'libxvid',
+        #vbitrate => '420k',
+        #abitrate => '56k',
+        #pass => 1,
+        #acodec => 'libmp3lame',
+        #extra_opts => '-flags +loop',
+        #
+        # bleh, tetep terlalu blocky ah. mendingan blur daripada
+        # blocky, sangat mengganggu kalo blocky. cari encoder wmv atau
+        # rmvb aja deh.
+
         size => "", # same as input
        );
 my %DefOpt = %Opt;
@@ -33,6 +49,7 @@ GetOptions(
            'acodec=s' => \$Opt{acodec},
            'vbitrate=s' => \$Opt{vbitrate},
            'abitrate=s' => \$Opt{abitrate},
+           'extra-opts=s' => \$Opt{extra_opts},
            'size=s' => \$Opt{size},
 
            'version|v' => \$Opt{version},
@@ -56,6 +73,7 @@ Options:
  --abitrate   (default: $DefOpt{abitrate}).
  --size       (default: $DefOpt{size}).
  --pass       1 or 2 (default: $DefOpt{pass}).
+ --extra-opts (default: $DefOpt{extra_opts}).
 EOF
   exit 0;
 }
@@ -73,7 +91,7 @@ for my $f (@files) {
     print "WARNING: $f.avi exists, skipped";
   }
   my $esc = esc($f);
-  my $opt0 = "-vcodec $Opt{vcodec} -acodec $Opt{acodec} -b $Opt{vbitrate} -ab $Opt{abitrate}".
+  my $opt0 = "-vcodec $Opt{vcodec} $Opt{extra_opts} -acodec $Opt{acodec} -b $Opt{vbitrate} -ab $Opt{abitrate}".
              ($Opt{size} ? " -s $Opt{size}":"");
 
   my $cmd;

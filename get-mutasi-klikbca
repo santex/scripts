@@ -1,0 +1,68 @@
+#!/usr/bin/perl -w
+
+use strict;
+use autodie;
+use WWW::Mechanize;
+use Data::Dumper;
+
+#my $USER = "stevenha1210"; my $PIN  = "203954";
+#my $USER = "tommieha8005"; my $PIN  = "251081";
+my $USER = "abcdefgh1234"; my $PIN  = "123456";
+
+###
+
+my $SITE = "https://ibank.klikbca.com";
+my $UA = "Opera/9.10 (X11; Linux i686; U; en)";
+my $LOG = "/home/steven/klikbca.log";
+
+my $mech = WWW::Mechanize->new(agent=>$UA);
+$Data::Dumper::Indent = 0;
+my $Counter = 0;
+
+sub dmp {
+    my $var = shift;
+    local $_ = Dumper($var);
+    s/^\$VAR1 = //;
+    s/;$//;
+    $_;
+}
+
+sub req {
+    my ($meth, $args, $fail_check) = @_;
+    $Counter++;
+    print LOG "#$Counter [".scalar(localtime)."] mech $meth ".dmp($args);
+    $mech->$meth(@$args);
+    my $fail = '';
+    if (!$mech->success) {
+        $fail = "request failed, status=".$mech->status.")";
+    } elsif ($fail_check) {
+        $fail = $fail_check->();
+    }
+    print LOG ($fail ? "FAIL ($fail)" : "success")."\n";
+    #$Counter++;
+    #print LOG "#$Counter [".scalar(localtime)."] mech content\n\n";
+    #print LOG $mech->content, "\n\n";
+    if ($fail) {
+        print STDERR "Gagal di step #$Counter: $meth ".dmp($args).": $fail\n";
+        die;
+    }
+}
+
+open LOG, ">>$LOG";
+
+eval {
+     req(get => [$SITE]);
+     req(submit_form => [form_number=>1, fields=>{"value(user_id)"=>$USER, "value(pswd)"=>$PIN}, button=>"value(Submit)"],
+         sub { $mech->content =~ /var err='(.+?)'/ and return $1; $mech->content =~ /=logout"/ and return; "unknown login page (".length($mech->content)." bytes)" });
+     req(get => ["$SITE/authentication.do?value(actions)=welcome"]);
+     #req("get => ["$SITE/nav_bar_indo/menu_nav.htm"]); # gagal?
+     req(get => ["$SITE/nav_bar_indo/account_information_menu.htm"]);
+     req(post => ["$SITE/accountstmt.do?value(actions)=acct_stmt"]);
+     $mech->form_number(0)->action("$SITE/accountstmt.do?value(actions)=acctstmtview");
+     req(submit_form => [form_number=>1, fields=>{}, button=>"value(submit1)"]);
+};
+
+if ($@) {
+   print "error: $@\ndropping to eval loop\n> ";
+   while (<>) { eval $_; print "eval error: $@\n> " if $@; }
+}

@@ -58,30 +58,15 @@ def mount_encrypted(path, mpoint, fstype, opts, enctype)
     system "modprobe loop" if use_loop
 
     # find a free loop device
-    loop_num = nil
-    if use_loop
-      looped_paths = {}
-      (0..NUM_LOOP_DEVICES-1).each {|i|
-        output = `losetup /dev/loop#{i} 2>/dev/null`
-        if output !~ /\((.*)\)/
-          puts "ERROR: Can't check loop device #{i}"
-        elsif $1.empty?
-          loop_num = i if !loop_num
-        else
-          looped_paths[$1] = 1
-        end
-      }
-      if !loop_num
-        puts "ERROR: Can't mount encrypted volume #{path}: No more free loop devices"
-        return
-      end
-      if looped_paths[path]
-        puts "INFO: Not mounting encrypted volume #{path}: Already looped"
-        return
-      end
+    output = `losetup -f`
+    if output =~ %r{/dev/loop(\d+)}
+      loop_num = $1.to_i
+    else
+      puts "ERROR: Can't find free loop device"
+      return
     end
 
-    mapper_name = path.gsub(%r([^a-z]+), "_")
+    mapper_name = path.gsub(%r([^a-z0-9]+), "_")
     if FileTest.exists?("/dev/mapper/#{mapper_name}")
       puts "INFO: Not mounting encrypted volume #{path}: /dev/mapper/#{mapper_name} already exists"
       return
@@ -163,6 +148,8 @@ def $log.puts(s)
   orig_puts("#{Time.now}: #{s}")
 end
 
+system "modprobe loop"
+
 # ---
 
 serial_numbers = {}
@@ -221,50 +208,55 @@ puts "INFO: Mounting IDE & SATA devices..."
   did_mount_encryptedsub = false
   encryptedsub_is_mounted = false
 
-  tmp  = "#{detail['mount_point']}/.encrypted.disk".gsub(%r(//), "/")
-  tmp2 = "#{detail['mount_point']}/encrypted".gsub(%r(//), "/")
-  if FileTest.exists?(tmp)
-    puts "INFO: Encrypted volume #{tmp} exists"
-    unless opts[:dry_run]
-      mount_encrypted(tmp, tmp2, "ext3", "", "dm") && did_mount_encryptedsub = true
-    end
-  end
-  tmp  = "#{detail['mount_point']}/.encrypted.jbc".gsub(%r(//), "/")
-  tmp2 = "#{detail['mount_point']}/encrypted".gsub(%r(//), "/")
-  if FileTest.exists?(tmp) && !already_mounted[tmp]
-    puts "INFO: Encrypted volume #{tmp} exists and not yet mounted"
-    unless opts[:dry_run]
-      mount_encrypted(tmp, tmp2, "ext3", "", "bc") && did_mount_encryptedsub = true
-    end
-  end
+  (1..10).each {|num|
 
-  tmp = "#{detail['mount_point']}/encrypted/swapfile"
-  if FileTest.exists?(tmp) && !`swapon -s | grep file`.include?(tmp)
-    puts "INFO: Swap file #{tmp} exists and not yet installed"
-    $log.puts("Setup swap #{tmp}")
-    unless opts[:dry_run]
-      system "mkswap #{tmp} && swapon #{tmp}"
+    suffix = num == 1 ? '' : num.to_s
+    tmp  = "#{detail['mount_point']}/.encrypted#{suffix}.disk".gsub(%r(//), "/")
+    tmp2 = "#{detail['mount_point']}/encrypted#{suffix}".gsub(%r(//), "/")
+    if FileTest.exists?(tmp)
+      puts "INFO: Encrypted volume #{tmp} exists"
+      unless opts[:dry_run]
+        mount_encrypted(tmp, tmp2, "ext3", "", "dm") && did_mount_encryptedsub = true
+      end
     end
-  end
+    tmp  = "#{detail['mount_point']}/.encrypted#{suffix}.jbc".gsub(%r(//), "/")
+    tmp2 = "#{detail['mount_point']}/encrypted#{suffix}".gsub(%r(//), "/")
+    if FileTest.exists?(tmp) && !already_mounted[tmp]
+      puts "INFO: Encrypted volume #{tmp} exists and not yet mounted"
+      unless opts[:dry_run]
+        mount_encrypted(tmp, tmp2, "ext3", "", "bc") && did_mount_encryptedsub = true
+      end
+    end
 
-  if !already_mounted[part] || opts[:force_index]
-    to_be_indexed << {
-      :label => label,
-      :mpath => detail['mount_point'],
-      :ipath => (detail['index_point'] || detail['mount_point']),
-      :dont_index => detail['dont_index']
-    }
-  end
+    tmp = "#{detail['mount_point']}/encrypted#{suffix}/swapfile"
+    if FileTest.exists?(tmp) && !`swapon -s | grep file`.include?(tmp)
+      puts "INFO: Swap file #{tmp} exists and not yet installed"
+      $log.puts("Setup swap #{tmp}")
+      unless opts[:dry_run]
+        system "mkswap #{tmp} && swapon #{tmp}"
+      end
+    end
 
-  if did_mount_encryptedsub || (opts[:force_index]) # && encryptedsub_is_mounted)
-    p2 = "#{detail['mount_point'] == '/' ? '' : detail['mount_point']}/encrypted"
-    to_be_indexed << {
-      :label => "#{label}-encrypted",
-      :mpath => p2,
-      :ipath => (detail['encrypted_index_point'] || p2),
-      :dont_index => detail['encrypted_dont_index']
-    }
-  end
+    if !already_mounted[part] || opts[:force_index]
+      to_be_indexed << {
+        :label => label,
+        :mpath => detail['mount_point'],
+        :ipath => (detail['index_point'] || detail['mount_point']),
+        :dont_index => detail['dont_index']
+      }
+    end
+
+    if did_mount_encryptedsub || (opts[:force_index]) # && encryptedsub_is_mounted)
+      p2 = "#{detail['mount_point'] == '/' ? '' : detail['mount_point']}/encrypted#{suffix}"
+      to_be_indexed << {
+        :label => "#{label}-encrypted#{suffix}",
+        :mpath => p2,
+        :ipath => (detail['encrypted_index_point'] || p2),
+        :dont_index => detail['encrypted_dont_index']
+      }
+    end
+
+  }
 }
 
 p to_be_indexed
