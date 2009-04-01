@@ -21,11 +21,13 @@ ssh root@xenon \
    --include "+ admin" \
    --include "+ admin/mobile" \
    --include "+ admin/mobile/**" \
-   --include "+ configuration.php" \
    --include "+ includes" \
    --include "+ includes/mk-functions.php" \
    --include "+ includes/sh_functions.inc.php" \
    --include "+ includes/sh_translation.inc.php" \
    --include "- *" \
-   /s/masterkey.masterweb.net/www/ /usr/local/masterkey/
+   /s/masterkey.masterweb.net/www/ /usr/local/masterkey/;
+ rsync -av /s/masterkey.masterweb.net/etc/configuration.php /usr/local/masterkey/; # 2009-04-01 - 2 minggu lalu demi security gw memindahkan DOCROOT/configuration.php yg berisi password internet banking dll jadi symlink ke ../etc/.
+   
 '
+
