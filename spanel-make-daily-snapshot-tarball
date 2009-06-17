@@ -1,30 +1,43 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
+use strict;
 use POSIX qw(strftime);
-
-BEGIN {
-  $PROJ_DIR = "/home/steven/proj/spanel";
-  $TARGET_DIR = "/home/steven/tmp";
-}
+use App::Options (
+    option => {
+        proj_dir => {type=>"string", required=>1, default=>"/home/steven/proj/spanel"},
+        target_dir => {type=>"string", required=>1, default=>"/home/steven/tmp"},
+        history => {type=>"int", required=>0, default=>30},
+        branch => "master",
+    }
+);
 
 # ---
 
-use lib "$PROJ_DIR/lib/perl";
-use Spanel;
+chdir $App::options{proj_dir} or die "FATAL: Can't chdir to `$App::options{proj_dir}': $!\n";
+require "$App::options{proj_dir}/lib/perl/Spanel.pm";
+my $rev = `git log $App::options{branch} | head -n1`;
+$rev =~ /^commit ([0-9a-f]{8})/ or die "FATAL: Can't get last commit ID for branch $App::options{branch}\n";
+$rev = $1;
 
-chdir $PROJ_DIR or die "FATAL: Can't chdir to `$PROJ_DIR': $!\n";
-
-my $rev = `bzr log -r -1 --line | cut -d: -f1`;
-$rev > 0 or die "FATAL: Can't get revision number\n";
-chomp($rev);
-
+no warnings;
 my $timestamp = strftime "%Y%m%d", localtime;
-my $targetn = "spanel-$Spanel::VERSION-$timestamp-r$rev";
-my $targetp = "$TARGET_DIR/$targetn";
+my $targetn = "spanel-$Spanel::VERSION.$Spanel::REVISION-$timestamp-rev_$rev";
+my $targetp = "$App::options{target_dir}/$targetn";
 
-system qq(bzr export $targetp && \
-  cd $TARGET_DIR && \
-  rm -f $targetn.tar.gz && \
-  tar cfz $targetn.tar.gz $targetn && \
-  ls -l $targetn.tar.gz);
+# don't generate if the same rev has been extracted.
+my @d;
+if (@d = glob "$App::options{target_dir}/*-rev_$rev.tar.gz") {
+    #print "$d[0] already exists, which is the latest revision. Skipped generating tarball.\n";
+    exit 0;
+}
 
+# delete older tarball.
+@d = sort {(-M $b) <=> (-M $a)} glob "$App::options{target_dir}/spanel-*.tar.gz";
+unlink (splice @d, 0, $App::options{history});
+
+system qq(git-archive --prefix=$targetn/ $App::options{branch}\@{HEAD} | gzip -c >$targetp.tar.gz);
+#system qq(ls -l $targetp.tar.gz);
+
+# point spanel-latest to the latest tarball.
+unlink "$App::options{target_dir}/spanel-latest.tar.gz";
+symlink "$targetn.tar.gz", "$App::options{target_dir}/spanel-latest.tar.gz";

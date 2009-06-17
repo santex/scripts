@@ -1,0 +1,28 @@
+#!/usr/bin/perl -w
+
+use File::Slurp;
+use strict;
+use Cwd;
+
+(-f "MANIFEST") or die "Can't find MANIFEST, maybe you're in the wrong directory?";
+
+my @lines =
+    sort {length($a)<=>length($b)}
+    grep {m!^(lib/.+\.pm)$!}
+    read_file("MANIFEST");
+
+@lines or die "Can't find main module .pm file in MANIFEST";
+chomp($lines[0]);
+
+my $fc = read_file($lines[0]);
+$fc =~ m#^our .VERSION = (['"])(.+)\1;#m or die "Can't find VERSION line";
+my $version = $2;
+
+$_ = getcwd();
+s!.+/!!;
+
+system "cd ../../_files && ".
+    "rm -rf $_-$version $_-$version.tar.gz && ".
+    "cp -a ../perl/$_ $_-$version && ".
+    "tar cfz $_-$version.tar.gz $_-$version && ".
+    "ls -l $_-$version.tar.gz";

@@ -13,5 +13,5 @@ rsync -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '*~' \
   ~/proj/webdev/mbt-gdocs/ $TARGETHOST:$TARGETDIR
 
 rsync -e ssh -Pavz \
-  ~/proj/spanel/lib/php/sh_functions.inc.php $TARGETHOST:$TARGETDIR
+  ~/proj/spanel/lib/php/sh_*.inc.php $TARGETHOST:$TARGETDIR
 

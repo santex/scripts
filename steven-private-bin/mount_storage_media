@@ -170,7 +170,7 @@ to_be_indexed = []
 
 puts "INFO: Mounting IDE & SATA devices..."
 (IDE_DEVICES + SATA_DEVICES).each {|dev|
-  `hdparm -I #{dev}` =~ /Serial Number:\s*(\w+)/ or next
+  `hdparm -I #{dev}` =~ /Serial Number:\s*(\S+)/ or next
   serial = $1
   puts "INFO: Found IDE/SATA device on #{dev}, serial=#{serial}"
 

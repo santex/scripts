@@ -1,0 +1,3 @@
+#!/usr/bin/perl -ln
+$f{$_}++;
+END { for (sort {$f{$b}<=>$f{$a}} keys %f) { printf "%5d %s\n", $f{$_}, $_ } }

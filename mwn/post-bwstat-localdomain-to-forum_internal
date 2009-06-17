@@ -1,0 +1,61 @@
+#!/usr/bin/perl -w
+
+use strict;
+#use Cwd;
+use Log::Log4perl qw(:easy);
+use POSIX;
+use YAML::XS;
+use File::Slurp;
+use autodie;
+use App::Options (
+    option => {
+        tag => { type => 'string', required => 0, default => '' },
+        year => { type => 'int', required => 0 },
+        mon => { type => 'int', required => 0 },
+    },
+);
+
+Log::Log4perl->easy_init($DEBUG);
+
+my @now = localtime;
+my $year = POSIX::strftime("%Y", @now);
+my $mon = POSIX::strftime("%m", @now);
+$mon--; if ($mon == 0) { $mon = 12; $year-- }
+my $period = sprintf "%04d%02d", ($App::options{year} || $year), ($App::options{mon} || $mon);
+
+#my $orig_dir = getcwd;
+
+my %sites;
+
+chdir "/u" or die "cant chdir: $!";
+for my $u (<*>) {
+    my $f = "/u/$u/syslog/bw-$period.yaml";
+    (-f $f) or next;
+    my $b = Load(scalar read_file($f));
+    for (keys %{ $b->{day} }) {
+        my $d = $b->{day}{$_};
+        for (keys %$d) {
+            /^web\.(.+)\.(www|ssl)$/ or next;
+            my $bytes = $d->{$_};
+            $sites{ ($2 eq "www" ? "http" : "https")."://$1" } += $bytes;
+        }
+    }
+}
+
+open F, "| phpbb2-post --log_level=DEBUG --profile=sharing_movie --topic_id=14092 -";
+print F "Subject: Statistik bandwidth *.localdomain utk periode $period\n\n";
+print F "Statistik bandwidth *.localdomain utk periode [b] $period [/b]\n\n";
+
+my $rank = 1;
+for my $s (sort {$sites{$b} <=> $sites{$a}} keys %sites) {
+    my $g = $sites{$s}/1024/1024/1024;
+    last if $g < 0.1;
+    print F "[b]" if $rank==1;
+    print F sprintf "%2d. %-65s = %.1f GB", $rank, $s, $g;
+    print F "[/b]" if $rank==1;
+    print F "\n";
+    $rank++;
+}
+
+close F;
+

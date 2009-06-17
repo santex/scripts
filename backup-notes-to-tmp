@@ -1,0 +1,13 @@
+#!/bin/bash
+NAME=notes
+SRCDIR=~
+TARGETDIR=~/tmp
+
+TARNAME=$NAME-`date +'%Y%m%d'`.tar
+
+cd $SRCDIR
+tar cf $TARGETDIR/$TARNAME $NAME
+
+cd $TARGETDIR
+rar a -p $TARNAME.rar $TARNAME && rm -f $TARNAME
+ls -l $TARNAME.rar

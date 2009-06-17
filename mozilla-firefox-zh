@@ -1,5 +1,0 @@
-#!/bin/sh
-source set-zh
-exec mozilla-firefox
-
-

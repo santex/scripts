@@ -6,6 +6,10 @@ use strict;
 my $VERSION = 20070526;
 
 my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+dissent-
+_www.ccebook.cn_
+_ccebook.cn_
+[ccebook.cn]
 [SCI]
 (youyouniaoyingshiluntan-www.uubird.com)
 _youyouniaoyingshiluntan-www.uubird.com_
@@ -45,11 +49,74 @@ www.d-p-t.dl.am...
 [LonE]
 XXX artinya various artists - VA - 
 XXX artinya various artists - VA-
+IMAX.
+HDTV.
+[Documentaire]
+dich-
 EOF
 
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.StreamCap.DivX-QG
+.DVDRip.XviD-ItzikGur
+.DVDRip(Xvid_Mp3)
+ {www.desibbrg.com} ~ Da Xclusives
+.DVDRip.XviD.Pengo-Team
+.XviD.Pengo-Team
+.HDTV.XviD-VAiN
+.720p.hdtv.x264-pix
+.720p.hdtv.x264-hv
+.ws.xvid-conspiracycentral
+.640x464
+_DIVX.640x526.MP3
+.PDTV.XviD-DiSSENT
+.720p.hdtv.x264
+ DivX-Clone
+.ws.pdtv.xvid-sometv
+.ws.pdtv.xvid-waters
+.720p-dhd
+.PDTV.XviD-SiSO
+.ws.pdtv.xvid-ftp
+.hdtv.xvid-TSL
+.HDTV.XviD-TVA
+ DVDRIP VOSTFR
+ [doc arte fr] [science] [TV]
+ [japan4player]
+_[japan4player]
+.HDTV.720p.AC3.x264-CGI
+ DivX-MP3
+.ws.pdtv-fov
+ [by Yokky]
+.DVB.DivX6.MP3
+.pdtv.NiX
+.TVRip.SoS)
+.PDTV.XviD-REViSiON
+.XviD.AC3.MVGroup.Forum
+-xvid-ws-ognir
+-WS.MP3.XviD-Ognir
+.mp3.ws.ConCen-xvid-ognir
+.HDTV.SoS)
+ Mpg 4
+.DVB.XviD.MP3.MVGroup.Forum
+.HDTV.XviD-TERRA
+.ws.mp3.xvid-ognir
+.(Ognir-ConCen).mp3.ws
+-ognir-xvid-ws
+.ws.mp3.xvid-ognir
+.DivX.MP3.anurag
+.720p.HDTV.AC3-SoS)
+ (XviD).mp3.ws.xvid-ognir
+_(SOS)
+ [DVDXVID]
+_XviD~Ekolb
+.PDTV.XviD.SWESUB-APB
+.DVDRip.XviD_ENG.PT-BR
+-TVRip-d0x)
+.(DivX6.1)(HQ)
+.pdtv.xvid-aerial
+.x264.720p.AC3.MVGroup.Forum
+.720p
 .DVB.XviD.MP3.mvgroup.org
 .DVBC
 .DVB.x264.aac.MVGroup.org

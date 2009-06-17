@@ -5,11 +5,11 @@ SRC=/home/steven/proj/spanel
 TARGET=
 
 echo "Updating source trees (~/spanel on remote servers) ..."
-/c/sbin/spanel-multissh $@ --nouse-ip --rsync --user root -- \
+/c/sbin/spanel-multissh $@ --use-ip --rsync --user root -- \
   -Pavz --del --exclude '.svn' --exclude '.bzr' --exclude '.git' --exclude '*~' \
   "$SRC" '[[USER]]@[[IP_OR_HOSTNAME]]':$TARGET
 
 echo "Running spanel-install on remote servers ..."
-/c/sbin/spanel-multissh $@ --nouse-ip --user root -- spanel/sbin/spanel-install --nocheck install
+/c/sbin/spanel-multissh $@ --use-ip --user root -- spanel/sbin/spanel-install --nocheck install
 
 # XXX not yet: optional: run spanel-setup

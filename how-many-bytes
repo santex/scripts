@@ -1,12 +1,61 @@
 #!/usr/bin/perl -n
 
-if (($n) = /^[A-Za-z-]{10}\s+\d+\s+\S+\s+\S+\s+(\d+)\s+/) {
+# tiap gw download gw catat/log dalam file. dulu bikin format sendiri
+# tapi belakangan pake format ls -l (atau du -sm / du -sh).
+
+my $VERSION = 0.02;
+
+BEGIN {
+    $status_re = qr/(?:\[.*?\]|<.*?>|\*|[Xx ])\s*/;
+    $guid_status_re = qr/#.+?#\s*/;
+    $guid_re = qr/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
+}
+
+next unless /\S/;
+next if /^#/;
+
+$bytes = 0;
+if (($n) = /^(?:$status_re)?-[A-Za-z-]{9}\s+\d+\s+\S+\s+\S+\s+(\d+)\s+/) {
   # ls -l output
   # -rw-r--r-- 1 root root 237458581 2007-02-18 21:18 Half.Nelson.2006.CD1.rmvb
-  $total += $n;
-} elsif (($n, $unit) = /\b(\d+(?:\.\d+)?)\s*(GB?|MB?)?\s*$/i) {
-  # NAMAFILE SIZE
-  $total += $n * ($unit =~ /g/i ? 1024*1024*1024 : ($unit =~ /m/i ? 1024*1024 : 1));
+  $bytes = $n;
+} elsif (/^(?:$status_re)?(?:$guid_status_re)?(?:$guid_re)\s+'.+?'$/) {
+  # format lama: GUID     'FILENAME'
+  $bytes = 0;
+} elsif (($n, $unit) = /^(?:$status_re)?(?:$guid_status_re)?(?:$guid_re)\s+'.+?'\s+(\d+)([MmGg])?$/) {
+  # format lama: GUID     'FILENAME'    SIZE(UNIT)?
+  $bytes = $n * ($unit =~ /g/i ? 1024*1024*1024 : ($unit =~ /m/i ? 1024*1024 : 1));
+} elsif (/^(?:$status_re)?\d{1,5} = .+?$/) {
+  # format lama: NOMOR = NAMAFILE
+  $bytes = 0;
+} elsif (($n, $unit) = m!^(?:$status_re)?d[A-Za-z-]{9}\s+\d+\s+\S+\s+\S+\s+(\d+)([MmGg])\s+!) {
+  # ls -l output direktori yang sudah diberi size "du -sh"
+  # drw-r--r-- 1 root root 804M 2007-02-18 21:18 some dir/
+  $bytes = $n * ($unit =~ /g/i ? 1024*1024*1024 : ($unit =~ /m/i ? 1024*1024 : 1));
+} elsif (($n) = /^\s+(\d+)\s+[0-9A-F]{32}\s+\d+\s+(?:\d+\s+\d+)?\w+\s+\w+/) {
+  # edonkey 'vd' output:            753998123 62FDC9276F8E052B4BB7A8FCC1679D7B 1   0   0   avi Video
+  $bytes += $n;
+} elsif (($n) = /^(?:$status_re)?(\d{5,})\s+(.+)$/) {
+  # utk saat ini, jika >100GB kita anggap du -sb output
+  $bytes += $n;
+} elsif (($n) = /^(?:$status_re)?(\d+)\s+(.+)$/) {
+  # du -sm output
+  $bytes += $n * 1024*1024;
+} elsif (($n) = /^(?:$status_re)?\S.+\.torrent$/) {
+  # hanya melist nama torrent
+  $bytes += $n * 1024*1024;
+} elsif (($n) = m!^(?:$status_re)?ed2k://\S+$!) {
+  # hanya melist uri ed2k
+  $bytes += $n * 1024*1024;
+} elsif (($n, $unit) = /\s(\d+(?:\.\d+)?)\s*(GB?|MB?)?\s*$/i) {
+  # format lama: NAMAFILE SIZE
+  $bytes += $n * ($unit =~ /g/i ? 1024*1024*1024 : ($unit =~ /m/i ? 1024*1024 : 1));
+} else {
+  print "WARN: Can't parse line $.: $_";
 }
+
+print "WARN: Size seems very big? ($bytes bytes): $_" if $bytes >= 4*1024*1024*1024;
+
+$total += $bytes;
 
 END { printf "%.1f GB\n", $total/1024/1024/1024 }

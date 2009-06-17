@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Data::Dumper;
+use List::MoreUtils qw/uniq/;
+use autodie;
+
+my $to_id = $0 =~ /su_id$/;
+my %entries;
+
+for my $file ("id_su_entries.csv", "id_su_phrases.csv", "id_su_main.csv") {
+    open F, $file;
+    $_ = <F>;
+    while (<F>) {
+        chomp;
+        my @f = split /;/, $_;
+        for (@f) { s/^"//; s/"$//; }
+        my ($id, $valid, $fu, $fn, $ctx, $form, $root) = @f;
+        next unless $valid;
+        #die "BUG#1: file $file baris $.: id tidak valid: $id" if (!$id || $id eq '--');
+        next if (!$id || $id eq '--');
+        my $su = $f[2];
+        if ($to_id) {
+            $entries{$su} ||= {aliases=>[], defs=>[]};
+            push @{ $entries{$su}{aliases} }, $su;
+            push @{ $entries{$su}{defs} }, ($form && $form ne '--' ? "[$form] $id" : $id);
+        } else {
+            $entries{$id} ||= {aliases=>[], defs=>[]};
+            push @{ $entries{$id}{aliases} }, $id;
+            push @{ $entries{$id}{defs} }, ($form && $form ne '--' ? "[$form] $su" : $su);
+        }
+    }
+}
+
+# output
+for my $e (sort keys %entries) {
+    my @aliases = uniq @{ $entries{$e}{aliases} };
+    my @defs = uniq @{ $entries{$e}{defs} };
+
+    print join("|", @aliases), "\n";
+    print join "<br><br>", @defs;
+    print "\n\n";
+}
+

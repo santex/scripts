@@ -15,6 +15,7 @@ cd /home/steven/proj/mwn/spanel-configs
   servers/'[[SERVERID]]'/spanel.yaml \
   www \
   www-templates \
+  ssl \
   \
   '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
 
