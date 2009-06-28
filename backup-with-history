@@ -15,12 +15,6 @@ use App::Options (
             default     => "-7,4,3",
             required    => 0,
         },
-        nolink => {
-            description => "Don't do rsync's --link-dest, e.g. when dest doesn't support hardlinks (e.g. sshfs)",
-            type        => "bool",
-            default     => 0,
-            required    => 0,
-        },
         nobackup => {
             description => "Don't do backup, just do the history rotation",
             type        => "bool",
@@ -30,6 +24,7 @@ use App::Options (
     }
 );
 use Cwd qw(abs_path);
+use Log::Log4perl qw(:easy);
 use POSIX;
 use Time::Local;
 
@@ -58,24 +53,28 @@ unless ($App::options{nobackup}) {
 system "mkdir -p " . esc("$dst/current");
 ( -d "$dst/current" ) or die "Gagal membuat creating $dst/current\n";
 
+Log::Log4perl->easy_init($DEBUG);
+
 # do backup!
 unless ( $App::options{nobackup} ) {
-    print "Membuat backup terbaru $src ke $dst/ ...\n";
-    system "nice -n19 rsync $App::options{rsync_opts} -av --del --force "
-        . (
-        $App::options{nolink}
-        ? ""
-        : "--link-dest " . esc( abs_path("$dst") . "/current" ) . " "
-        )
+    unless (-e "$dst/.work") {
+	INFO "cp -la $dst/current ==> $dst/.work ...";
+	system "nice -n19 cp -al " . esc("$dst/current") . " " . esc("$dst/.work");
+	WARN "cp command didn't succeed ($?), please recheck" if $?;
+    }
+
+    INFO "rsync $src ==> $dst/.work ...";
+    system "nice -n19 rsync $App::options{rsync_opts} -a --del --force "
         . esc("$src/") . " "
         . esc("$dst/.work/") . "\n";
-    warn "Perintah rsync tidak sukses, sebaiknya Anda periksa\n" if $?;
+    WARN "rsync command didn't succeed ($?), please recheck" if $?;
 }
 
-chdir($dst) or die "Tidak bisa chdir ke $dst: $!\n";
+chdir($dst) or LOGDIE "Can't chdir to $dst: $!";
 
 my $now    = time;
 unless ( $App::options{nobackup} ) {
+    INFO "rename .work ==> new current ...";
     system "touch .current.timestamp";
     my @st     = stat(".current.timestamp");
     my $tstamp = POSIX::strftime( "%Y-%m-%d\@%H:%M:%S+00",
@@ -84,7 +83,7 @@ unless ( $App::options{nobackup} ) {
     rename ".work", "current";
 }
 
-print "Menghapus histori backup yang sudah terlalu lama ...\n";
+INFO "Removing old histories ...";
 for my $level ( 1 .. @$hist_levels ) {
     my $is_highest_level  = $level == @$hist_levels;
     my $prefix            = "hist" . ( $level == 1 ? '' : $level );
@@ -93,7 +92,7 @@ for my $level ( 1 .. @$hist_levels ) {
     my $moved             = 0;
 
     if ( $n > 0 ) {
-        print "Hanya menyimpan $n buah histori backup L$level ...\n";
+        INFO "Only keeping $n level-$level histories ...";
         my @f = reverse sort grep { !/\.work$/ } glob "$prefix.*";
         my $any_tagged = ( grep {/t$/} @f ) ? 1 : 0;
         for my $f ( @f[ $n .. @f - 1 ] ) {
@@ -103,7 +102,7 @@ for my $level ( 1 .. @$hist_levels ) {
                 && !$moved
                 && ( $tagged || !$any_tagged ) )
             {
-                print "Memindahkan level histori backup: $f -> $f2\n";
+                INFO "Moving history level: $f -> $f2";
                 system "mv " . esc($f) . " " . esc($f2);
                 $moved++;
                 if ( $f ne $f[0] ) {
@@ -112,14 +111,14 @@ for my $level ( 1 .. @$hist_levels ) {
                 }
             }
             else {
-                print "Menghapus histori backup: $f ...\n";
+                INFO "Removing history: $f ...";
                 system "nice -n19 rm -rf " . esc($f);
             }
         }
     }
     else {
         $n = -$n;
-        print "Hanya menyimpan histori backup L$level sd $n hari ...\n";
+        INFO "Only keeping $n day(s) of level-$level histories ...";
         my @f = reverse sort grep { !/\.work$/ } glob "$prefix.*";
         my $any_tagged = ( grep {/t$/} @f ) ? 1 : 0;
         for my $f (@f) {
@@ -129,11 +128,11 @@ for my $level ( 1 .. @$hist_levels ) {
             $st =~ /(\d\d\d\d)-(\d\d)-(\d\d)\@(\d\d):(\d\d):(\d\d)\+00/;
             $t = timegm( $6, $5, $4, $3, $2 - 1, $1 ) if $1;
             $st && $t or do {
-                print "Histori backup salah format: $f, diabaikan\n";
+                WARN "Wrong format of history, ignored: $f";
                 next;
             };
             if ( $t > $now ) {
-                print "Histori backup di masa depan? $f, diabaikan\n";
+                WARN "History in the future, ignored: $f";
                 next;
             }
             my $delta = ( $now - $t ) / 86400;
@@ -142,7 +141,7 @@ for my $level ( 1 .. @$hist_levels ) {
                     && !$moved
                     && ( $tagged || !$any_tagged ) )
                 {
-                    print "Memindahkan level histori backup: $f -> $f2\n";
+                    INFO "Moving history level: $f -> $f2";
                     system "mv " . esc($f) . " " . esc($f2);
                     $moved++;
                     if ( $f ne $f[0] ) {
@@ -151,7 +150,7 @@ for my $level ( 1 .. @$hist_levels ) {
                     }
                 }
                 else {
-                    print "Menghapus history backup: $f ...\n";
+                    INFO "Removing history: $f ...";
                     system "nice -n19 rm -rf " . esc($f);
                 }
             }
