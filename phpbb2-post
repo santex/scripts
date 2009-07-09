@@ -29,6 +29,8 @@ use App::Options (
         delay => { type => 'int', required => 0, default => 4, },
 
         log_level => { type => 'string', required => 0, default => 'DEBUG' },
+
+        bbcode => { type => 'bool', required => 0, default => 0, },
     },
 );
 
@@ -110,7 +112,7 @@ POST: for my $file (@ARGV) {
             subject         => $subj,
             message         => $mesg,
             disable_html    => "on",
-            disable_bbcode  => undef,
+            disable_bbcode  => ($App::options{bbcode} ? "off" : "on"),
             disable_smilies => "on",
         },
         button => 'post',
