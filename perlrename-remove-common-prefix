@@ -6,5 +6,5 @@ if (!defined($COMMON_PREFIX)) {
   }
   $COMMON_PREFIX = substr($ARGV[0], 0, $i);
 }
-s/^\Q$COMMON_PREFIX//g;
+s/^\Q$COMMON_PREFIX//;
 ' "$@"

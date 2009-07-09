@@ -38,8 +38,8 @@ echo "+ Setting DNS resolver ..."
 
 #dnscache
 # elektrik is consulted for some zones
-for d in ciledug.com localdomain 168.192.in-addr.arpa; do echo 192.168.0.2 > /etc/dnscache/root/servers/$d; done
-/etc/init.d/dnscache restart
+#for d in ciledug.com localdomain 168.192.in-addr.arpa; do echo 192.168.0.2 > /etc/dnscache/root/servers/$d; done
+#/etc/init.d/dnscache restart
 
 
 echo "+ Setting auto-shutdown for IDE & SATA drives..."

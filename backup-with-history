@@ -159,3 +159,23 @@ for my $level ( 1 .. @$hist_levels ) {
 }
 
 __END__
+
+algorithm:
+
+* creating current backup:
+
+0. mkdir dest if not exists
+1. cp -la dest/current -> dest/.work, unless current doesnt exist or .work already exists
+2. mkdir .work is not exists
+3. rsync src -> dest/.work
+4. if dest/current exist (and dest/.current.timestamp exist), rename into
+   dest/hist.TIMESTAMP, where TIMESTAMP is from dest/.current.timestamp
+5. touch dest/.current.timestamp && rename dest/.work -> dest/current
+
+so timestamp is time where the backup is _finished_, not started
+(could be either way, though, we pick finish time).
+
+if rsync process (#3) (or cp, #2) is interrupted, we will just
+continue from here after restart, since .work already exists.
+
+* backup history:

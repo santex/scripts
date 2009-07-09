@@ -25,12 +25,10 @@ use App::Options (
         base_url => { type => 'string', required => 1, },
         forum_id => { type => 'int', required => 0, },
         topic_id => { type => 'int', required => 0, },
-
         delay => { type => 'int', required => 0, default => 4, },
-
         log_level => { type => 'string', required => 0, default => 'DEBUG' },
-
         bbcode => { type => 'bool', required => 0, default => 0, },
+        obfuscate_link => { type => 'bool', require => 0, default => 0, },
     },
 );
 
@@ -104,6 +102,10 @@ POST: for my $file (@ARGV) {
 
     # submit it
     INFO "Posting #$i ...";
+
+    if ($App::options{obfuscate_link}) {
+        $mesg =~ s!\bhttp(s?)://!hxxp$1://!ig;
+    }
 
     #DEBUG "posting = $posting";
     $mech->submit_form(

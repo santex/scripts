@@ -21,18 +21,14 @@ use App::Options (
         username => { type => 'string', required => 1, },
         password => { type => 'string', required => 1, },
         base_url => { type => 'string', required => 1, },
-
         forum_id => { type => 'int', required => 1, },
-
         # one must be specified. if topic_id is not specified, posting
         # will start a new topic, otherwise it will be a topic reply
         topic_id => { type => 'int', required => 0, },
-
         delay => { type => 'int', required => 0, default => 4, },
-
         bbcode => { type => 'bool', required => 0, default => 0, },
-
         log_level => { type => 'string', required => 0, default => 'DEBUG' },
+        obfuscate_link => { type => 'bool', require => 0, default => 0, },
     },
 );
 
@@ -102,6 +98,10 @@ POST: for my $file (@ARGV) {
 
     my $mesg = ($obj->body ? join("", @{ $obj->body }) : "(no message)");
     $mesg =~ s/[\x80-\xff]/_/g; # XXX can't handle accented character right now
+
+    if ($App::options{obfuscate_link}) {
+        $mesg =~ s!\bhttp(s?)://!hxxp$1://!ig;
+    }
 
     #print $mech->content();
     #DEBUG "subject=$subj, message=$mesg";

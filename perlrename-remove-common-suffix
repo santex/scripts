@@ -1,0 +1,17 @@
+#!/bin/bash
+perlrename -e '
+if (!defined($COMMON_SUFFIX)) {
+
+  for (@ARGV) { $_ = reverse };
+  print "ARGV = ".join(" ", @ARGV)."\n";
+  for ($i=0; $i<length($ARGV[0]); $i++) {
+    last if grep { substr($_, $i, 1) ne substr($ARGV[0], $i, 1) } @ARGV[1..$#ARGV];
+  }
+  $COMMON_SUFFIX = reverse substr($ARGV[0], 0, $i);
+  for (@ARGV) { $_ = reverse };
+
+  # jangan hapus extension, jika ada
+  $EXT = $COMMON_SUFFIX =~ /.(\.\w+)$/ ? $1 : "";
+}
+s/\Q$COMMON_SUFFIX\E$/$EXT/;
+' "$@"

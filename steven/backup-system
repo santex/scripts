@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# berhubung spanel gak diinstal, jadi pake ini dulu
+
+#set -x
+
+exec=/home/steven/bin/backup-with-history
+rsync_opts="--exclude Cache --exclude cache --exclude var --exclude tmp --exclude temp"
+#cmd="nice -n 19 $exec --rsync_opts='$rsync_opts' --hist_levels=2,1,2"
+cmd="nice -n 19 $exec --hist_levels=2,1,2"
+p=builder.local
+
+$cmd --rsync_opts="$rsync_opts" /encrypted /backup/encrypted/$p
+
+for u in archive builder mwn stats steven steventest test1 test2 test3 test4; do
+  $cmd --rsync_opts="$rsync_opts" /u/$u /backup/$p/backup-u-$u
+done
+
+$cmd --rsync_opts="$rsync_opts" /etc /backup/$p/backup-etc
+
+$cmd --rsync_opts="$rsync_opts" /var/spool/cron /backup/$p/backup-var-spool-cron

@@ -6,6 +6,8 @@ use strict;
 my $VERSION = 20070526;
 
 my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+[di6ganchupin]
+[btwuji-www.btwuji.com].
 dissent-
 _www.ccebook.cn_
 _ccebook.cn_
@@ -58,6 +60,14 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+[dvd-rmvb]
+[zhongwenzimu]
+[eng]dvdrip.dino
+ ws eng dvdrip (darktiger)
+.dvdrip.xvid.[movie-torrentz]
+.[divx_dvdrip]
+-HDTV
+ (dvd rip)
 .StreamCap.DivX-QG
 .DVDRip.XviD-ItzikGur
 .DVDRip(Xvid_Mp3)

@@ -4,8 +4,8 @@
 # 030412
 
 $secs_re = qr/[+-]?\d+(?:\.\d*)?/;
-$hms_re = qr/\d\d?:\d\d?:\d\d?(?:,\d\d\d)?/;
-$hms_re_catch = qr/(\d\d?):(\d\d?):(\d\d?)(?:,(\d\d\d))?/;
+$hms_re = qr/\d\d?:\d\d?:\d\d?(?:,\d{1,3})?/;
+$hms_re_catch = qr/(\d\d?):(\d\d?):(\d\d?)(?:,(\d{1,3}))?/;
 sub hms2secs { local $_=shift; /^$hms_re_catch$/ or return; $1*3600+$2*60+$3+$4*0.001 }
 sub secs2hms { local $_=shift; /^$secs_re$/ or return "00:00:00,000"; my $ms=1000*($_-int($_)); $_=int($_); my $s=$_%60; $_-=$s; $_/=60; my $m=$_%60; $_-=$m; $_/=60; sprintf "%02d:%02d:%02d,%03d",$_,$m,$s,$ms }
 

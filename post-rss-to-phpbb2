@@ -99,7 +99,7 @@ for my $item (reverse @{ $rss->{item} }) {
 
 # send it!
 if (@files) {
-    my $cmd = "phpbb3-post".
+    my $cmd = "phpbb2-post".
         " --delay=".esc($App::options{delay}).
         " --base_url=".esc($App::options{forum_url}).
         " --username=".esc($App::options{username}).
