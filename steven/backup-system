@@ -2,6 +2,8 @@
 
 # berhubung spanel gak diinstal, jadi pake ini dulu
 
+if test -e /backup/NOT_MOUNTED; then echo "/backup partition not mounted, exiting"; exit 1; fi
+
 #set -x
 
 exec=/home/steven/bin/backup-with-history
