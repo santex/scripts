@@ -3,5 +3,5 @@
 rsync -av --del --delete-excluded --force \
  --exclude '.svn' \
  --exclude '*~' \
- /home/steven/bin/steven-private-bin/ \
+ /home/steven/bin/steven/ \
  /u/steven/private/bin/
