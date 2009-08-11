@@ -47,9 +47,6 @@ $hist_levels = [split /,\s*/, $App::options{hist_levels}];
 @ARGV == 2 or die "Usage: $0 <src> <dest>\n";
 my ( $src, $dst ) = @ARGV;
 for ( $src, $dst ) {s!/$!!}
-unless ($App::options{nobackup}) {
-    ( -d $src ) or die "Src haruslah direktori yang sudah ada: $src\n";
-}
 system "mkdir -p " . esc("$dst/current");
 ( -d "$dst/current" ) or die "Gagal membuat creating $dst/current\n";
 
