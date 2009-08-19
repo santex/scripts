@@ -1,0 +1,158 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use autodie;
+use MIME::Parser;
+use Getopt::Std;
+
+# --- globals
+
+my %Config = (
+    max_header_lines => 2000,
+);
+
+# --- subs
+
+sub soft_error($) {
+    my $msg = shift;
+    print STDERR $msg, "\n";
+    exit 111;
+}
+
+sub perm_error($) {
+    my $msg = shift;
+    print STDERR $msg, "\n";
+    exit 100;
+}
+
+# --- main
+
+# check command-line options
+
+my %Opts = ();
+getopts( 'Hh?', \%Opts ) or die "Can't parse command line options\n";
+
+my $usage;
+@ARGV == 3 or $usage++;
+my ($msg, $input, $output) = @ARGV;
+if ( $Opts{'?'} || $Opts{'h'} || $usage ) {
+    require Pod::Usage;
+    Pod::Usage::pod2usage(1);
+    exit 0;
+}
+
+if ($input eq '-') {
+    *INPUT = \*STDIN;
+} else {
+    open INPUT, $input;
+}
+if ($output eq '-') {
+    *OUTPUT = \*STDOUT;
+} else {
+    open OUTPUT, ">$output";
+}
+
+# read and parse message header
+my @headerlines
+    = ();    # e.g. (["Subject: a long\n"], [" continued line\n"], ...)
+my @headerstatuses
+    = ();    # e.g. ([STATUS1, [STATUS2, ...). STATUS:1=print, 0=dont print
+my %headers = ();  # lc(headername) => [[indexlinestart1, indexlineend1], ...]
+my $lastheader;
+my $i = 0;
+PARSE_HEADERS: while (<INPUT>) {
+    $i++;
+
+    #DEBUG "got header line: $_";
+    if ( $Config{max_header_lines} > 0 && $i >= $Config{max_header_lines} ) {
+        perm_error(
+            "Too many header lines, max is: $Config{max_header_lines}");
+    }
+    elsif (/^\s*$/) {
+        $headers{$lastheader}[-1][1] = $i - 2 if $lastheader;
+        last PARSE_HEADERS;
+    }
+    elsif ( my ($name) = /^(\S+?)\s*:\s*(?:.*)/ ) {
+        $name = lc($name);
+        perm_error(
+            "Header line $i: Invalid header name, must not contain colon")
+            if $name =~ /:/;
+        perm_error(
+            "Header line $i: Invalid header name, must not contain unprintable characters"
+        ) if $name =~ /[\x00-\x1F\x80-\xFF]/;
+        $headers{$lastheader}[-1][1] = $i - 2 if $lastheader;
+        $headers{$name} ||= [];
+        push @{ $headers{$name} }, [ $i - 1, $i - 1 ];
+        $lastheader = $name;
+    }
+    elsif ($lastheader) {
+
+        # it's just a continuation of last header
+    }
+    else {
+        perm_err("Invalid message header line: $_");
+    }
+    chomp $_;
+    push @headerlines,    $_;
+    push @headerstatuses, 1
+        ; #($Opts{t} && $lastheader =~ /^(resent-bcc|bcc)$/ ? 0:1); # bcc will be stripped by qmail-inject anyway, so we don't have to do it ourselves for now
+}
+
+#use Data::Dumper; DEBUG "%headers = ".Dumper(\%headers);
+
+exit 0;
+
+__END__
+
+=head1 NAME
+
+mail-stamper - Add footer messages to email files
+
+=head1 SYNOPSIS
+
+mail-stamper [OPTIONS] <MESSAGE> <INPUT-EMAIL-FILE> <OUTPUT-EMAIL-FILE>
+
+=head1 DESCRIPTION
+
+Mail-stamper adds footer messages to email files.
+
+If a mail is cryptographically signed using, e.g. PGP, footer will not
+be added.
+
+If a mail is a multipart MIME message, then it will be parsed first
+and footer will be added to the main text.
+
+Either INPUT-EMAIL-FILE or OUTPUT-EMAIL-FILE can be some file name or
+"-" to specify standard input/standard output.
+
+=head1 OPTIONS
+
+=over 4
+
+=item *
+
+B<-h>, B<-?>. Show help message.
+
+=item *
+
+B<-H>. Assume message is HTML. NOT IMPLEMENTED YET.
+
+=back
+
+=head1 RETURN VALUE
+
+Exits zero if there were no problems, otherwise exits 111.
+
+=head1 AUTHOR(S)
+
+Steven Haryanto E<lt>steven@masterweb.netE<gt>
+
+=head1 COPYRIGHT
+
+Copyright(c) 2009 Steven Haryanto. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
