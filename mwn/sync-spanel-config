@@ -12,6 +12,7 @@ cd /home/steven/proj/mwn/spanel-configs
   dns-zone-templates \
   error-pages \
   plans.yaml \
+  hooks \
   servers/'[[SERVERID]]'/spanel.yaml \
   www \
   www-templates \

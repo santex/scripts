@@ -27,7 +27,7 @@ my $targetp = "$App::options{target_dir}/$targetn";
 # don't generate if the same rev has been extracted.
 my @d;
 if (@d = glob "$App::options{target_dir}/*-rev_$rev.tar.gz") {
-    #print "$d[0] already exists, which is the latest revision. Skipped generating tarball.\n";
+    print "$d[0] already exists, which is the latest revision. Skipped generating tarball.\n";
     exit 0;
 }
 
@@ -35,8 +35,8 @@ if (@d = glob "$App::options{target_dir}/*-rev_$rev.tar.gz") {
 @d = sort {(-M $b) <=> (-M $a)} glob "$App::options{target_dir}/spanel-*.tar.gz";
 unlink (splice @d, 0, $App::options{history});
 
-system qq(git-archive --prefix=$targetn/ $App::options{branch}\@{HEAD} | gzip -c >$targetp.tar.gz);
-#system qq(ls -l $targetp.tar.gz);
+system qq(git archive --prefix=$targetn/ $App::options{branch}\@{HEAD} | gzip -c >$targetp.tar.gz);
+system qq(ls -l $targetp.tar.gz);
 
 # point spanel-latest to the latest tarball.
 unlink "$App::options{target_dir}/spanel-latest.tar.gz";

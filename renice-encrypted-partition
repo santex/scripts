@@ -1,4 +1,5 @@
 #!/bin/sh
 
-ps ax | fgrep '[bcrypt' | grep -v grep | perl -slane'system "renice 0 $F[0]"'
-ps ax | fgrep '[loop' | grep -v grep | perl -slane'system "renice 0 $F[0]"'
+ps ax | fgrep '[bcrypt' | grep -v grep | perl -slane'system "renice 2 $F[0]"'
+ps ax | fgrep 'kcryptd' | grep -v grep | perl -slane'system "renice 2 $F[0]"'
+ps ax | fgrep '[loop' | grep -v grep | perl -slane'system "renice 2 $F[0]"'

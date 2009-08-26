@@ -1,5 +1,9 @@
 #!/bin/sh
-rsync --exclude '*.psd' --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --delete \
--e ssh -Pavz $* /home/steven/sites/id-mwn.steven.builder.localdomain/www mwn@23.masterwebnet.com:/s/id.masterwebnet.com/
+
+# s23 dah gak dipake, sekarang semua ke inet. suka problem koneksi iix sih telkom bbrp mgg lalu - 2009-08-07
+#rsync --exclude '*.psd' --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --delete \
+#-e ssh -Pavz $* /home/steven/sites/id-mwn.steven.builder.localdomain/www mwn@23.masterwebnet.com:/s/id.masterwebnet.com/
+
 rsync --exclude '*.psd' --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --delete \
 -e ssh -Pavz $* /home/steven/sites/id-mwn.steven.builder.localdomain/www mwnmirror@xenon:/s/id.masterwebnet.com/
+

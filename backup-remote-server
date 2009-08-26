@@ -1,0 +1,100 @@
+#!/usr/bin/perl -w
+
+use strict;
+use List::Util qw/shuffle/;
+use Proc::PID::File;
+use App::Options (
+    option => {
+        rsync_opts => {
+            description => "Extra rsync options, will be passed to 'backup-with-history' script",
+            type        => "string",
+            default     => "",
+            required    => 0,
+        },
+        bin_path => {
+            description => "Path to 'backup-with-history' script",
+            type        => "string",
+            default     => "",
+            required    => 0,
+        },
+        hist_levels => {
+            description => "A comma-separated list of numbers to specify the history levels, will be passed to 'backup-with-history' script",
+            type        => "string",
+            default     => "-7,4,3",
+            required    => 0,
+        },
+        dirs => {
+            description => "Source dirs to backup, separated by comma",
+            type        => "string",
+            required    => 1,
+        },
+        user => {
+            description => "User",
+            type        => "string",
+            required    => 1,
+        },
+        host => {
+            description => "Host",
+            type        => "string",
+            required    => 1,
+        },
+        random => {
+            description => "randomize order of directories, etc",
+            type        => "boolean",
+            required    => 1,
+            default     => 1,
+        },
+    }
+);
+use Log::Log4perl qw(:easy);
+
+# --- subs
+
+sub esc {
+    local $_ = shift;
+    s/'/'"'"'/g;
+    "'$_'";
+}
+
+# --- main
+
+@ARGV == 1 or die "Usage: $0 <dest>\n";
+my ( $dst0 ) = @ARGV;
+for ( $dst0 ) {s!/$!!}
+
+my @src = grep { /\S/ } split /\s*,\s*/, $App::options{dirs};
+die "Please specify one or more dirs to backup from remote server (--dirs)\n" unless @src;
+@src = shuffle @src if $App::options{random};
+
+Log::Log4perl->easy_init($DEBUG);
+
+my $name = $App::options{host};
+$name =~ s/[^A-Za-z0-9]+/_/g;
+LOGDIE "Remote backup to server $App::options{host} already running, aborting"
+    if Proc::PID::File->running(name=>$name);
+
+INFO "Remote backup for server $App::options{host} started";
+
+my $i = 0;
+for my $dir (@dirs) {
+    $i++;
+
+    my $dst = $dir;
+    $dst =~ s!/+!-!g;
+    $dst =~ s!^-!!g;
+    $dst =~ s!-$!!g;
+    if ($dst eq '.') { $dst = "CURDIR" }
+    elsif ($dst eq '..') { $dst = "PARENT" }
+
+    my $bin = ($App::options{bin_path} ? "$App::options{bin_path}/" : "") . "backup-with-history";
+    my $cmd = "$bin " .
+        ($App::options{hist_levels} ? "--hist_levels=".esc($App::options{hist_levels})." " : "").
+        ($App::options{rsync_opts} ? "--rsync_opts=".esc($App::options{rsync_opts})." " : "").
+        esc("$App::options{user}\@$App::options{host}:$dir") . " ".
+        esc("$dst0/$dst");
+    INFO "($i/".scalar(@dirs).") Running backup for dir=$dir ...";
+    DEBUG "cmd: $cmd";
+    system $cmd;
+}
+
+INFO "Remote backup for server $App::options{host} ended";

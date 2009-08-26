@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+use Email::Address;
+use File::Slurp;
+use LWP::Simple;
+use strict;
+
+my %memory;
+
+for my $arg (@ARGV) { 
+    # %memory = (); # jika on, berarti memori link hanya sebatas per file
+    my $doc = $arg =~ m#^\w+://# ? get($arg) : read_file($arg);
+    for (split /\n/, $doc) {
+        my @emails = Email::Address->parse($_);
+        print map { "$_\n" } grep { !$memory{$_}++ } @emails;
+    }
+}
+

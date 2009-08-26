@@ -2,16 +2,17 @@
 
 if test `id -u` -ne 0; then echo "You must be root to do this"; exit 1; fi
 
-WHICH=`echo $0 | grep -q home; if [ $? == 0 ]; then echo home; else echo office; fi`
+WHICH=`echo $0 | grep -q home; if [ $? = 0 ]; then echo home; else echo office; fi`
+echo "WHICH=$WHICH"; exit
 PRIMARY_MEDIA=eddie
 PATH=/usr/sbin:/usr/bin:/sbin:/bin:/u/steven/private/bin
-ISLINUX26=`uname -r | grep -q ^2.6; if [ $? == 0 ]; then echo 1; else echo 0; fi`
-#ISLINUX24=`uname -r | grep -q ^2.4; if [ $? == 0 ]; then echo 1; else echo 0; fi`
+ISLINUX26=`uname -r | grep -q ^2.6; if [ $? = 0 ]; then echo 1; else echo 0; fi`
+#ISLINUX24=`uname -r | grep -q ^2.4; if [ $? = 0 ]; then echo 1; else echo 0; fi`
 
 echo "+ Mounting partitions ..."
 mount_storage_media -i $PRIMARY_MEDIA
 mount_storage_media
-#/home/steven/bin/renice-encrypted-partition
+/home/steven/bin/renice-encrypted-partition
 
 #echo "+ Cleaning up pperl files..."
 #rm -f ~/.pperl/*; # 2007-08-04
@@ -48,7 +49,7 @@ rm -f "$XFINALCONF"
 cp -a "$XCONF" "$XFINALCONF"
 
 #echo "+ Installing sound card driver..."
-#if [ "$ISLINUX26" == 1 ]; then modprobe snd_via82xx
+#if [ "$ISLINUX26" = 1 ]; then modprobe snd_via82xx
 #else insmod snd_via82xx; fi
 
 #/etc/init.d/cgiexecd start

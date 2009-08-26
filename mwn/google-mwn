@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "# num keywords in site - mwn"
-get-num-results-of-keyword-in-search-engine site:{id,kb,forums,blogs}.masterweb.net site:masterwebnet.com
+get-num-results-of-keyword-in-search-engine site:{id,kb,forums,blogs}.masterweb.net site:{masterwebnet.com,masterweb.net}
 echo "# num pages in site - kompetitor"
 get-num-results-of-keyword-in-search-engine site:{cbn.net.id,idwebhost.com,rumahweb.com,techscape.co.id,indoglobal.com,ardhosting.com}
 echo "# num keywords - mwn"

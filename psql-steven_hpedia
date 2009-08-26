@@ -1,2 +1,0 @@
-#!/bin/sh
-exec psql -h localhost -U steven_hpedia steven_hpedia $*

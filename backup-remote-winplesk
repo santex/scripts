@@ -1,0 +1,98 @@
+#!/usr/bin/perl -w
+
+use strict;
+use List::Util qw/shuffle/;
+use Proc::PID::File;
+use App::Options (
+    option => {
+        rsync_opts => {
+            description => "Extra rsync options",
+            type        => "string",
+            default     => "",
+            required    => 0,
+        },
+        user => {
+            description => "User",
+            type        => "string",
+            required    => 1,
+            default     => "Administrator",
+        },
+        host => {
+            description => "Host",
+            type        => "string",
+            required    => 1,
+        },
+        ssh_port => {
+            description => "ssh port",
+            type        => "int",
+            required    => 1,
+            default     => 22,
+        },
+        files => {
+            description => "Number of .psa files to retrieve (extra older files will not be retrieved)",
+            type        => "int",
+            required    => 1,
+            default     => 1,
+        },
+        dir => {
+            description => "Backup directory",
+            type        => "string",
+            required    => 1,
+            default     => "/cygdrive/d/Backup",
+        },
+    }
+);
+use Log::Log4perl qw(:easy);
+
+# --- subs
+
+sub esc {
+    local $_ = shift;
+    s/'/'"'"'/g;
+    "'$_'";
+}
+
+# --- main
+
+@ARGV == 1 or die "Usage: $0 <dest>\n";
+my ( $dst0 ) = @ARGV;
+for ( $dst0 ) {s!/$!!}
+
+Log::Log4perl->easy_init($DEBUG);
+
+my $name = $App::options{host};
+$name =~ s/[^A-Za-z0-9]+/_/g;
+LOGDIE "Remote backup to WinPlesk server $App::options{host} already running, aborting"
+    if Proc::PID::File->running(name=>$name);
+
+INFO "Remote backup for WinPlesk server $App::options{host} started";
+
+INFO "Listing files to backup ...";
+my $sshopts = "-p $App::options{ssh_port} -c arcfour -o StrictHostKeyChecking=no";
+my $cmd = "ssh $sshopts " .
+    "$App::options{user}\@$App::options{host} \"'ls'\" -1 --sort=t $App::options{dir}/";
+DEBUG "cmd: $cmd";
+my @files = `$cmd`;
+@files or do {
+    WARN "There are no files under $App::options{dir}/";
+    exit 1;
+};
+chomp for @files;
+splice @files, $App::options{files};
+
+my $bin = "rsync";
+my $i = 0;
+for my $file (@files) {
+    $i++;
+
+    my $cmd = "$bin " .
+        ($App::options{rsync_opts} ? $App::options{rsync_opts}." " : "").
+        "-e ssh -a --del --force ".
+        esc("$App::options{user}\@$App::options{host}:$App::options{dir}/$file") . " ".
+        esc("$dst0/");
+    INFO "($i/".scalar(@files).") Running backup for file=$file ...";
+    DEBUG "cmd: $cmd";
+    system $cmd;
+}
+
+INFO "Remote backup for WinPlesk server $App::options{host} ended";
