@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+$wget = (-x "/usr/bin/wget2") ? "/usr/bin/wget2" : "wget"; # support utk yg wget-nya diblokir
+$yfticker = $ARGV[0] ? "$ARGV[0].JK" : "^JKSE";
+$idticker = $ARGV[0] ? "$ARGV[0]" : "IHSG";
+$_ = `$wget -q -O- --no-cache 'http://finance.yahoo.com/q?s=$yfticker'`;
+length($_) or die "Gagal mengambil halaman (kosong)\n";
+m!<div class="yui-g yfi-start-content">(.+?)<div id="ecn_warning">!s or
+    die "Gagal mengambil main section [1]\n";
+$num_re = qr/[0-9,]+\.?\d*/;
+
+($name) = m!<h2>([^<]+)</h2>! or die "Gagal memparsing nama perusahaan [2]\n";
+
+($val) = m!(?:Index Value|Last Trade):</th><td class="yfnc_tabledata1"><big><b><span id="[^"]+">\s*($num_re)<! or die "Gagal memparsing value [3]\n";
+$val = clean_num($val);
+
+($ttime) = m!Trade Time:</th><td class="yfnc_tabledata1"><span id="[^"]+">\s*([^<]+)<! or die "Gagal memparsing trade time [4]\n";
+
+($csign, $change) = m!class="\s*yfi-price-change-(up|down)\s*">($num_re)<!s or die "Gagal memparsing change [5]\n";
+$change = clean_num($change);
+$csign = $csign eq 'up' ? '+' : '-';
+
+($dr1, $dr2) = m!Day's Range:</th><td class="yfnc_tabledata1"><span><span id="[^"]+">($num_re)</span></span> - <span><span id="[^"]+">($num_re)<! or die "Gagal memparsing day's range [6]\n";
+$dr1 = clean_num($dr1);
+$dr2 = clean_num($dr2);
+
+($prevclose) = m!Prev Close:</th><td class="yfnc_tabledata1">($num_re)<! or die "Gagal memparsing prev close [7]\n";
+$prevclose = clean_num($prevclose);
+
+($open) = m!Open:</th><td class="yfnc_tabledata1">($num_re)<! or die "Gagal memparsing open [8]\n";
+$open = clean_num($open);
+
+print "$idticker:$val($csign$change) TutupKemarin:$prevclose Buka:$open Range:$dr1-$dr2 Sumber:Y!Finance $ttime\n";
+
+sub clean_num {
+    local $_ = shift;
+    s/,//g;
+    $_+0;
+}
