@@ -1,11 +1,12 @@
 #!/usr/bin/perl
 $wget = (-x "/usr/bin/wget2") ? "/usr/bin/wget2" : "wget"; # support utk yg wget-nya diblokir
 $_ = `$wget -q -O- --no-cache 'http://www.klikbca.com'`;
+length($_) or die "Gagal mengambil halaman (kosong)\n";
 m!<td[^>]+"/images/kurs-tanggal.jpg">&nbsp;&nbsp;(\d\d+)-(\w{2,6})-(\d\d\d\d)\s*/\s*(\d\d?):(\d\d?) WIB(.+?)"/images/kurs-bawah.jpg"!s or
-    die "Gagal memparsing kurs\n";
+    die "Gagal memparsing kurs [1]\n";
 $waktu = "$1-$2-$3 $4:$5 WIB";
 $kurs = $6;
-$kurs =~ m!>USD<.+?>(\d+\.\d+)<.+?>(\d+\.\d+)<!s or die "Gagal memparsing kurs USD\n";
+$kurs =~ m!>USD</td>\s*<td[^>]*>\s*(\d+\.\d+)</td>\s*<td[^>]*>\s*(\d+\.\d+)<!s or die "Gagal memparsing kurs USD [2]\n";
 ($usd_jual, $usd_beli) = ($1, $2);
 #$kurs =~ m!>SGD<.+?>(\d+\.\d+)<.+?>(\d+\.\d+)<!s or die "Gagal memparsing kurs SGD\n";
 #($sgd_jual, $sgd_beli) = ($1, $2);
