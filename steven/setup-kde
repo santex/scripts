@@ -1,0 +1,6 @@
+#!/bin/bash
+xset r rate 200 40
+oocalc ~/notes/expenses.ods &
+. set-zh
+stardict &
+

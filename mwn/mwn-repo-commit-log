@@ -1,0 +1,3 @@
+#!/bin/bash
+cd ~/proj/mwn
+( echo "Subject: commit"; echo; bzr log -r-1 -v -p ) | phpbb2-post --profile=commit_mwn -

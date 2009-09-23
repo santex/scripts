@@ -71,14 +71,14 @@ $mech->content =~ m!cmd=_logout">Log Out</a>! or do {
 $mech->submit_form(
                    form_name   => 'form1',
                    fields      => {
-                                       type => "custom_date_range",
+                                       type => "latest_completed_date_range",
                                        from_a => $m1,
                                        from_b => $d1,
                                        from_c => $y1,
                                        to_a => $m2,
                                        to_b => $d2,
                                        to_c => $y2,
-                                       custom_file_type => "comma_allactivity",
+                                       custom_file_type => "comma_completed",
                                    },
                        button => 'submit.x',
                );
