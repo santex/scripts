@@ -12,11 +12,17 @@ my @lines =
     read_file("MANIFEST");
 
 @lines or die "Can't find main module .pm file in MANIFEST";
-chomp($lines[0]);
 
-my $fc = read_file($lines[0]);
-$fc =~ m#^our .VERSION = (['"])(.+)\1;#m or die "Can't find VERSION line";
-my $version = $2;
+my $version;
+for my $fn (@lines) {
+    chomp $fn;
+    my $fc = read_file($fn);
+    if ($fc =~ m#^our .VERSION = (['"])(.+)\1;#m) {
+	$version = $2;
+	last;
+    }
+}
+die "Can't find VERSION line in any of these files: ".join(", ", @lines) unless $version;
 
 $_ = getcwd();
 s!.+/!!;
