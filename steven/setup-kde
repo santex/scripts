@@ -1,6 +1,19 @@
 #!/bin/bash
-xset r rate 200 40
+
+xset r rate 200 50
+eval `ssh-agent`
+ssh-add
+
+konqueror &
+
+korganizer &
+
+# XXX buka tab 1 dengan dbus: emacs ~/notes/waktu_depan_pc.txt dll
+
+# XXX buka tab 2 dengan dbus: root shell
+
 oocalc ~/notes/expenses.ods &
+
 . set-zh
 stardict &
 
