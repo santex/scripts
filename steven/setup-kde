@@ -17,3 +17,6 @@ oocalc ~/notes/expenses.ods &
 . set-zh
 stardict &
 
+# kalo kepencet gak sengaja agak lama aja (mis: 1 detik), udah deh, bakal terus2an
+# launch terus sampe crash. walaupun udah di-killall, ada lagi ada lagi... gila.
+sudo chmod -x /usr/bin/ksnapshot
