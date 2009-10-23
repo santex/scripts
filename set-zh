@@ -1,8 +1,8 @@
 #!/bin/sh
 export LANG="zh_CN.UTF-8"
-export XMODIFIERS="@im=SCIM"
-export GTK_IM_MODULE="scim"
-if test `ps aux|grep -v grep|grep steven|grep -q scim;echo $?` -ne 0; then
-  scim -d
+export XMODIFIERS="@im=ibus"
+export GTK_IM_MODULE="ibus"
+export QT_IM_MODULE="ibus"
+if test `ps aux|grep -v grep|grep steven|grep -q ibus-daemon;echo $?` -ne 0; then
+  ibus-daemon&
 fi
-
