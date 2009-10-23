@@ -2,7 +2,7 @@
 TARGETHOST=t73214@mybabytree.org
 TARGETDIR=mbt-gdocs
 
-rsync -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '*~' \
+rsync -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '/.git' --exclude '*~' \
   --exclude '/config.inc.php' \
   --exclude '/log' \
   --exclude '/logs/*' \
