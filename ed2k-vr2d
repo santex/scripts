@@ -1,0 +1,4 @@
+#!/usr/bin/perl -ln
+#2009-11-04: output vr menjadi perintah download
+/^\[\s*(\d+)\]/ and push @n, $1;
+END { print "d ".join(" ", @n) }
