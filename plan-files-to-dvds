@@ -4,7 +4,7 @@ use strict;
 use Algorithm::BinPack;
 use App::Options (
     option => {
-        dvd_size => { type => 'int', required => 0, default => 4400 },
+        dvd_size => { type => 'int', required => 0, default => 4494-1 },
         fudge    => { type => 'int', required => 0, default => 10 },
         move     => { type => 'boolean', required => 0, default => 0 },
         dry_run  => { type => 'boolean', required => 0, default => 0, env => 'DRY_RUN' },

@@ -1,8 +1,8 @@
 #!/usr/bin/ruby
 
-# todo: support unmounting, add --no-encrypted
+# todo: support unmounting, add --no-block
 
-# BUG: jika --force-index maka meskipun encrypted partition tidak/gagal dimount maka akan diindex
+# BUG: jika --force-index maka meskipun block partition tidak/gagal dimount maka akan diindex
 
 # ---
 
@@ -43,15 +43,15 @@ def mount(path, mpoint, fstype, opts)
   $? == 0
 end
 
-def mount_encrypted(path, mpoint, fstype, opts, enctype)
-  if enctype == 'bc'
+def mount_block(path, mpoint, fstype, opts, ctype)
+  if ctype == 'bc'
 
     $log.puts("Mounting #{path}")
     # XXX kuduna mah ngecek heula nya, ulah sembarang diunlock
     system "bctool unlock #{path}"
     system "bcmount -m 755 -t #{fstype} #{(opts && !opts.empty?) ? '-o '+opts : ''} #{path} #{mpoint}"
 
-  elsif enctype == 'dm'
+  elsif ctype == 'dm'
 
     use_loop = 1 unless path =~ %r(^/dev/)
 
@@ -68,7 +68,7 @@ def mount_encrypted(path, mpoint, fstype, opts, enctype)
 
     mapper_name = path.gsub(%r([^a-z0-9]+), "_")
     if FileTest.exists?("/dev/mapper/#{mapper_name}")
-      puts "INFO: Not mounting encrypted volume #{path}: /dev/mapper/#{mapper_name} already exists"
+      puts "INFO: Not mounting block volume #{path}: /dev/mapper/#{mapper_name} already exists"
       return
     end
 
@@ -77,7 +77,7 @@ def mount_encrypted(path, mpoint, fstype, opts, enctype)
     if use_loop
       system "losetup /dev/loop#{loop_num} #{path}"
       if $? != 0
-        puts "ERROR: Can't mount encrypted volume #{path}: failed to loop"
+        puts "ERROR: Can't mount block volume #{path}: failed to loop"
         return
       end
     end
@@ -85,7 +85,7 @@ def mount_encrypted(path, mpoint, fstype, opts, enctype)
     target = use_loop ? "/dev/loop#{loop_num}" : path
     system "cryptsetup create #{mapper_name} #{target}"
     if $? != 0
-      puts "ERROR: Can't mount encrypted volume #{path}: failed to cryptsetup create"
+      puts "ERROR: Can't mount block volume #{path}: failed to cryptsetup create"
       return
     end
 
@@ -93,7 +93,7 @@ def mount_encrypted(path, mpoint, fstype, opts, enctype)
 
   else
 
-    raise "Unknown encryption type: #{enctype}"
+    raise "Unknown block type: #{ctype}"
 
   end
 end
@@ -197,38 +197,38 @@ puts "INFO: Mounting IDE & SATA devices..."
     puts "INFO: Mounting #{label} on #{detail['mount_point']}..."
     $log.puts("Mounting #{label}")
     unless opts[:dry_run]
-      if detail['encrypted']
-        mount_encrypted(part, detail['mount_point'], detail['filesystem'], detail['mount_options'], detail['encryption_type'])
+      if detail['block']
+        mount_block(part, detail['mount_point'], detail['filesystem'], detail['mount_options'], detail['block_type'])
       else
         mount(part, detail['mount_point'], detail['filesystem'], detail['mount_options'])
       end
     end
   end
 
-  did_mount_encryptedsub = false
-  encryptedsub_is_mounted = false
+  did_mount_blocksub = false
+  blocksub_is_mounted = false
 
   (1..10).each {|num|
 
     suffix = num == 1 ? '' : num.to_s
-    tmp  = "#{detail['mount_point']}/.encrypted#{suffix}.disk".gsub(%r(//), "/")
-    tmp2 = "#{detail['mount_point']}/encrypted#{suffix}".gsub(%r(//), "/")
+    tmp  = "#{detail['mount_point']}/.block#{suffix}".gsub(%r(//), "/")
+    tmp2 = "#{detail['mount_point']}/mnt#{suffix}".gsub(%r(//), "/")
     if FileTest.exists?(tmp)
-      puts "INFO: Encrypted volume #{tmp} exists"
+      puts "INFO: Block volume #{tmp} exists"
       unless opts[:dry_run]
-        mount_encrypted(tmp, tmp2, "ext3", "", "dm") && did_mount_encryptedsub = true
+        mount_block(tmp, tmp2, "ext3", "", "dm") && did_mount_blocksub = true
       end
     end
-    tmp  = "#{detail['mount_point']}/.encrypted#{suffix}.jbc".gsub(%r(//), "/")
-    tmp2 = "#{detail['mount_point']}/encrypted#{suffix}".gsub(%r(//), "/")
+    tmp  = "#{detail['mount_point']}/.block#{suffix}.jbc".gsub(%r(//), "/")
+    tmp2 = "#{detail['mount_point']}/mnt#{suffix}".gsub(%r(//), "/")
     if FileTest.exists?(tmp) && !already_mounted[tmp]
-      puts "INFO: Encrypted volume #{tmp} exists and not yet mounted"
+      puts "INFO: Block volume #{tmp} exists and not yet mounted"
       unless opts[:dry_run]
-        mount_encrypted(tmp, tmp2, "ext3", "", "bc") && did_mount_encryptedsub = true
+        mount_block(tmp, tmp2, "ext3", "", "bc") && did_mount_blocksub = true
       end
     end
 
-    tmp = "#{detail['mount_point']}/encrypted#{suffix}/swapfile"
+    tmp = "#{detail['mount_point']}/mnt#{suffix}/swapfile"
     if FileTest.exists?(tmp) && !`swapon -s | grep file`.include?(tmp)
       puts "INFO: Swap file #{tmp} exists and not yet installed"
       $log.puts("Setup swap #{tmp}")
@@ -246,13 +246,13 @@ puts "INFO: Mounting IDE & SATA devices..."
       }
     end
 
-    if did_mount_encryptedsub || (opts[:force_index]) # && encryptedsub_is_mounted)
-      p2 = "#{detail['mount_point'] == '/' ? '' : detail['mount_point']}/encrypted#{suffix}"
+    if did_mount_blocksub || (opts[:force_index]) # && blocksub_is_mounted)
+      p2 = "#{detail['mount_point'] == '/' ? '' : detail['mount_point']}/mnt#{suffix}"
       to_be_indexed << {
-        :label => "#{label}-encrypted#{suffix}",
+        :label => "#{label}-block#{suffix}",
         :mpath => p2,
-        :ipath => (detail['encrypted_index_point'] || p2),
-        :dont_index => detail['encrypted_dont_index']
+        :ipath => (detail['block_index_point'] || p2),
+        :dont_index => detail['block_dont_index']
       }
     end
 

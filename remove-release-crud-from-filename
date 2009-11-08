@@ -60,6 +60,8 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.HDTV.XviD-FEVER.[VTV]
+.HDTV.XviD-FEVER
 .dvd-rmvb.rex
 .DVDRip.XviD-MAK
 .REPACK.WS.PDTV.XviD-XII
@@ -69,6 +71,7 @@ my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/
  - hdtv xvid-0tv
  - hdtv xvid-2hd
 [dvd-rmvb]
+[yingyuzhongzi]
 [zhongwenzimu]
 [eng]dvdrip.dino
  ws eng dvdrip (darktiger)

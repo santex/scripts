@@ -18,5 +18,5 @@ my $timestamp = strftime "%Y%m%d", localtime;
 my $targetn = "spanel-$Spanel::VERSION.$Spanel::REVISION";
 my $targetp = "$TARGET_DIR/$targetn";
 
-system qq{git-archive -v --prefix=$targetn/ HEAD | gzip -c > $targetp.tar.gz};
+system qq{git archive -v --prefix=$targetn/ HEAD | gzip -c > $targetp.tar.gz};
 system qq{ls -l $targetp.tar.gz};
