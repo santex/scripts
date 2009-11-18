@@ -24,7 +24,8 @@ use App::Options (
         bbcode => { type => 'bool', required => 0, default => 0 },
         dry_run => { type => 'bool', required => 0, default => 0 },
         log_level => { type => 'string', required => 0, default => 'DEBUG' },
-        obfuscate_link => { type => 'bool', require => 0, default => 0, },
+        obfuscate_link => { type => 'bool', required => 0, default => 0, },
+        prefix => { type => 'string', required => 0, default => '', },
     },
 );
 
@@ -78,7 +79,7 @@ for my $item (reverse @{ $rss->{item} }) {
     next unless $status eq 'new';
 
     my ($fh, $filename) = tempfile();
-    print $fh "Subject: ".html2bbcode($item->{title})."\n";
+    print $fh "Subject: ".html2bbcode(($App::options{prefix} ? "$App::options{prefix}: " : "") . $item->{title})."\n";
     print $fh "\n";
     print $fh "Waktu asli posting blog: $item->{pubDate}\n";
     print $fh "Diposting oleh: ".$item->{'dc:creator'}."\n" if $item->{'dc:creator'};

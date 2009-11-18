@@ -1,11 +1,11 @@
 #!/usr/bin/ruby
 
 # 2004-12-25 - memastikan bahwa apa yg harus diencrypt (karena
-# sifatnya private/rahasia) harus ditaruh di /encrypted.
+# sifatnya private/rahasia) harus ditaruh di /mnt.
 
 LOG_LEVEL = 3
 VERBOSE = 0
-OVERWRITE = 1 # when both exist, delete stuff in /encrypted/ and move the unencrypted to encrypted
+OVERWRITE = 1 # when both exist, delete stuff in /mnt/ and move the unmnt to mnt
 
 require 'pathname'
 require 'fileutils'
@@ -51,19 +51,19 @@ def dirname(p)
   Pathname.new(p).dirname.to_s
 end
 
-def in_encrypted(p)
+def in_mnt(p)
   rp = realpath(p)
-  result = rp =~ %r(^/encrypted/) ? true : false
-  debug "in_encrypted: p=#{p}, realpath(p)=#{rp}, result=#{result}"
+  result = rp =~ %r(^/mnt/) ? true : false
+  debug "in_mnt: p=#{p}, realpath(p)=#{rp}, result=#{result}"
   result
 end
 
-# move /some/path to /encrypted/some/path and make /some/path symlink
-# to /encrypted/some/path
+# move /some/path to /mnt/some/path and make /some/path symlink
+# to /mnt/some/path
 
-def move_dir_to_encrypted(dir)
+def move_dir_to_mnt(dir)
   verbose1 "Processing directory: #{dir}..."
-  targetparentdir = "/encrypted#{dirname dir}"
+  targetparentdir = "/mnt#{dirname dir}"
 
   unless dir =~ %r(^/)
     error "INTERNAL ERROR: #{dir} doesn't start with a slash, skipped. " +
@@ -75,8 +75,8 @@ def move_dir_to_encrypted(dir)
       "Please check my source code for errors."
     return
   end
-  if !FileTest.exists?(dir) && !FileTest.exists?("/encrypted#{dir}")
-    warn "Both #{dir} and /encrypted#{dir} don't exist, skipped"
+  if !FileTest.exists?(dir) && !FileTest.exists?("/mnt#{dir}")
+    warn "Both #{dir} and /mnt#{dir} don't exist, skipped"
     return
   end
   if FileTest.exists?(dir) && !FileTest.directory?(dir)
@@ -84,17 +84,17 @@ def move_dir_to_encrypted(dir)
     return
   end
 
-  if FileTest.symlink?(dir) && in_encrypted(File.readlink(dir))
-    info "#{dir} is already symlinked to /encrypted, skipped"
+  if FileTest.symlink?(dir) && in_mnt(File.readlink(dir))
+    info "#{dir} is already symlinked to /mnt, skipped"
     return
   end
-  if (FileTest.exists?(dir) && !in_encrypted(dir))
-    info "#{dir} is not in /encrypted, moving..."
-    if FileTest.exists? "/encrypted#{dir}"
+  if (FileTest.exists?(dir) && !in_mnt(dir))
+    info "#{dir} is not in /mnt, moving..."
+    if FileTest.exists? "/mnt#{dir}"
       if OVERWRITE
-        system "rm -rf /encrypted#{dir}"
+        system "rm -rf /mnt#{dir}"
       else
-        warn "/encrypted#{dir} and #{dir} exist, skipped. " +
+        warn "/mnt#{dir} and #{dir} exist, skipped. " +
           "You should probably delete #{dir} first."
         return
       end
@@ -103,18 +103,18 @@ def move_dir_to_encrypted(dir)
     system "mv #{dir.esc} #{targetparentdir.esc}/"
   end
 
-  if FileTest.exists?(dir) || !FileTest.exists?("/encrypted#{dir}")
-    error "#{dir} still exists or /encrypted#{dir} doesn't exist, skipped. " +
+  if FileTest.exists?(dir) || !FileTest.exists?("/mnt#{dir}")
+    error "#{dir} still exists or /mnt#{dir} doesn't exist, skipped. " +
       "You should probably check this situation."
     return
   end
 
-  system %Q(ln -s #{"/encrypted#{dir}".esc} #{dir.esc})
+  system %Q(ln -s #{"/mnt#{dir}".esc} #{dir.esc})
 end
 
-def move_file_to_encrypted(file)
+def move_file_to_mnt(file)
   verbose1 "Processing file: #{file}..."
-  targetparentdir = "/encrypted#{dirname file}"
+  targetparentdir = "/mnt#{dirname file}"
 
   unless file =~ %r(^/)
     error "INTERNAL ERROR: #{file} doesn't start with a slash, skipped. " +
@@ -126,8 +126,8 @@ def move_file_to_encrypted(file)
       "Please check my source code for errors."
     return
   end
-  if !FileTest.exists?(file) && !FileTest.exists?("/encrypted#{file}")
-    warn "Both #{file} and /encrypted#{file} don't exist, skipped"
+  if !FileTest.exists?(file) && !FileTest.exists?("/mnt#{file}")
+    warn "Both #{file} and /mnt#{file} don't exist, skipped"
     return
   end
   if FileTest.exists?(file) && FileTest.directory?(file)
@@ -135,17 +135,17 @@ def move_file_to_encrypted(file)
     return
   end
 
-  if FileTest.symlink?(file) && in_encrypted(File.readlink(file))
-    info "#{file} is already symlinked to /encrypted, skipped"
+  if FileTest.symlink?(file) && in_mnt(File.readlink(file))
+    info "#{file} is already symlinked to /mnt, skipped"
     return
   end
-  if (FileTest.exists?(file) && !in_encrypted(file))
-    info "#{file} is not in /encrypted, moving..."
-    if FileTest.exists? "/encrypted#{file}"
+  if (FileTest.exists?(file) && !in_mnt(file))
+    info "#{file} is not in /mnt, moving..."
+    if FileTest.exists? "/mnt#{file}"
       if OVERWRITE
-        system "rm -f /encrypted#{file}"
+        system "rm -f /mnt#{file}"
       else
-        warn "/encrypted#{file} and #{file} exist, skipped. " +
+        warn "/mnt#{file} and #{file} exist, skipped. " +
           "You should probably delete #{file} first."
         return
       end
@@ -154,35 +154,35 @@ def move_file_to_encrypted(file)
     system "mv #{file.esc} #{targetparentdir.esc}"
   end
 
-  if FileTest.exists?(file) || !FileTest.exists?("/encrypted#{file}")
-    error "#{file} still exists or /encrypted#{file} doesn't exist, skipped. " +
+  if FileTest.exists?(file) || !FileTest.exists?("/mnt#{file}")
+    error "#{file} still exists or /mnt#{file} doesn't exist, skipped. " +
       "You should probably check this situation."
     return
   end
 
-  system %Q(ln -s #{"/encrypted#{file}".esc} #{file.esc})
+  system %Q(ln -s #{"/mnt#{file}".esc} #{file.esc})
 end
 
 # --- main
 
-fatal "/encrypted is not mounted" unless 
-  %x(/bin/mount) =~ %r(/dev/mapper/.+ on /encrypted)
+fatal "/mnt is not mounted" unless 
+  %x(/bin/mount) =~ %r(/dev/mapper/.+ on /mnt)
 
 raise RunTimeError, "Please run me as root" unless
   Process.uid == 0
 
 # home dirs
-move_dir_to_encrypted "/home/sloki/user/steven/home"
-move_dir_to_encrypted "/home/sloki/user/steven/sites/steven.builder.localdomain/syslog"
-move_dir_to_encrypted "/home/sloki/user/steven/sites/traps.steven.builder.localdomain/syslog"
-move_dir_to_encrypted "/home/sloki/user/test1/home"
-move_dir_to_encrypted "/home/sloki/user/test2/home"
-move_dir_to_encrypted "/home/sloki/user/test3/home"
-move_dir_to_encrypted "/home/sloki/user/stats/home"
-move_dir_to_encrypted "/home/sloki/user/mwn/home"
+move_dir_to_mnt "/home/sloki/user/steven/home"
+move_dir_to_mnt "/home/sloki/user/steven/sites/steven.builder.localdomain/syslog"
+#move_dir_to_mnt "/home/sloki/user/steven/sites/traps.steven.builder.localdomain/syslog"
+move_dir_to_mnt "/home/sloki/user/test1/home"
+move_dir_to_mnt "/home/sloki/user/test2/home"
+move_dir_to_mnt "/home/sloki/user/test3/home"
+move_dir_to_mnt "/home/sloki/user/stats/home"
+move_dir_to_mnt "/home/sloki/user/mwn/home"
 
 # /root
-move_dir_to_encrypted "/root/Desktop"
+move_dir_to_mnt "/root/Desktop"
 # -- all dotfiles
 Dir.chdir "/root"
 dirs = []; files = []
@@ -190,31 +190,29 @@ Dir[".*"].each {|e|
   next if e == '.' || e == '..'
   (FileTest.directory?(e) ? dirs : files) << "/root/#{e}"
 }
-dirs.each  {|d| move_dir_to_encrypted d}
-files.each {|f| move_file_to_encrypted f}
+dirs.each  {|d| move_dir_to_mnt d}
+files.each {|f| move_file_to_mnt f}
 
 # squid
-move_dir_to_encrypted "/var/log/squid"
-move_dir_to_encrypted "/var/spool/squid"
+move_dir_to_mnt "/var/log/squid"
+move_dir_to_mnt "/var/spool/squid"
 
 # slocate
-#move_dir_to_encrypted "/var/cache/locate" # ini kalau belum instal paket 'slocate'
-move_dir_to_encrypted "/var/lib/slocate"
+#move_dir_to_mnt "/var/cache/locate" # ini kalau belum instal paket 'slocate'
+move_dir_to_mnt "/var/lib/slocate"
 
 # ftp
-Dir["/var/log/xferlog*"].each { |f| move_file_to_encrypted f }
+Dir["/var/log/xferlog*"].each { |f| move_file_to_mnt f }
 
 # samba
-move_dir_to_encrypted "/var/log/samba"
-
-# XXX steven's apache log of steven.builder.localdomain, traps.steven.builder.localdomain
+move_dir_to_mnt "/var/log/samba"
 
 # XXX slk-smtpd's logs? (/var/log/slk-smtpd and
 # /var/spool/slk-smtpd). in the mean time, ngirim email private pakai
 # web saja...
 
-# NOTE: /e/usr/bin/manipurlation gak ada symlinknya
+# NOTE: /mnt/usr/bin/manipurlation gak ada symlinknya
 
 # dnscache & tinydns
-move_dir_to_encrypted "/etc/dnscache/log"
-move_dir_to_encrypted "/etc/tinydns/log"
+#move_dir_to_mnt "/etc/dnscache/log"
+#move_dir_to_mnt "/etc/tinydns/log"

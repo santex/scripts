@@ -1,0 +1,20 @@
+ for s in `
+
+   /c/sbin/find-servers --has mwn --spanel --has iix --lack intranet --has hosting --lack demo --has-pat '^datacenter:telkom.*' --xname-pat server23 --random;
+
+   /c/sbin/find-servers --has mwn --spanel --has iix --lack intranet --has hosting --lack demo --has-pat '^datacenter:mwn9.*' --random`; do
+
+   backup-remote-spanel --hist_levels=1 --server_id=$s --host=$s.masterweb.net /backup/remote-backups/$s 2>&1| tee -a ~/remote-backups.log
+
+ done
+
+ for s in `
+
+   /c/sbin/find-servers --has mwn --cpanel --has iix --lack intranet --has hosting --lack demo --has-pat '^datacenter:telkom.*' --xname-pat server23 --random;
+
+   /c/sbin/find-servers --has mwn --cpanel --has iix --lack intranet --has hosting --lack demo --has-pat '^datacenter:mwn9.*' --random`; do
+
+   backup-remote-cpanel --hist_levels=1 --dir=/backup/$s.local/cpbackup --host=$s.masterweb.net /backup/remote-backups/$s 2>&1| tee -a ~/remote-backups.log
+
+ done
+

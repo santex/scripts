@@ -12,16 +12,16 @@ storages.each_pair {|name, storage|
   next if %w(REPLACED).include? storage['current_status']
 
   if storage['filesystem'] =~ /^(?:bc|bestcrypt)\+(.+)/
-    encrypted = true
-    encryption_type = "bc"
+    block = true
+    block_type = "bc"
     filesystem = $1
   elsif storage['filesystem'] =~ /^(dm|dm-?crypt)\+(.+)/
-    encrypted = true
-    encryption_type = "dm"
+    block = true
+    block_type = "dm"
     filesystem = $1
   else
-    encrypted = false
-    encryption_type = nil
+    block = false
+    block_type = nil
     filesystem = storage['filesystem']
   end
   summary[name] = {
@@ -31,10 +31,10 @@ storages.each_pair {|name, storage|
     'mount_point' => storage['mount_point'],
     'index_point' => storage['index_point'],
     'filesystem' => filesystem,
-    'encrypted' => encrypted,
-    'encryption_type' => encryption_type,
+    'block' => block,
+    'block_type' => block_type,
     'dont_index' => (storage['dont_index'] ? true : false),
-    'encrypted_dont_index' => (storage['encrypted_dont_index'] ? true : false),
+    'block_dont_index' => (storage['block_dont_index'] ? true : false),
   }
 }
 
