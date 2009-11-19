@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+use YAML;
+
+undef $/;
+
+print Dump(Load(scalar <>));
