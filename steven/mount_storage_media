@@ -11,7 +11,11 @@ require 'getoptlong'
 
 # --- consts
 
-MEDIA_LIST = YAML::load(File::open("/u/steven/private/etc/storage_media_summary.yaml"))
+DIRS = ['/u/steven/private/etc', '/etc/local']
+DIRS.each {|x|
+   FILE = x+"/storage_media_summary.yaml" if FileTest.exist?(x)
+}
+MEDIA_LIST = YAML::load(File::open(FILE))
 IDE_DEVICES = %w(/dev/hda /dev/hdb /dev/hdc /dev/hdd)
 SATA_DEVICES = %w(/dev/sda /dev/sdb)
 DATA_DIR = "/home/stats/media/ls-lR"

@@ -1,5 +1,5 @@
 #!/bin/bash
-NAME=perl
+NAME=shperl
 SRCDIR=~/proj
 TARGETDIR=~/tmp
 

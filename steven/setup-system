@@ -2,26 +2,23 @@
 
 if test `id -u` -ne 0; then echo "You must be root to do this"; exit 1; fi
 
-WHICH=`echo $0 | grep -q home; if [ $? = 0 ]; then echo home; else echo office; fi`
+WHICH=`echo $0 | grep -q home; if [ $? = 0 ]; then echo home; else echo $0 | grep -q office; if [ $? = 0 ]; then echo office; else echo laptop; fi; fi`
 #echo "WHICH=$WHICH"; exit
-PRIMARY_MEDIA=eddie
-PATH=/usr/sbin:/usr/bin:/sbin:/bin:/u/steven/private/bin
-ISLINUX26=`uname -r | grep -q ^2.6; if [ $? = 0 ]; then echo 1; else echo 0; fi`
-#ISLINUX24=`uname -r | grep -q ^2.4; if [ $? = 0 ]; then echo 1; else echo 0; fi`
 
-if [[ $1 == "" || $1 == "mount" ]]; then
-  echo "+ Mounting partitions ..."
-  mount_storage_media -i $PRIMARY_MEDIA
-  mount_storage_media
-  /home/steven/bin/renice-encrypted-partition
+if [ $WHICH = "laptop" ]; then
+  PRIMARY_MEDIA=niles
+  IP=192.168.0.104
+else
+  PRIMARY_MEDIA=eddie
+  IP=192.168.0.103
 fi
 
 if [[ $1 == "" || $1 == "network" || $1 == "net" ]]; then
   echo "+ Setting network ..."
-  ifconfig eth0 192.168.0.103
-  while test `route -n | grep -q '192.168.0.\(1\|103\)'; echo $?` -eq 0; do
+  ifconfig eth0 $IP
+  while test `route -n | grep -q '192.168.0.[1-9]'; echo $?` -eq 0; do
     route del default gw 192.168.0.1
-    route del default gw 192.168.0.103
+    route del default gw $IP
   done
   route add default gw 192.168.0.1
   #iptables -F; iptables -t nat -F
@@ -45,11 +42,13 @@ fi
 #rm -f /etc/server=builder+*
 #touch /etc/server=builder+$WHICH
 
-XCONF=/u/steven/private/etc/xorg.conf.$WHICH
-XFINALCONF=/etc/X11/xorg.conf
-echo "+ Copying $XCONF to $XFINALCONF..."
-rm -f "$XFINALCONF"
-cp -a "$XCONF" "$XFINALCONF"
+if [ $WHICH != laptop ]; then
+  XCONF=/u/steven/private/etc/xorg.conf.$WHICH
+  XFINALCONF=/etc/X11/xorg.conf
+  echo "+ Copying $XCONF to $XFINALCONF..."
+  rm -f "$XFINALCONF"
+  cp -a "$XCONF" "$XFINALCONF"
+fi
 
 #echo "+ Installing sound card driver..."
 #if [ "$ISLINUX26" = 1 ]; then modprobe snd_via82xx
