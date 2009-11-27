@@ -74,7 +74,7 @@ LOGDIE "Remote backup to cPanel server $App::options{host} already running, abor
 INFO "Remote backup for cPanel server $App::options{host} started";
 
 INFO "Listing files to backup ...";
-my $sshopts = "-p $App::options{ssh_port} -c arcfour -o StrictHostKeyChecking=no";
+my $sshopts = "-p $App::options{ssh_port} -c arcfour -o StrictHostKeyChecking=no -o BatchMode=yes";
 my $dir0 = $App::options{dir};
 
 my $bin = ($App::options{bin_path} ? "$App::options{bin_path}/" : "") . "backup-with-history";

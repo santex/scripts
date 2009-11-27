@@ -82,7 +82,7 @@ INFO "Remote backup for Spanel server $App::options{server_id} ($App::options{ho
 
 
 INFO "Listing backup directories to backup ...";
-my $sshopts = "-p $App::options{ssh_port} -c arcfour -o StrictHostKeyChecking=no";
+my $sshopts = "-p $App::options{ssh_port} -c arcfour -o StrictHostKeyChecking=no -o BatchMode=yes";
 my $dir0 = "/backup/$App::options{server_id}.local";
 my $cmd = "ssh $sshopts " .
     "$App::options{user}\@$App::options{host} \"'ls'\" -1 $dir0/";

@@ -68,7 +68,7 @@ LOGDIE "Remote backup to WinPlesk server $App::options{host} already running, ab
 INFO "Remote backup for WinPlesk server $App::options{host} started";
 
 INFO "Listing files to backup ...";
-my $sshopts = "-p $App::options{ssh_port} -c arcfour -o StrictHostKeyChecking=no";
+my $sshopts = "-p $App::options{ssh_port} -c arcfour -o StrictHostKeyChecking=no -o BatchMode=yes";
 my $cmd = "ssh $sshopts " .
     "$App::options{user}\@$App::options{host} \"'ls'\" -1 --sort=t $App::options{dir}/";
 DEBUG "cmd: $cmd";
