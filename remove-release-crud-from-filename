@@ -6,6 +6,11 @@ use strict;
 my $VERSION = 20070526;
 
 my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+[fk]
+[tvb]
+[qxtsr]
+[★di⑥ganyuanchuang★][xinjiapo]
+[★di⑥ganyuanchuang★]
 [di6ganchupin]
 [btwuji-www.btwuji.com].
 dissent-
@@ -60,6 +65,17 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+[quanji]
+[yueyuzimu]
+[fkyazhizu]
+.yueyuzimu.d-vb.evo
+.yueyuzimu
+.d-vb.evo
+[guoyuzhongzi][dvd-rmvb]
+[guoyuzhongzi]
+[dvd-rmvb]
+.WS.PDTV.XviD-XII
+.WS
 .HDTV.XviD-FEVER.[VTV]
 .HDTV.XviD-FEVER
 .dvd-rmvb.rex
@@ -705,7 +721,7 @@ for (@ARGV) {
   my $old2 = $old;
   while (1) {
       s/^$re_prefix//; s/^\s+//;
-      s/$re_suffix(\.\w+)$/$1/;
+      s/$re_suffix(\.\w+)?$/$1/;
       s/\s+(\.\w+)?$/$1/;
       last if $old2 eq $_;
       $old2 = $_;

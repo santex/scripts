@@ -1,0 +1,10 @@
+#!/bin/bash
+NAME=spanel
+SRCDIR=~/proj
+TARGETDIR=~/tmp
+
+TARNAME=$NAME-`date +'%Y%m%d'`.tgz
+
+cd $SRCDIR
+tar cfz $TARGETDIR/$TARNAME $NAME
+ls -l $TARGETDIR/$TARNAME
