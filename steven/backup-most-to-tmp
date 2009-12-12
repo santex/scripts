@@ -1,0 +1,11 @@
+#!/bin/bash
+set -x
+
+backup-notes-to-tmp
+backup-scripts-to-tmp
+backup-settings-to-tmp
+backup-organizer-to-tmp
+backup-writings-to-tmp
+
+backup-proj-perl-to-tmp
+backup-proj-maris-to-tmp

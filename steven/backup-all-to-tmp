@@ -1,0 +1,7 @@
+#!/bin/bash
+set -x
+
+backup-most-to-tmp
+
+backup-proj-spanel-to-tmp
+backup-scan-to-tmp

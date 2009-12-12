@@ -1,0 +1,9 @@
+#!/bin/bash
+NAME=writings
+SRCDIR=~
+TARGETDIR=/tmp
+TARGET="$TARGETDIR/$NAME-`date +'%Y%m%d'`.tgz"
+
+cd $SRCDIR
+tar cfz $TARGETDIR/$TARNAME $NAME
+ls -l $TARGETDIR/$TARNAME

@@ -1,5 +1,5 @@
 #!/bin/bash
-NAME=shnotes
+NAME=shorganizer
 SRCDIR=~
 TARGETDIR=/tmp
 TARGET="$TARGETDIR/$NAME-`date +'%Y%m%d'`.tar.pgp"
