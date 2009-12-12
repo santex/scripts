@@ -1,7 +1,7 @@
 #!/bin/bash
 NAME=shnotes
 SRCDIR=~
-TARGETDIR=~/tmp
+TARGETDIR=/tmp
 TARGET="$TARGETDIR/$NAME-`date +'%Y%m%d'`.tar.pgp"
 
 tar cf - "$SRCDIR/$NAME" | gpg --encrypt --sign - > "$TARGET"
