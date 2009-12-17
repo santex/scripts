@@ -1,0 +1,13 @@
+#!/bin/sh
+TARGETHOST=t67376@bidcom.total.co.id
+TARGETDIR=../sites/www
+
+rsync -n -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '/.git' --exclude '*~' \
+  --exclude '.*.cache' \
+  --exclude '/documents/*' \
+  --exclude '/images/article/*' \
+  --exclude '*.swf' \
+  --exclude '*.flv' \
+  --exclude '*.wmv' \
+  --exclude '/tmp' \
+  ~/proj/webdev/bidcom-total/ $TARGETHOST:$TARGETDIR/
