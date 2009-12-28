@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+use strict;
+use File::Find;
+use POSIX qw/strftime/;
+
+my $most;
+my $file;
+my ($sub, $sub2, $asc, $nonzero);
+
+if ($0 =~ /-(most-recent|newest)$/ || $0 =~ /-(least-recent|oldest)$/) {
+    $sub  = sub { -M $_ };
+    $sub2 = sub { sprintf "%s (%.2f day(s) ago)", (strftime "%Y-%m-%d %H:%M:%S", localtime($^T-$most*86400) ), $most };
+    $asc = $0 =~ /-(most-recent|newest)$/ ? 1 : 0;
+} elsif ($0 =~ /-(largest|biggest)$/ || $0 =~ /-(smallest|smallest-nonzero)$/) {
+    $sub  = sub { -s $_ };
+    $sub2 = sub { sprintf "%d (%.2fMB)", $most, $most/1024/1024 };
+    $asc = $0 =~ /-(largest|biggest)$/ ? 0 : 1;
+    $nonzero = 1 if $0 =~ /nonzero/;
+} elsif ($0 =~ /-(longest-name)$/ || $0 =~ /-(shortest-name)$/) {
+    $sub  = sub { length($_) };
+    $sub2 = sub { $most };
+    $asc = $0 =~ /-(longest-name)$/ ? 0 : 1;
+} else {
+    die "No suitable comparison sub";
+}
+
+find sub {
+    return unless -f;
+    #print "DEBUG: $File::Find::dir/$_\n";
+    my $new = $sub->();
+    if (
+        ($nonzero ? $new > 0 : 1) &&
+        (!defined($most) || ($asc ? $most > $new : $most < $new))
+    ) {
+        $most = $new;
+        $file = "$File::Find::dir/$_";
+        #print "DEBUG: new most: $file ($most)\n";
+    }
+}, ".";
+
+if (defined($most)) {
+    print $file, "\t", $sub2->(), "\n";
+}
