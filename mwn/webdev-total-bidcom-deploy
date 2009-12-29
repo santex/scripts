@@ -1,8 +1,8 @@
 #!/bin/sh
 TARGETHOST=t67376@bidcom.total.co.id
-TARGETDIR=../sites/www
+TARGETDIR=../sites/bidcom.total.co.id/www
 
-rsync -n -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '/.git' --exclude '*~' \
+rsync $* -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '/.git' --exclude '*~' \
   --exclude '.*.cache' \
   --exclude '/documents/*' \
   --exclude '/images/article/*' \
