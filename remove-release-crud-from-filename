@@ -65,6 +65,7 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.XviD.[sharethefiles.com]
  xvid [sharethefiles com]
 [quanji]
 [yueyuzimu]

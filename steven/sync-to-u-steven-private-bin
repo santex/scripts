@@ -3,5 +3,5 @@
 rsync -av --del --delete-excluded --force \
  --exclude '.svn' --exclude '.bzr' --exclude '.git' \
  --exclude '*~' \
- /home/steven/bin/steven/ \
- /u/steven/private/bin/
+ $HOME/bin/steven/ \
+ /u/$USER/private/bin/

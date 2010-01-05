@@ -43,7 +43,7 @@ fi
 #touch /etc/server=builder+$WHICH
 
 if [ $WHICH != laptop ]; then
-  XCONF=/u/steven/private/etc/xorg.conf.$WHICH
+  XCONF=/u/$USER/private/etc/xorg.conf.$WHICH
   XFINALCONF=/etc/X11/xorg.conf
   echo "+ Copying $XCONF to $XFINALCONF..."
   rm -f "$XFINALCONF"
