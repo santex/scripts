@@ -11,7 +11,7 @@ require 'getoptlong'
 
 # --- consts
 
-DIRS = ['/u/steven/private/etc', '/etc/local']
+DIRS = ["/u/#{ENV['USER']}/private/etc', '/etc/local']
 DIRS.each {|x|
    FILE = x+"/storage_media_summary.yaml" if FileTest.exist?(x)
 }

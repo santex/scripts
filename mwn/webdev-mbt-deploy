@@ -2,7 +2,7 @@
 TARGETHOST=t73214@mybabytree.org
 TARGETDIR=mbt-gdocs
 
-rsync -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '/.git' --exclude '*~' \
+rsync $* -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '/.git' --exclude '*~' \
   --exclude '/config.inc.php' \
   --exclude '/log' \
   --exclude '/logs/*' \
@@ -12,6 +12,6 @@ rsync -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '/.git' --exclude '
   --exclude '/tmp' \
   ~/proj/webdev/mbt-gdocs/ $TARGETHOST:$TARGETDIR
 
-rsync -e ssh -Pavz \
+rsync $* -e ssh -Pavz \
   ~/proj/spanel/lib/php/sh_*.inc.php $TARGETHOST:$TARGETDIR
 

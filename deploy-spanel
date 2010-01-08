@@ -1,8 +1,8 @@
 #!/bin/sh
 
-SBINDIR=/home/steven/proj/spanel/sbin
+SBINDIR=$HOME/proj/spanel/sbin
 
-SRC=/home/steven/proj/spanel
+SRC=$HOME/proj/spanel
 # default is home directory
 TARGET=
 

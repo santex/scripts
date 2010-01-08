@@ -3,5 +3,5 @@
 rsync -av --force \
  --exclude '.svn' --exclude '.bzr' --exclude '.git' \
  --exclude '*~' \
- /home/u1/bin/steven/ \
+ $HOME/bin/steven/ \
  /etc/local/

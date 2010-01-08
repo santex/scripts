@@ -6,13 +6,13 @@ if test -e /backup/NOT_MOUNTED; then echo "/backup partition not mounted, exitin
 
 #set -x
 
-exec=/home/steven/bin/backup-with-history
+exec=$HOME/bin/backup-with-history
 rsync_opts="--exclude Cache --exclude cache --exclude var --exclude tmp --exclude temp"
 #cmd="nice -n 19 $exec --rsync_opts='$rsync_opts' --hist_levels=2,1,2"
 cmd="nice -n 19 $exec --hist_levels=2,1,2"
 p=builder.local
 
-for u in archive builder mwn stats steven steventest test1 test2 test3 test4; do
+for u in archive builder mwn stats s1 s1t t1 t2 t3 t4; do
   $cmd --rsync_opts="$rsync_opts" /u/$u /backup/$p/backup-u-$u
 done
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/steven/bin/mwn
+cd $HOME/bin/mwn
 
 ping -c2 hosting.localdomain 2>&1 >/dev/null
 if [ $? != 0 ]; then exit; fi
