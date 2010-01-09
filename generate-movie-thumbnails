@@ -17,6 +17,7 @@ use Cwd qw(getcwd abs_path);
 use File::Temp qw(tempdir);
 use File::Spec;
 use File::Type;
+use POSIX qw(floor ceil);
 
 # --- globals
 
@@ -31,6 +32,7 @@ my %Opt = (
            width => 1024,
            rows => 4,
            cols => 4,
+           every => undef,
            guess_length => -1,
            skip_if_exists => 0,
            force => 0,
@@ -71,6 +73,7 @@ GetOptions(
            'width=i' => \$Opt{width},
            'rows=i' => \$Opt{rows},
            'cols=i' => \$Opt{cols},
+           'every=i' => \$Opt{every},
            'guess-length=i' => \$Opt{guess_length},
            'skip-if-exists' => sub { $Opt{skip_if_exists} = 1 },
            'force' => sub { $Opt{force} = 1 },
@@ -97,6 +100,7 @@ Options:
  --width        Width of output, in pixels (default: $Default_Opt{width}).
  --rows=N       Number of colums (default: $Default_Opt{rows}).
  --cols=N       Number of rows (default: $Default_Opt{cols}).
+ --every=S      Instead of --rows, you can specify --every instead, specified in seconds.
  --frames=N     Number of frames to take when doing captures, -1=auto (default: $Default_Opt{frames}).
  --guess-length=G
                 If -1 then auto, if 1 then forced (default: $Default_Opt{guess_length}).
@@ -242,7 +246,13 @@ MOVIE: for my $movie (@ARGV) {
   }
 
   # extract screenshots
-  my $n = $Opt{rows}*$Opt{cols};
+  my $n;
+  if ($Opt{every}) {
+      $n = $length / $Opt{every};
+      $Opt{rows} = ceil($n / $Opt{cols});
+      DEBUG "Calculating n = length / every = $length / $Opt{every} = $n, rows = $Opt{rows}";
+  }
+  $n = $Opt{rows}*$Opt{cols};
   INFO "Taking $n screenshots ...";
   SCREENSHOT: for my $i (1..$n) {
     my $pos = sprintf("%.1f", $length * $i/($n+1));
