@@ -2,12 +2,11 @@
 
 # first version created: 2006-12-25 tengah malam (sekitar 1 jam)
 
-# requirements: mplayer and imagemagick/graphicsmagick
+# requirements: mplayer, imagemagick/graphicsmagick, netpbm (for jpegtopnm), File::Type, Image::Size
 
 # todo:
-# * print position on each screenshot
 # * bug: width is now not calculated exactly
-# * figuring out length on mpeg
+# * timestamp options (font, color, size, placement on left/right & top/bottom)
 
 use warnings;
 use strict;
@@ -17,6 +16,7 @@ use Cwd qw(getcwd abs_path);
 use File::Temp qw(tempdir);
 use File::Spec;
 use File::Type;
+use Image::Size;
 use POSIX qw(floor ceil);
 
 # --- globals
@@ -37,6 +37,7 @@ my %Opt = (
            skip_if_exists => 0,
            force => 0,
            quality => 50,
+           timestamp => 1,
           );
 my %Default_Opt = %Opt;
 
@@ -78,6 +79,7 @@ GetOptions(
            'skip-if-exists' => sub { $Opt{skip_if_exists} = 1 },
            'force' => sub { $Opt{force} = 1 },
            'quality=i' => \$Opt{quality},
+           'timestamp!' => \$Opt{timestamp},
           );
 
 if ($Opt{version}) {
@@ -109,6 +111,7 @@ Options:
  --force
                 Try to generate thumbnail even if mime type is not video
  --quality      JPEG compression quality (default: $Default_Opt{quality}).
+ --notimestamp  Don't print timestamp.
 EOF
   exit 0;
 }
@@ -253,6 +256,7 @@ MOVIE: for my $movie (@ARGV) {
       DEBUG "Calculating n = length / every = $length / $Opt{every} = $n, rows = $Opt{rows}";
   }
   $n = $Opt{rows}*$Opt{cols};
+  my ($imgx, $imgy);
   INFO "Taking $n screenshots ...";
   SCREENSHOT: for my $i (1..$n) {
     my $pos = sprintf("%.1f", $length * $i/($n+1));
@@ -260,8 +264,19 @@ MOVIE: for my $movie (@ARGV) {
     $out = myqx("mplayer -nosound -vo jpeg -ss $pos -frames $frames $movie_esc 2>&1");
     my $jpg = (<0*.jpg>)[-1];
     $jpg or do { ERROR "Can't get screenshot ($i/$n, pos $pos secs), skipping ..."; next SCREENSHOT };
-    rename $jpg, sprintf("s%05d.jpg", $i);
+    my $tname = sprintf("s%05d.jpg", $i);
+    rename $jpg, $tname;
     unlink <0*.jpg>;
+    if ($Opt{timestamp}) {
+        my $ts = sec2hms($pos);
+        unless (defined $imgx) {
+            ($imgx, $imgy) = imgsize $tname;
+        }
+        my $pt = floor($imgx/19);
+        DEBUG "Annotating timestamp $ts (${pt}pt) ...";
+        mysystem "convert -annotate +10+30 $ts -pointsize $pt -fill yellow -weight bold $tname ts-$tname"; # -weight gak ngefek? dan undocumented
+        rename "ts-$tname", $tname;
+    }
   }
 
   # assemble thumbnails
@@ -276,3 +291,12 @@ MOVIE: for my $movie (@ARGV) {
   mysystem "mv $output_esc $output_esc.tmp && ( jpegtopnm $output_esc.tmp | cjpeg -optimize -quality $Opt{quality} > $output_esc ) && rm -f $output_esc.tmp";
 }
 
+sub sec2hms {
+    my ($secs) = @_;
+    my $h = floor($secs/3600);
+    $secs -= $h*3600;
+    my $m = floor($secs/60);
+    $secs -= $m*60;
+    my $s = floor($secs);
+    sprintf "%02d:%02d:%02d", $h, $m, $s;
+}
