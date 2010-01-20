@@ -1,56 +1,54 @@
---- Sendmail.pm.old	Sat Jul 29 15:33:11 2000
-+++ Sendmail.pm	Sat Jul 29 16:16:29 2000
-@@ -20,7 +20,9 @@
-     'smtp'    => [ qw( localhost smtp.site1.csi.com ) ],
-     #'smtp'    => [ qw( mail.mydomain.com ) ], # example
+--- Sendmail.pm.orig	2010-01-07 17:28:36.000000000 +0700
++++ Sendmail.pm	2010-01-07 17:36:06.000000000 +0700
+@@ -9,7 +9,7 @@
  
--    'from'    => '', # default sender e-mail, used when no From header in mail
-+    'from'    => '', # default RFC822 From address, used when no From header in mail
-+
+ =cut
+ 
+-$VERSION = '0.79';
++$VERSION = '0.791'; # patched to allow setting envelope sender
+ 
+ # *************** Configuration you may want to change *******************
+ # You probably want to set your SMTP server here (unless you specify it in
+@@ -22,6 +22,8 @@
+ 
+     'from'    => '', # default sender e-mail, used when no From header in mail
+ 
 +    'sender'  => '', # default envelope sender address
- 
++
      'mime'    => 1, # use MIME encoding by default
  
-@@ -45,6 +47,7 @@
-             $default_smtp_server
-             $default_smtp_port
-             $default_sender
-+            $default_envsender
-             $TZ
-             $use_MIME
-             $address_rx
-@@ -70,6 +73,7 @@
-                  $default_smtp_server
-                  $default_smtp_port
-                  $default_sender
-+                 $default_envsender
-                  $TZ
-                  $address_rx
-                  $debug
-@@ -131,7 +135,7 @@
+     'retries' => 1, # number of retries on smtp connect failure
+@@ -122,7 +124,7 @@
  
      my (%mail, $k,
          $smtp, $server, $port, $connected, $localhost,
--        $message, $fromaddr, $recip, @recipients, $to, $header,
-+        $message, $sender, $fromaddr, $recip, @recipients, $to, $header,
+-        $fromaddr, $recip, @recipients, $to, $header,
++        $sender, $fromaddr, $recip, @recipients, $to, $header,
         );
  
-     sub fail {
-@@ -194,6 +198,8 @@
+     # -------- a few internal subs ----------
+@@ -213,12 +215,14 @@
+     # Extract 'From:' e-mail address to use as envelope sender
+ 
+     $fromaddr = $mail{'Sender'} || $mail{'From'} || $mailcfg{'from'};
+-    delete $mail{'Sender'};
+     unless ($fromaddr =~ /$address_rx/) {
+         return fail("Bad or missing From address: \'$fromaddr\'");
      }
      $fromaddr = $1;
  
-+    $sender = $mail{'Sender'} || $default_envsender || $mailcfg{'sender'} || $fromaddr;
++    $sender = $mail{'Env_Sender'} || $mail{'Sender'} || $mailcfg{'sender'} || $fromaddr;
 +    delete $mail{'Sender'};
++
      # add Date header if needed
      $mail{Date} ||= time_to_date() ;
      $log .= "Date: $mail{Date}\n";
-@@ -312,7 +318,7 @@
-         return fail("HELO error ($_)")
-     }
-     
--    print S "mail from: <$fromaddr>\015\012";
-+    print S "mail from: <$sender>\015\012";
-     chomp($_ = <S>);
-     if (/^[45]/ or !$_) {
-         return fail("mail From: error ($_)")
+@@ -332,7 +336,7 @@
+         || return fail("send HELO error");
+     socket_read()
+         || return fail("HELO error ($_)");
+-    socket_write("MAIL FROM: <$fromaddr>$CRLF")
++    socket_write("MAIL FROM: <$sender>$CRLF")
+         || return fail("send MAIL FROM: error");
+     socket_read()
+         || return fail("MAIL FROM: error ($_)");

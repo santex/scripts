@@ -1,0 +1,17 @@
+#!/usr/bin/perl -0777 -w
+
+use strict;
+use YAML::XS;
+use Finance::Bank::ID::BCA;
+
+my $b = Finance::Bank::ID::BCA->new;
+while (<>) {
+    my @r = $b->parse_statement($_);
+    $r[0] == 200 or die "$r[0] - $r[1]";
+    my $st = $r[2];
+    $st->{start_date} = $st->{start_date}->ymd;
+    $st->{end_date} = $st->{end_date}->ymd;
+    for(@{$st->{transactions}}) { $_->{date} = $_->{date}->ymd }
+    print Dump $st;
+}
+

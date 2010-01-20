@@ -57,6 +57,8 @@ def mount_block(path, mpoint, fstype, opts, ctype)
 
   elsif ctype == 'dm'
 
+    system "modprobe dm_crypt"
+
     use_loop = 1 unless path =~ %r(^/dev/)
 
     system "modprobe loop" if use_loop

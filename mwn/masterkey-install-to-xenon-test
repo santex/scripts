@@ -1,5 +1,5 @@
 #!/bin/sh
-rsync -e ssh -Pavz --del --delete-excluded --force --exclude '/.bzr' --exclude '*~' \
+rsync -e ssh -Pavz --del --delete-excluded --force --exclude '/.bzr' --exclude '/.git' --exclude '*~' \
   ~/proj/mwn/masterkey mwnwhmcs@xenon:
 rsync -e ssh -Pavz \
   ~/proj/spanel/lib/php/{sh_functions.inc.php,sh_translation.inc.php} \
