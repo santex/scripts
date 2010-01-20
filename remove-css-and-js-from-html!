@@ -2,3 +2,4 @@
 
 s!<style[^>]*>.+?</style>\s*!!sig;
 s!<link[^>]*rel="?stylesheet"?[^>]*\s+/>!!sig;
+s!<script[^>]*>.+?</script>!!sig;

@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+sub qot { local $_ = shift; s/'/'"'"'/g; "'$_'" }
+
+if (@ARGV < 2) { die "Usage: $0 <cmd> <arg> [more_args] ...\n" }
+
+my $cmd = shift @ARGV;
+my @RANDARGV;
+push @RANDARGV, $_ while defined($_ = splice @ARGV, rand @ARGV, 1);
+
+#print "DEBUG: Executing: ", $cmd, " ", join(" ", map { qot $_ } @RANDARGV), "\n";
+system $cmd, @RANDARGV;

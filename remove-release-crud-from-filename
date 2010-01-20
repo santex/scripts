@@ -65,6 +65,15 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+ - hdtv xvid-xor
+.DVDRiP.XviD-iNTiMiD
+.XviD.MP3.MVGroup.Forum
+.--DVDrip.XViD.MP3.608x336
+ [H.264-AAC]
+.DVDRip.XviD-FiCO
+-DivX-Yo
+[btxiazailianmengluntan][www.btbts.com]
+[www.btbts.com]
 .XviD.[sharethefiles.com]
  xvid [sharethefiles com]
 [quanji]
