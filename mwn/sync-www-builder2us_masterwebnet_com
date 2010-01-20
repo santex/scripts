@@ -1,3 +1,3 @@
 #!/bin/sh
 rsync --exclude '.git' --exclude '*.psd' --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --exclude 'www/tools' --delete \
--e ssh -Pavz $* $HOME/sites/id-mwn.steven.builder.localdomain/www mwn@us.masterwebnet.com:/s/us.masterwebnet.com/
+-e ssh -Pavz $* $HOME/proj/mwn-site/ mwn@us.masterwebnet.com:/s/us.masterwebnet.com/www/
