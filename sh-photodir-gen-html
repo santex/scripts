@@ -8,6 +8,7 @@ use File::Slurp;
 use HTML::Entities 'encode_entities';
 use Image::Size;
 use Log::Log4perl qw(:easy);
+use Statistics::Descriptive;
 use YAML;
 
 use App::Options (
@@ -16,7 +17,7 @@ use App::Options (
         clean_html => { type => 'boolean', required => 0, default => 0, },
         photo_dir => { type => 'string', require => 1, default => '.', },
         meta_dir => { type => 'string', require => 0, }, # default = {photo_dir}
-        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+        log_level => { type => 'string', required => 0, default => 'INFO' },
     },
 );
 
@@ -55,11 +56,11 @@ my @images = sort { lc($a) cmp lc($b) } (<*.jpg>, <*.JPG>);
 INFO "Generating thumbnails ...";
 system "mkdir -p .tn";
 for my $filename (@images) {
-    my $filesize = (-s $filename)/1024;
     my $tnname = tnname($filename);
-    my ($x, $y) = imgsize($filename);
-    my $x2 = 120; my $y2 = int($y/$x*$x2);
     unless (-s $tnname) {
+        my $filesize = (-s $filename)/1024;
+        my ($x, $y) = imgsize($filename);
+        my $x2 = 120; my $y2 = int($y/$x*$x2);
         INFO "Generating thumbnail $tnname ...";
         if ($GD_Available) {
             my $image = GD::Image->newFromJpeg($filename);
@@ -139,16 +140,41 @@ INFO "Generating index page ...";
 my $photo_dir = abs_path("."); $photo_dir =~ s!.*/!!;
 my $album_title = $meta->{album_title} // $photo_dir;
 open F, ">index.html";
-print F "<html><title>".encode_entities($album_title)."</title>\n";
+print F "<html><head><title>".encode_entities($album_title)."</title>\n";
+
+print F "</head>\n<body>\n";
 print F "<h1>".encode_entities($album_title)."</h1>\n";
 
 print F "<h2>All tags (".scalar(keys %tag_images).")</h2>\n";
-print F join(", ", map {"<a href=".tags_filename($_).">$_</a> (".scalar(@{ $tag_images{$_} }).")"} (sort keys %tag_images));
-    print F "\n";
+my $stat = Statistics::Descriptive::Full->new;
+$stat->add_data(map { scalar @{ $tag_images{$_} } } keys %tag_images);
+DEBUG "\$stat->add_data(".join(", ", map { scalar @{ $tag_images{$_} } } keys %tag_images).")";
+
+# doesn't give what i want? so i'll use quantile for the moment
+#my $f = $stat->frequency_distribution_ref(7);
+#DEBUG "\$f = { ".join(", ", map {"$_ => $f->{$_}"} sort keys %$f)." }";
+#my @nums = reverse sort keys %$f;
+#my @sizes = qw(small medium medium medium large x-large xx-large);
+
+my @nums = map {$stat->quantile($_)} 0..4;
+my @sizes = qw(small medium large x-large xx-large);
+
+DEBUG "\@nums = ".join(", ", @nums);
+my $i = 0;
+for (sort keys %tag_images) {
+    my $num = scalar(@{ $tag_images{$_} });
+    my $size = $sizes[0];
+    for my $j (1..@nums) {
+        if ($num >= $nums[@nums-$j]) { $size = $sizes[@nums-$j]; last }
+    }
+    print F "\n, " if $i++;
+    print F "<span style=\"font-size: $size\"><a href=".tags_filename($_).">$_</a> ($num)</span>";
+}
 
 print F "<h2>All images (".scalar(@images).")</h2>\n";
 print F (tn_html(\@images));
 
+print F "</body>\n";
 print F "</html>\n";
 close F;
 
