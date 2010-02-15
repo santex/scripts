@@ -1,139 +1,202 @@
 #!/usr/bin/perl -w
 
-# 2008-07-21 - selain pake GD.pm bisa juga pake imagemagick
-# 2005-08-28 - ubah indentasi dari 4 ke 2, use strict.
-# 020622
-
+use autodie;
 use strict;
-use Image::Size;
+use Cwd qw(abs_path);
+use DateTime;
+use File::Slurp;
 use HTML::Entities 'encode_entities';
-use Getopt::Long;
+use Image::Size;
+use Log::Log4perl qw(:easy);
+use YAML;
+
+use App::Options (
+    option => {
+        #overwrite => { type => 'boolean', required => 0, default => 0, },
+        clean_html => { type => 'boolean', required => 0, default => 0, },
+        photo_dir => { type => 'string', require => 1, default => '.', },
+        meta_dir => { type => 'string', require => 0, }, # default = {photo_dir}
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+    },
+);
 
 eval { require GD; import GD; };
 my $GD_Available = $@ ? 0:1;
 
-my $start = "";
-my $end = "";
-my $help = 0;
-GetOptions(
-  "start|s=i" => \$start,
-  "end|e=i" => \$end,
-  "help" => \$help,
-);
+if (!defined($App::options{meta_dir})) { $App::options{meta_dir} = $App::options{photo_dir} }
 
-if ($help) {
-  print <<_;
+if ( $App::options{log_level} eq 'FATAL' ) {
+    Log::Log4perl->easy_init($FATAL);
+}
+elsif ( $App::options{log_level} eq 'ERROR' ) {
+    Log::Log4perl->easy_init($ERROR);
+}
+elsif ( $App::options{log_level} eq 'WARN' ) {
+    Log::Log4perl->easy_init($WARN);
+}
+elsif ( $App::options{log_level} eq 'INFO' ) {
+    Log::Log4perl->easy_init($INFO);
+}
+else { Log::Log4perl->easy_init($DEBUG) }
 
-This script will search for YYYY/ dirs and .jpg files in them and
-generate thumbnails as well as HTML files for them.
+DEBUG "Opening meta file ($App::options{meta_dir}/meta.yaml) ...";
+my $meta = Load(scalar read_file "$App::options{meta_dir}/meta.yaml");
 
-Usage:
-  $0 [--start=YYYYMM] [--end=YYYYMM]
-  $0 --help
-_
-  exit 0;
+DEBUG "Processing photo dir ($App::options{photo_dir}) ...";
+chdir $App::options{photo_dir};
+
+if ($App::options{clean_html}) {
+    no autodie;
+    unlink "index.html", <tag_*.html>, <note_*.html>;
+    exit 0;
 }
 
-my @years=();
-for my $year (grep {(-d) and /^(19|20)\d\d$/} <*>) {
-  my @albums=();
-  chdir $year or die "Can't chdir to $year: $!\n";
-  for my $dir (grep {(-d) and /^\d{8}\w*(-.*)?$/} <*>) {
-    chdir $dir or die "Can't chdir to $year/$dir: $!\n";
-    my $process_images = not($start and $dir lt $start or $end and $dir gt $end);
-
-    my $album_title = '';
-    my @album = ();
-    open F, "titles.txt" or do { warn "dir $dir doesn't have titles.txt, skipped.\n"; next };
-
-    print "+ $dir...\n";
-    while (<F>) {
-      s/\r|\n//g;
-      next unless /\S/;
-      if (/^\[(.+)\]/) { $album_title=$1; next }
-      if (/^(.+?):(.*)/) {
-        my $filename = $1;
-        my $pic_title = $2 ? $2 : "(no picture title)";
-        my $tnname;
-        my ($x, $y) = (0, 0);
-        my $filesize = 0;
-
-        if ($process_images) {
-          # generate thumbnail if not already exists
-          if (-f $filename) {
-            $filesize = (-s $filename)/1024;
-            ($tnname = $filename) =~ s/\.jpg$//i; $tnname .= ".tn.png";
-            ($x,$y) = imgsize($filename);
-            my $x2 = 120; my $y2 = int($y/$x*$x2);
-            if (!(-f $tnname)) {
-              print "+ generating thumbnail $dir/$tnname...\n";
-              if ($GD_Available) {
-                my $image = GD::Image->newFromJpeg($filename);
-                my $image2 = GD::Image->new($x2, $y2);
-                $image2->copyResized($image, 0, 0, 0, 0, $x2, $y2, $x, $y);
-                open F2, ">$tnname";
-                print F2 $image2->png;
-                close F2 or die "Can't write $dir/$tnname: $!\n";
-              } else {
-                system qq(convert "$filename" -resize ${x2}x$y2 "$tnname");
-              }
-            }
-          } else {
-            #warn "$year/$dir/$filename: doesn't exist\n";
-          }
+my @images = sort { lc($a) cmp lc($b) } (<*.jpg>, <*.JPG>);
+INFO "Generating thumbnails ...";
+system "mkdir -p .tn";
+for my $filename (@images) {
+    my $filesize = (-s $filename)/1024;
+    my $tnname = tnname($filename);
+    my ($x, $y) = imgsize($filename);
+    my $x2 = 120; my $y2 = int($y/$x*$x2);
+    unless (-s $tnname) {
+        INFO "Generating thumbnail $tnname ...";
+        if ($GD_Available) {
+            my $image = GD::Image->newFromJpeg($filename);
+            my $image2 = GD::Image->new($x2, $y2);
+            $image2->copyResized($image, 0, 0, 0, 0, $x2, $y2, $x, $y);
+            write_file $tnname, $image2->png;
+        } else {
+            system qq(convert "$filename" -resize ${x2}x$y2 "$tnname");
         }
-
-        push @album, [$filename, $tnname, $pic_title, "${x}x$y", sprintf("%.0fK", $filesize)];
-        next;
-      }
-      warn "$year/$dir/titles.txt: syntax error at line $.: $_\n";
     }
+}
+
+INFO "Generating tag pages ...";
+my %tag_images;
+for my $img (keys %{ $meta->{images} }) {
+    my $v = $meta->{images}{$img};
+    my $tags = $v->{tags};
+    for my $tag0 (@$tags) {
+        my ($prefix, $tag1);
+        if ($tag0 =~ /([^:]+):(.+)/) {
+            $prefix = $1; $tag1 = $2;
+        } else {
+            $prefix = ""; $tag1 = $tag0;
+        }
+        my $tag2 = "";
+        for my $t (reverse split m!/!, $tag1) {
+            $tag2 = $t . (length($tag2) ? "/" : "") . $tag2;
+            my $tag = (length($prefix) ? "$prefix:" : "") . $tag2;
+            $tag_images{$tag} //= [];
+            push @{ $tag_images{$tag} }, $img;
+        }
+    }
+}
+# XXX sort images in each tag
+for my $tag (keys %tag_images) {
+    INFO "Generating tag page: $tag ...";
+    my $n = scalar(@{ $tag_images{$tag} });
+    open F, ">" . tags_filename($tag); # XXX how to handle conflict if there are two tags with the same filename, e.g. foo: & foo, -> foo_
+    print F "<html><title>".encode_entities($tag)." ($n)</title>\n";
+    print F "<h1>".encode_entities($tag)." ($n)</h1>\n";
+    print F (tn_html($tag_images{$tag}));
+    print F "</html>\n";
     close F;
-    $album_title ||= "(no album title)";
+}
 
-    if ($process_images) {
-      open F,">index.html";
-      print F "<title>${\( encode_entities $album_title )}</title><h3>${\( encode_entities $album_title )}</h3>";
-      print F "<a href=../index.html>up</a>";
-      print F "<table border cellpadding=10>\n";
+#INFO "Generating note pages ...";
+#if ($meta->{notes}) {
+#    my $i = 0;
+#    for (@{ $meta->{notes} }) {
+#        $i++;
+#        DEBUG "";
+#        my $v = $meta->{images}{$img};
+#        my $tags = $v->{tags};
+#        for my $tag (@$tags) {
+#            my $ftag = "";
+#            for my $t (split m!/!, $tag) {
+#                $ftag .= $t;
+#                $tag_images->{$ftag} //= [];
+#                push @{ $tag_images->{$ftag} }, $img;
+#            }
+#        }
+#    }
+#}
+# XXX sort images in each tag
+#for my $tag (keys %tag_images) {
+#    INFO "Generating note page: $tag ...";
+#    my $n = scalar(@{ $tag_images->{$tag} });
+#    open F, ">" . tags_filename($tag); # XXX how to handle conflict if there are two tags with the same filename, e.g. foo: & foo, -> foo_
+#    print F "<html><title>".encode_entities($tag)." ($n)</title>\n";
+#    print F "<h1>".encode_entities($tag)." ($n)</h1>\n";
+#    print F tn_html($tag_images->{$tag});
+#    print F "</html>\n";
+#    close F;
+#}
 
-      my $col=0;
-      for (@album) {
-        print F "<tr>" if $col++==0;
-        print F "<td valign=top><a href=$_->[0]><img width=120 src=$_->[1]></a><small><br>${\( encode_entities $_->[2] )}<p><small>$_->[0], $_->[3], $_->[4]</small></small></td>";
-        do{print F "</tr>";$col=0} if $col==5;
-      }
-      print F "</tr>" if $col==0;
-      print F "</table>\n";
-      print F "<a href=../index.html>up</a>";
-      close F or die "Can't write $year/$dir/index.html: $!\n";
+INFO "Generating index page ...";
+my $photo_dir = abs_path("."); $photo_dir =~ s!.*/!!;
+my $album_title = $meta->{album_title} // $photo_dir;
+open F, ">index.html";
+print F "<html><title>".encode_entities($album_title)."</title>\n";
+print F "<h1>".encode_entities($album_title)."</h1>\n";
+
+print F "<h2>All tags (".scalar(keys %tag_images).")</h2>\n";
+print F join(", ", map {"<a href=".tags_filename($_).">$_</a> (".scalar(@{ $tag_images{$_} }).")"} (sort keys %tag_images));
+    print F "\n";
+
+print F "<h2>All images (".scalar(@images).")</h2>\n";
+print F (tn_html(\@images));
+
+print F "</html>\n";
+close F;
+
+sub filename_esc {
+    my ($str) = @_;
+    $str =~ s/\W+/_/g;
+    $str;
+}
+
+sub tnname {
+    my ($img) = @_;
+    my $tnname = $img;
+    $tnname =~ s/\.jpg$//i;
+    $tnname .= ".png";
+    ".tn/$tnname";
+}
+
+sub tags_filename {
+    my ($tag) = @_;
+    "tag_" . filename_esc($tag) . ".html";
+}
+
+sub tn_html {
+    my ($imgs) = @_;
+    my $res = "<table cellpadding=3>\n";
+    my $col = 0;
+    for (@$imgs) {
+        $col = 0 if $col++ == 5;
+        $res .= "<tr>\n" if $col == 1;
+        my $title = "";
+        if (my $m = $meta->{images}{$_}) {
+            if (length $m->{title}) {
+                $title = $m->{title};
+            } elsif (@{ $m->{tags} }) {
+                $title = "Tags: ".join(", ", @{ $m->{tags} });
+            }
+        }
+        $res .= "<td><a href=$_><img border=0 src=".tnname($_).
+            " title=\"".encode_entities($title)."\"></a><br>$_</td>\n";
+        $res .= "</tr>\n" if $col == 0;
     }
-
-    push @albums, [$dir, $album_title, scalar @album];
-    chdir ".." or die "Can't chdir back: $!\n";
-  }
-
-  open F,">index.html";
-  print F "<title>$year Albums</title><h2>$year</h2>";
-  print F "<a href=../index.html>up</a>\n";
-  print F "<ol>";
-  for (@albums) {
-    print F "<li>$_->[0] - <a href=$_->[0]/index.html>$_->[1]</a>, $_->[2] picture(s)\n";
-  }
-  print F "</ol>\n";
-  print F "<a href=../index.html>up</a>\n";
-  close F or die "Can't write to $year/index.html: $!\n";
-
-  my $totpic = 0; $totpic += $_->[2] for @albums;
-  push @years, [$year, scalar(@albums), $totpic];
-  chdir ".." or die "Can't chdir back: $!\n";
+    $res .= "</tr>\n" unless $col == 0;
+    $res .= "</table>\n";
+    $res;
 }
 
-open F,">index.html";
-print F "<title>All Albums</title><h1>All albums</h1>\n";
-print F "<ol>";
-for (@years) {
-  print F "<li><a href=$_->[0]/index.html>$_->[0]</a>, $_->[1] album(s), $_->[2] picture(s)\n";
+sub notes_filename {
+    my ($i) = @_;
+    "note_$i.html";
 }
-print F "</ol>\n";
-close F or die "Can't write to index.html: $!\n";
+
