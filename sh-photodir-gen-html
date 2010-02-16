@@ -1,5 +1,13 @@
 #!/usr/bin/perl -w
 
+# todo:
+
+# 1. notes
+
+# 2. thumbnail can be zoomed when clicked (use jquery), display
+# semi-enlarged image + list of tags (clickable) + title + several
+# images before + several images after (prev + next link)
+
 use autodie;
 use strict;
 use Cwd qw(abs_path);
