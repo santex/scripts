@@ -4,17 +4,20 @@
 
 # 1. notes
 
-# 2. thumbnail can be zoomed when clicked (use jquery), display
-# semi-enlarged image + list of tags (clickable) + title + several
-# images before + several images after (prev + next link)
+# 2. in img page, show several images before + several images after (prev + next link)
 
 use autodie;
+use feature 'state';
 use strict;
+
+#use Carp::Always;
 use Cwd qw(abs_path);
 use DateTime;
 use File::Slurp;
+use FindBin '$Bin';
 use HTML::Entities 'encode_entities';
 use Image::Size;
+use List::MoreUtils qw(uniq);
 use Log::Log4perl qw(:easy);
 use Statistics::Descriptive;
 use YAML;
@@ -56,20 +59,32 @@ chdir $App::options{photo_dir};
 
 if ($App::options{clean_html}) {
     no autodie;
-    unlink "index.html", <tag_*.html>, <note_*.html>;
+    unlink "index.html", <tag_*.html>, <note_*.html>, <img_*.html>;
     exit 0;
 }
 
+unless (-f "jquery.js") {
+    INFO "Copying jquery.js ...";
+    system "cp -H ".escapeshellarg($Bin)."/jquery.js .";
+}
+
+unless (-f "jquery.simplemodal.js") {
+    INFO "Copying jquery.simplemodal.js ...";
+    system "cp -H ".escapeshellarg($Bin)."/jquery.simplemodal.js .";
+}
+
 my @images = sort { lc($a) cmp lc($b) } (<*.jpg>, <*.JPG>);
+
 INFO "Generating thumbnails ...";
 system "mkdir -p .tn";
-for my $filename (@images) {
+for my $i (0..$#images) {
+    my $filename = $images[$i];
     my $tnname = tnname($filename);
     unless (-s $tnname) {
         my $filesize = (-s $filename)/1024;
         my ($x, $y) = imgsize($filename);
         my $x2 = 120; my $y2 = int($y/$x*$x2);
-        INFO "Generating thumbnail $tnname ...";
+        INFO sprintf "(%d/%d) Generating thumbnail %s ...", $i+1, scalar(@images), $tnname;
         if ($GD_Available) {
             my $image = GD::Image->newFromJpeg($filename);
             my $image2 = GD::Image->new($x2, $y2);
@@ -102,86 +117,150 @@ for my $img (keys %{ $meta->{images} }) {
         }
     }
 }
+
 # XXX sort images in each tag
 for my $tag (keys %tag_images) {
     INFO "Generating tag page: $tag ...";
     my $n = scalar(@{ $tag_images{$tag} });
     open F, ">" . tags_filename($tag); # XXX how to handle conflict if there are two tags with the same filename, e.g. foo: & foo, -> foo_
-    print F "<html><title>".encode_entities($tag)." ($n)</title>\n";
-    print F "<h1>".encode_entities($tag)." ($n)</h1>\n";
-    print F (tn_html($tag_images{$tag}));
+    print F "<html><script src=jquery.js></script><script src=jquery.simplemodal.js></script>";
+    print F "<title>Tag: ".encode_entities($tag)." ($n)</title>\n";
+    print F "<h1>Tag: ".encode_entities($tag)." ($n)</h1>\n";
+    print F (gen_html_thumbs($tag_images{$tag}));
     print F "</html>\n";
     close F;
 }
 
-#INFO "Generating note pages ...";
-#if ($meta->{notes}) {
-#    my $i = 0;
-#    for (@{ $meta->{notes} }) {
-#        $i++;
-#        DEBUG "";
-#        my $v = $meta->{images}{$img};
-#        my $tags = $v->{tags};
-#        for my $tag (@$tags) {
-#            my $ftag = "";
-#            for my $t (split m!/!, $tag) {
-#                $ftag .= $t;
-#                $tag_images->{$ftag} //= [];
-#                push @{ $tag_images->{$ftag} }, $img;
-#            }
-#        }
-#    }
-#}
-# XXX sort images in each tag
-#for my $tag (keys %tag_images) {
-#    INFO "Generating note page: $tag ...";
-#    my $n = scalar(@{ $tag_images->{$tag} });
-#    open F, ">" . tags_filename($tag); # XXX how to handle conflict if there are two tags with the same filename, e.g. foo: & foo, -> foo_
-#    print F "<html><title>".encode_entities($tag)." ($n)</title>\n";
-#    print F "<h1>".encode_entities($tag)." ($n)</h1>\n";
-#    print F tn_html($tag_images->{$tag});
-#    print F "</html>\n";
-#    close F;
-#}
+INFO "Generating image pages ...";
+for my $i (0..$#images) {
+    my $filename = $images[$i];
+    my $pagename = imgpagename($filename);
+    #unless (-s $pagename) {
+    unless (0) {
+        INFO sprintf "(%d/%d) Generating image page %s ...", $i+1, scalar(@images), $pagename;
+        my ($x, $y) = imgsize($filename);
+        my $m = $meta->{images}{$filename};
+        my $title = $filename;
+        $title = $m->{title} if length($m->{title});
+        open F, ">$pagename";
+        print F "<html><head><script src=jquery.js></script><script src=jquery.simplemodal.js></script>";
+        print F "<title>Image: ".encode_entities($title)."</title>\n";
+        print F "</head><body bgcolor=#ffffcc>\n";
+        print F "<div align=center>\n";
+        print F "<table width=100%><tr><td nowrap>";
+        for (-2 .. -1) {
+            if ($i+$_ >= 0) { print F "<a href=".imgpagename($images[$i+$_])."><img border=0 src=".tnname($images[$i+$_])."></a> " }
+        }
+        print F "<a href=$filename><img border=0 src=$filename width=400></a> ";
+        for (1 .. 2) {
+            if ($i+$_ < @images) { print F "<a href=".imgpagename($images[$i+$_])."><img border=0 src=".tnname($images[$i+$_])."></a> " }
+        }
+        print F "</td></tr></table>\n";
+        print F "<p><i>$title</i></p>\n";
+        print F sprintf "<p>Dimension: <b>%d x %d</b>. Size: <b>%.0fK</b></p>\n", $x, $y, (-s $filename)/1024;
+        print F sprintf "<p>Tags: %s</p>\n", gen_html_tags($m->{tags});
+        print F "<p><a href=index.html>Back to index</a></p>\n";
+        print F "</div>\n";
+        print F "</body></html>\n";
+        close F;
+    }
+}
+
+INFO "Generating note pages ...";
+if ($meta->{notes}) {
+    my $i = 0;
+    for my $note (@{ $meta->{notes} }) {
+        $i++;
+        my @note_imgs;
+        if ($note->{images}) {
+            for my $imgspec (@{ $note->{images} }) {
+                if (!ref($imgspec)) {
+                    push @note_imgs, $imgspec;
+                } else {
+                    if ($imgspec->[0] eq 'with_any_tags') {
+                        # find all images which have any of the specified tags
+                        for my $im (@images) {
+                            my $found;
+                          L1:
+                            for my $j (1..scalar(@$imgspec)-1) {
+                                for (@{ $meta->{images}{$im}{tags} }) {
+                                    if ($imgspec->[$j] eq $_) { $found++; last L1 }
+                                }
+                            }
+                            push @note_imgs, $im if $found;
+                        }
+                    } elsif ($imgspec->[0] eq 'with_all_tags') {
+                        # find all images which have all of the specified tags
+                        for my $im (@images) {
+                            my $found = 0;
+                            for my $j (1..scalar(@$imgspec)-1) {
+                              L2:
+                                for (@{ $meta->{images}{$im}{tags} }) {
+                                    #DEBUG "  $imgspec->[$j] vs $_";
+                                    if ($imgspec->[$j] eq $_) { $found++; last L2 }
+                                }
+                            }
+                            #DEBUG "img=$im, found=$found, spec=".Dump($imgspec);
+                            push @note_imgs, $im if $found eq @$imgspec-1;
+                        }
+                    } else {
+                        die "Invalid image spec: ".Dump($imgspec);
+                    }
+                }
+            }
+            @note_imgs = uniq(@note_imgs);
+            $note->{NUM_IMAGES} = scalar(@note_imgs);
+        }
+        my $title = "#$i";
+        $title = $note->{title} if $note->{title};
+        INFO "Generating note page: $title ...";
+        my $notename = notes_filename($i);
+        open F, ">$notename";
+        print F "<html><script src=jquery.js></script><script src=jquery.simplemodal.js></script>";
+        print F "<title>Note: $title</title>\n";
+        my $content = $note->{note};
+        for ($content) { $_ = encode_entities($_); s/\n\n/<p>/g }
+        print F "<h1>$title</h1>\n";
+        print F $content;
+        print F "<h2>Images</h2>\n";
+        print F gen_html_thumbs(\@note_imgs);
+        print F "</html>";
+        close F;
+    }
+}
 
 INFO "Generating index page ...";
 my $photo_dir = abs_path("."); $photo_dir =~ s!.*/!!;
 my $album_title = $meta->{album_title} // $photo_dir;
 open F, ">index.html";
 print F "<html><head><title>".encode_entities($album_title)."</title>\n";
+print F "<script src=jquery.js></script>\n";
+print F "<script src=jquery.simplemodal.js></script>\n";
 
 print F "</head>\n<body>\n";
 print F "<h1>".encode_entities($album_title)."</h1>\n";
 
 print F "<h2>All tags (".scalar(keys %tag_images).")</h2>\n";
-my $stat = Statistics::Descriptive::Full->new;
-$stat->add_data(map { scalar @{ $tag_images{$_} } } keys %tag_images);
-DEBUG "\$stat->add_data(".join(", ", map { scalar @{ $tag_images{$_} } } keys %tag_images).")";
+DEBUG "\%tag_images = ".Dump(\%tag_images);
+print F gen_html_tags([sort keys %tag_images]);
 
-# doesn't give what i want? so i'll use quantile for the moment
-#my $f = $stat->frequency_distribution_ref(7);
-#DEBUG "\$f = { ".join(", ", map {"$_ => $f->{$_}"} sort keys %$f)." }";
-#my @nums = reverse sort keys %$f;
-#my @sizes = qw(small medium medium medium large x-large xx-large);
-
-my @nums = map {$stat->quantile($_)} 0..4;
-my @sizes = qw(small medium large x-large xx-large);
-
-DEBUG "\@nums = ".join(", ", @nums);
-my $i = 0;
-for (sort keys %tag_images) {
-    my $num = scalar(@{ $tag_images{$_} });
-    my $size = $sizes[0];
-    for my $j (1..@nums) {
-        if ($num >= $nums[@nums-$j]) { $size = $sizes[@nums-$j]; last }
+if ($meta->{notes}) {
+    print F "<h2>All notes (".scalar(@{ $meta->{notes} }).")</h2>\n";
+    print F "<ol>\n";
+    my $i = 0;
+    for my $note (@{ $meta->{notes} }) {
+        $i++;
+        my $title = "Note #$i";
+        $title = $note->{title} if $note->{title};
+        print F "<li><a href=".notes_filename($i).">$title</a> ($note->{NUM_IMAGES} images)\n";
     }
-    print F "\n, " if $i++;
-    print F "<span style=\"font-size: $size\"><a href=".tags_filename($_).">$_</a> ($num)</span>";
+    print F "</ol>\n";
 }
 
 print F "<h2>All images (".scalar(@images).")</h2>\n";
-print F (tn_html(\@images));
+print F (gen_html_thumbs(\@images));
 
+print F "<i>Generated by $ENV{USER} on ".`hostname`." using $0 on ".scalar(localtime)."</i>\n";
 print F "</body>\n";
 print F "</html>\n";
 close F;
@@ -205,8 +284,9 @@ sub tags_filename {
     "tag_" . filename_esc($tag) . ".html";
 }
 
-sub tn_html {
-    my ($imgs) = @_;
+sub gen_html_thumbs {
+    my ($imgs, $opts) = @_;
+    $opts //= {};
     my $res = "<table cellpadding=3>\n";
     my $col = 0;
     for (@$imgs) {
@@ -220,7 +300,8 @@ sub tn_html {
                 $title = "Tags: ".join(", ", @{ $m->{tags} });
             }
         }
-        $res .= "<td><a href=$_><img border=0 src=".tnname($_).
+        $res .= "<td><a href=".imgpagename($_).($opts->{target} ? " target=$opts->{target}" : "").
+            " xxxonclick=\"\$.modal('<iframe width=550 height=450 src=".imgpagename($_)."></iframe>',{minWidth: 550, minHeight: 450, onClose: function (dlg) {\$.modal.close()}});return false\"><img border=0 src=".tnname($_).
             " title=\"".encode_entities($title)."\"></a><br>$_</td>\n";
         $res .= "</tr>\n" if $col == 0;
     }
@@ -229,8 +310,55 @@ sub tn_html {
     $res;
 }
 
+sub gen_html_tags {
+    my ($tags) = @_;
+    state $stat;
+
+    if (!$stat) {
+        $stat = Statistics::Descriptive::Full->new;
+        $stat->add_data(map { scalar @{ $tag_images{$_} } } keys %tag_images);
+        DEBUG "\$stat->add_data(".join(", ", map { scalar @{ $tag_images{$_} } } keys %tag_images).")";
+    }
+
+    # doesn't give what i want? so i'll use quantile for the moment
+    #my $f = $stat->frequency_distribution_ref(7);
+    #DEBUG "\$f = { ".join(", ", map {"$_ => $f->{$_}"} sort keys %$f)." }";
+    #my @nums = reverse sort keys %$f;
+    #my @sizes = qw(small medium medium medium large x-large xx-large);
+
+    state $nums;
+    if (!$nums) {
+        $nums = [map {$stat->quantile($_)} 0..4];
+        DEBUG "\$nums = [".join(", ", @$nums)."]";
+    }
+    state $sizes = [qw(small medium medium large x-large)];
+
+    my $i = 0;
+    my $res = "";
+    for (@$tags) {
+        my $num = scalar(@{ $tag_images{$_} });
+        my $size = $sizes->[0];
+        for my $j (1..@$nums) {
+            if ($num >= $nums->[@$nums-$j]) { $size = $sizes->[@$nums-$j]; last }
+        }
+        $res .= "\n, " if $i++;
+        $res .= "<span style=\"font-size: $size\"><a href=".tags_filename($_).">$_</a> ($num)</span>";
+    }
+    $res;
+}
+
+sub imgpagename {
+    my ($img) = @_;
+    "img_$img.html";
+}
+
 sub notes_filename {
     my ($i) = @_;
     "note_$i.html";
 }
 
+sub escapeshellarg {
+    local $_ = shift;
+    s/'/'"'"'/g;
+    "'$_'";
+}
