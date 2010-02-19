@@ -53,11 +53,11 @@ for my $img (sort {lc($a) cmp lc($b)} (<*.jpg>, <*.JPG>)) {
 print META "\n";
 print META "notes:\n";
 print META "  #- title: \"\"\n";
-print META "  #  images:
-print META "  #    - filename1.jpg
-print META "  #    - filename2.jpg
-print META "  #    - [with_all_tags, tag1, tag2] # all images which have both tag1 AND tag2 will be included
-print META "  #    - [with_any_tags, tag1, tag2] # all images which have either tag1 OR tag2 will be included
+print META "  #  images:\n";
+print META "  #    - filename1.jpg\n";
+print META "  #    - filename2.jpg\n";
+print META "  #    - [with_all_tags, tag1, tag2] # all images which have both tag1 AND tag2 will be included\n";
+print META "  #    - [with_any_tags, tag1, tag2] # all images which have either tag1 OR tag2 will be included\n";
 print META "  #  note: \"a potentially long text\"\n";
 print META "\n";
 

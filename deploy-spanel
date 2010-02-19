@@ -2,7 +2,7 @@
 
 SBINDIR=$HOME/proj/spanel/sbin
 
-SRC=$HOME/proj/spanel
+SRC=$HOME/repo/spanel
 # default is home directory
 TARGET=
 

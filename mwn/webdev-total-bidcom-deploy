@@ -10,4 +10,4 @@ rsync $* -e ssh -Pavz --del --force --exclude '/.bzr' --exclude '/.git' --exclud
   --exclude '*.flv' \
   --exclude '*.wmv' \
   --exclude '/tmp' \
-  ~/proj/webdev/bidcom-total/ $TARGETHOST:$TARGETDIR/
+  ~/proj/mwn-webdev/bidcom-total/ $TARGETHOST:$TARGETDIR/

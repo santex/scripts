@@ -2,7 +2,7 @@
 
 # sama seperti sync-spanel-config, tapi hanya /etc/spanel/apache2-nya aja
 
-cd /home/steven/proj/mwn/spanel-configs
+cd $HOME/repo/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 

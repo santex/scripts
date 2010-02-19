@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SRC=/home/steven/proj/spanel
+SRC=/home/steven/repo/spanel
 # default is home directory
 TARGET=
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # ganti jika source mwn gak mirip dg yg di sini
-cd /home/steven/proj/mwn/spanel-configs
+cd $HOME/repo/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 

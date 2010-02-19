@@ -20,6 +20,14 @@ $cmd --rsync_opts="$rsync_opts" /etc /backup/$p/backup-etc
 
 $cmd --rsync_opts="$rsync_opts" /var/spool/cron /backup/$p/backup-var-spool-cron
 
-if test -e /backup/encrypted/NOT_MOUNTED; then echo "/backup/encrypted partition not mounted, exiting"; exit 1; fi
-$cmd --rsync_opts="$rsync_opts" /encrypted /backup/encrypted/$p
+if test -e /backup/mnt/NOT_MOUNTED; then
+  echo "/backup/mnt partition not mounted, skipping"
+else
+  $cmd --rsync_opts="$rsync_opts" /mnt /backup/mnt/$p
+fi
 
+if test -e /backup/mnt2/NOT_MOUNTED; then
+  echo "/backup/mnt2 partition not mounted, skipping"
+else
+  $cmd --rsync_opts="$rsync_opts" /mnt2 /backup/mnt2/$p
+fi
