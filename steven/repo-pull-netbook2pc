@@ -23,7 +23,7 @@ for my $repo (grep {-d} <*>) {
     if ($exit == 0 && $output =~ /Already up-to-date/) {
         DEBUG "Repo `$repo` is up to date, nothing to do";
     } elsif ($exit == 0 && $output =~ /^Updating /m) {
-        DEBUG "Repo `$repo` updated";
+        INFO "Repo `$repo` updated";
     } else {
         FATAL "Can't figure out result of 'git pull' for repo `$repo`: exit=$exit, output=$output";
         die;
