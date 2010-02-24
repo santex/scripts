@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+
+use Log::Log4perl qw(:easy);
+use autodie;
+use strict;
+
+#Log::Log4perl->easy_init($TRACE);
+Log::Log4perl->easy_init($INFO);
+
+my $src = "$ENV{HOME}/repo";
+my $dest = "$ENV{HOME}/he_/repo";
+
+if ($0 =~ /pc2netbook/) {
+    ($src, $dest) = ($dest, $src);
+}
+
+chdir $dest;
+for my $repo (grep {-d} <*>) {
+    INFO "Processing repo `$repo` ...";
+    chdir $repo;
+    my $output = `LANG=C git pull '$src'/$repo 2>&1`;
+    my $exit = $? & 255;
+    if ($exit == 0 && $output =~ /Already up-to-date/) {
+        DEBUG "Repo `$repo` is up to date, nothing to do";
+    } elsif ($exit == 0 && $output =~ /^Updating /m) {
+        DEBUG "Repo `$repo` updated";
+    } else {
+        FATAL "Can't figure out result of 'git pull' for repo `$repo`: exit=$exit, output=$output";
+        die;
+    }
+    DEBUG "Result of 'git pull' for repo `$repo`: exit=$exit, output=$output";
+    chdir "..";
+}
+
