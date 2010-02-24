@@ -1,0 +1,30 @@
+#!/usr/bin/perl -w
+
+use Log::Log4perl qw(:easy);
+use autodie;
+use strict;
+
+#Log::Log4perl->easy_init($TRACE);
+Log::Log4perl->easy_init($WARN);
+
+chdir "$ENV{HOME}/repo";
+for my $repo (grep {-d} <*>) {
+    DEBUG "Checking repo `$repo` ...";
+    chdir $repo;
+    my $output = `LANG=C git status 2>&1`;
+    my $exit = $? & 255;
+    if ($exit == 0 && $output =~ /nothing to commit/) {
+        DEBUG "Repo `$repo` is clean, nothing to do";
+    } elsif ($exit == 0 && $output =~ /Changes to be committed|Changed but/) {
+        WARN "Repo `$repo` needs commit";
+    } elsif ($exit == 0 && $output =~ /Untracked files/) {
+        WARN "Repo `$repo` has untracked files";
+    } elsif ($exit == 128 && $output =~ /Not a git repository/) {
+        ERROR "Repo `$repo` is not a git repo";
+    } else {
+        FATAL "Can't figure out result of 'git status' for repo `$repo`: exit=$exit, output=$output";
+        die;
+    }
+    chdir "..";
+}
+
