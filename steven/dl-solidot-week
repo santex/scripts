@@ -7,7 +7,7 @@ chdir "$ENV{HOME}/repo/shresearch/solidot";
 my $d = DateTime->now;
 system "mkdir -p ".$d->ymd("");
 chdir $d->ymd("");
-for (1..10) {
+for (1..8) {
     system "wget -O ".$d->ymd("").".html http://solidot.org/index.pl?issue=".$d->ymd("");
     $d->subtract(days => 1);
 }

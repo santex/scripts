@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+
+# scramble word, with easiness level.
+
+use strict;
+use POSIX qw/ceil/;
+use App::Options (
+    option => {
+        hardness => { type => 'int', required => 0, description => 'percentage of hardness, the higher the more scrambled the word will be. if negative, number of steps to scramble.'},
+        max_tries => { type => 'int', required => 1, default => 200, },
+    },
+);
+
+sub scramble {
+    my ($word, $hardness, $max_tries) = @_;
+    my $l = length($word);
+    $hardness //= -ceil(rand($l));
+    return $word if $l < 2 || $hardness == 0;
+    my $orig = $word;
+    my $num_scrambles = $hardness > 0 ? ceil($hardness/100*$l) : -$hardness;
+    my $i = 0;
+    while (1) {
+        $word = $orig;
+        #print "DEBUG: scramble=$num_scrambles\n";
+        for (1..$num_scrambles) {
+            my ($a, $b) = (int(rand($l)), int(rand($l)));
+            redo if $a == $b;
+            my $ca = substr($word, $a, 1);
+            my $cb = substr($word, $b, 1);
+            substr($word, $a, 1) = $cb;
+            substr($word, $b, 1) = $ca;
+        }
+        last if $word ne $orig || $i++ >= $max_tries;
+    }
+    $word;
+}
+
+while (<>) {
+    chomp;
+    printf "%s -> %s\n", $_,  scramble($_, $App::options{hardness}, $App::options{max_tries});
+}
