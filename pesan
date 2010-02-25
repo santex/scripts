@@ -5,6 +5,10 @@ $stdout_instead = 1;
 #($day_now,$mon_now,$year_now)=(29,3,2003);
 
 use Mail::Sendmail;
+use WWW::Google::Images;
+use YAML::Syck;
+
+my $gi;
 
 @dom = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
 if (!$day_now or !$mon_now or !$year_now) {
@@ -17,38 +21,64 @@ while (<>) {
   next unless /\S/;
   next if /^[#;]/;
   do { warn "Line $.: not match!: $_"; next; } unless
-      /^([JUT]) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(?: (\d+) (\d+))?\s*$/ or
-      /^(BIRTHDAY|ONETIME|YEARLY) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(.*)$/;
+      /^([JUT]) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(?: (\d+) (\d+))?\s*("[^"]+"|'[^']+')?$/ or
+      /^(BIRTHDAY|ONETIME|YEARLY) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')((?:\s+-?\d+)+)\s*("[^"]+"|'[^']+')?$/;
   if ($1 eq 'J' || $1 eq 'U' || $1 eq 'T') {
-      ($t, $mday, $mon, $year, $msg, $a, $b) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6, $7);
+      ($t, $mday, $mon, $year, $msg, $a, $b, $opts) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6, $7);
       warn "Line $.: must have a and b: $_" if $t ne 'U' and (!defined($a) or !defined($b));
       $a = 0 if !defined($a); $b = 0 if !defined($b); do{$a=7;$b=1} if $t eq 'U';
       if ($t ne 'J') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
       @d = (-$a..$b);
-      print "DEBUG: $t, $mday, $mon, $year, $msg, $a, $b" if $debug;
+      print "DEBUG: $t, $mday, $mon, $year, $msg, $a, $b, $opts\n" if $debug;
   } else {
-      ($t, $mday, $mon, $year, $msg, $days_list) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6);
+      ($t, $mday, $mon, $year, $msg, $days_list, $opts) = ($1, $2, $3, $4, $5, $6, $7);
       @d = $days_list =~ /(-?\d+)/g;
       @d = (0) unless @d;
       if ($t ne 'ONETIME') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
-      print "DEBUG: $t, $mday, $mon, $year, $msg, $days_list=[${\(join ', ', @d)}]" if $debug;
+      print "DEBUG: $t, $mday, $mon, $year, $msg, $days_list=[${\(join ', ', @d)}], $opts\n" if $debug;
   }
+  if ($opts) {
+      for ($opts) { if (/^'/) { s/^'//; s/'$//; } else { s/^"//; s/"$//; } }
+      $opts = Load($opts);
+  }
+  #print "DEBUG: opts = ".Dump($opts) if $debug;
   $done=0;
   L:
   for $y (@y) {
     last if $done;
     $ndays = calc_ndays($mday,$mon,$y);
 
+    my $msg_opt = "";
     if (grep { $ndays_now == $ndays+$_ } @d) {
       $done++;
       print " hit!" if $debug;
-      $msg1 = $ndays_now == $ndays ? "hari ini" :
-              (abs($ndays_now-$ndays) . " hari " . ($ndays_now > $ndays ? "yl":"lagi"));
+      my $delta = $ndays - $ndays_now;
+      $msg1 = $delta == 0 ? "hari ini" :
+              (abs($delta) . " hari " . ($delta < 0 ? "yl":"lagi"));
       $msg2 = $t eq 'U' ? "$msg ultah yang ke-".($year_now-$year) :
               $t eq 'BIRTHDAY' ? "$msg ultah" :
               $msg;
 
-      push @matches, [$ndays-$ndays_now, "$msg1: $msg2 ($mday-$mon-$y)\n"];
+      my $do_gi = $opts->{gi} && ($opts->{gi}{day} == $delta || $t eq 'BIRTHDAY');
+      if ($do_gi) {
+          my $s = $opts->{gi};
+          print "DEBUG: retrieving google images ($s->{q})..." if $debug;
+          $gi ||= new WWW::Google::Images;
+          my $res = $gi->search($s->{q},
+                                min_size => ($s->{min_size} || 25),
+                                max_size => ($s->{max_size} || 150),
+                                limit => ($s->{limit} || 10),
+                            );
+          my @im;
+          while (my $im = $res->next) { $im = $im->content_url; push @im, $im unless $im =~ /[%?]/ } # phpbb2 sucks!
+          if (@im) {
+              $msg_opt .= "[img]".$im[rand @im]."[/img]";
+          } else {
+              $msg_opt .= "(got no suitable results from google images)";
+          }
+      }
+
+      push @matches, [$ndays-$ndays_now, "$msg1: $msg2 ($mday-$mon-$y)".($msg_opt ? "\n\n$msg_opt" : "")."\n"];
     }
     print "\n" if $debug;
   }

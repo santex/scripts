@@ -3,6 +3,7 @@
 use strict;
 use LWP::Simple;
 use POSIX qw(strftime);
+#use YAML::Syck;
 
 my %bulan_long = (
     JANUARI  => 1,
@@ -76,12 +77,12 @@ for ( split /\015?\012/, $_ ) {
     m#</p><p><br /># and next;
     m#^$#           and next;
 
-    my ( $name, $day, $bulan_short )
-        = m#^(?:<ul><li>|</li><li>)\s*(.+?)\s+-\s+(\d+)(?:\s+(\w{3,5})\w*)\s*$#
+    my ( $name, $day, $bulan_short, $opts )
+        = m#^(?:<ul><li>|</li><li>)\s*(.+?)\s+-\s+(\d+)(?:\s+(\w{3,5})\w*)\s*('[^']+'|"[^"]+")?$#
         or die "FATAL: Can't parse line: $_";
     die "FATAL: Unknown bulan `$bulan_short' in line `$_'"
         unless $bulan_short{$bulan_short};
     my $bulan = $bulan_short ? $bulan_short{$bulan_short} : $cur_month;
 
-    printf "ONETIME %02d%02d%04d \"%s\" -7 -1 0\n", $day, $bulan, $year, $name;
+    printf "ONETIME %02d%02d%04d \"%s\" -7 -1 0 %s\n", $day, $bulan, $year, $name, ($opts || "");
 }

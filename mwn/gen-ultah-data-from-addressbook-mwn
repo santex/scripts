@@ -3,6 +3,10 @@
 use strict;
 use LWP::Simple;
 
+my @keywords = ("ulang tahun", "selamat ulang tahun", "ultah", "pesta ultah",
+		"birthday", "birthday surprise", 
+		"birthday cake", "birthday boy", "birthday girl", "birthday party");
+
 my %bulan_long = (
     JANUARI  => 1,
     JANUARY  => 1,
@@ -71,14 +75,15 @@ for ( split /\015?\012/, $_ ) {
     m#^<p><br />$#  and next;
     m#^$#           and next;
 
-    my ( $name, $day, $bulan_short )
-        = m#^(?:<ul><li>|</li><li>)\s*(.+?)\s+-\s+(\d+)(?:\s+(\w{3,5})\w*)\s*$#
+    my ( $name, $day, $bulan_short, $opts )
+        = m#^(?:<ul><li>|</li><li>)\s*(.+?)\s+-\s+(\d+)(?:\s+(\w{3,5})\w*)\s*('[^']+'|"[^"]+")?$#
         or die "FATAL: Can't parse line: $_";
+    $opts ||= qq!'{gi: {q: "${\( $keywords[rand @keywords] )}", day: 0}}'!;
     die "FATAL: Unknown bulan `$bulan_short' in line `$_'"
         unless $bulan_short{$bulan_short};
     my $bulan = $bulan_short ? $bulan_short{$bulan_short} : $cur_month;
 
-    printf "BIRTHDAY %02d%02d1000 \"%s\"\n", $day, $bulan, strip_tags($name);
+    printf "BIRTHDAY %02d%02d1000 \"%s\" 0 %s\n", $day, $bulan, strip_tags($name), $opts;
 }
 
 sub strip_tags {
@@ -86,4 +91,3 @@ sub strip_tags {
     s!<[^>]+>!!sg;
     $_;
 }
-    
