@@ -22,7 +22,7 @@ for my $repo (grep {-d} <*>) {
     my $exit = $? & 255;
     if ($exit == 0 && $output =~ /Already up-to-date/) {
         DEBUG "Repo `$repo` is up to date, nothing to do";
-    } elsif ($exit == 0 && $output =~ /^Updating /m) {
+    } elsif ($exit == 0 && $output =~ /^Updating |^Merge made by recursive/m) {
         INFO "Repo `$repo` updated";
     } else {
         FATAL "Can't figure out result of 'git pull' for repo `$repo`: exit=$exit, output=$output";
