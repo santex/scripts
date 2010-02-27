@@ -7,7 +7,9 @@ use strict;
 #Log::Log4perl->easy_init($TRACE);
 Log::Log4perl->easy_init($WARN);
 
-chdir "$ENV{HOME}/repo";
+my $repodir = $0 =~ /-pc$/ ? "$ENV{HOME}/he_/repo" : "$ENV{HOME}/repo";
+
+chdir $repodir;
 for my $repo (grep {-d} <*>) {
     DEBUG "Checking repo `$repo` ...";
     chdir $repo;
