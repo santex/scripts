@@ -1,5 +1,5 @@
 #!/bin/sh
 
 rsync --del -e "ssh -c arcfour" -Pavz \
-  $HOME/shscripts \
-  steven@hosting.localdomain:/u/steven/public/bzr/
+  $HOME/repo/shscripts/ \
+  steven@hosting.localdomain:/u/steven/public/git/scripts/

@@ -12,13 +12,7 @@ rsync_opts="--exclude Cache --exclude cache --exclude var --exclude tmp --exclud
 cmd="nice -n 19 $exec --hist_levels=2,1,2"
 p=builder.local
 
-for u in archive builder mwn stats s1 s1t t1 t2 t3 t4; do
-  $cmd --rsync_opts="$rsync_opts" /u/$u /backup/$p/backup-u-$u
-done
-
-$cmd --rsync_opts="$rsync_opts" /etc /backup/$p/backup-etc
-
-$cmd --rsync_opts="$rsync_opts" /var/spool/cron /backup/$p/backup-var-spool-cron
+#---
 
 if test -e /backup/mnt/NOT_MOUNTED; then
   echo "/backup/mnt partition not mounted, skipping"
@@ -31,3 +25,12 @@ if test -e /backup/mnt2/NOT_MOUNTED; then
 else
   $cmd --rsync_opts="$rsync_opts" /mnt2 /backup/mnt2/$p
 fi
+
+for u in archive s1 s1t t1 t2 t3 t4; do
+  $cmd --rsync_opts="$rsync_opts" /u/$u /backup/$p/backup-u-$u
+done
+
+$cmd --rsync_opts="$rsync_opts" /etc /backup/$p/backup-etc
+
+$cmd --rsync_opts="$rsync_opts" /var/spool/cron /backup/$p/backup-var-spool-cron
+

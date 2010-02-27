@@ -1,0 +1,61 @@
+#!/usr/bin/perl -w
+
+use strict;
+use File::Temp qw/tempfile/;
+use FindBin '$Bin';
+use Log::Log4perl qw(:easy);
+use POSIX;
+
+use App::Options (
+    option => {
+        stdin     => { type => 'bool', required => 0 },
+        data_file => { type => 'string', required => 0 },
+        topic_id  => { type => 'int', required => 1 },
+        tag       => { type => 'string', required => 0, default => '' },
+    },
+);
+
+my @files;
+
+Log::Log4perl->easy_init($DEBUG);
+
+LOGDIE "data_file must be specified unless stdin in specified"
+    if !$App::options{data_file} && !$App::options{stdin};
+
+my $tags = $App::options{tag} ? "[$App::options{tag}] " : "";
+
+my $tgl = POSIX::strftime("%Y-%m-%d", localtime);
+
+my $cmd;
+if ($App::options{stdin}) {
+    my ( $fh, $filename) = tempfile();
+    print $fh <STDIN>;
+    close $fh;
+    $cmd = "pesan $filename";
+} else {
+    LOGDIE "Can't find data file `$App::options{data_file}'"
+        unless -f $App::options{data_file};
+    $cmd = "pesan ".esc($App::options{data_file});
+}
+my $msg = `$cmd`;
+length($msg) or goto SKIP1;
+
+# ---
+my ( $fh, $filename ) = tempfile();
+print $fh "Subject: ${tags}pesan pengingat untuk tanggal $tgl\n";
+print $fh "\n";
+print $fh $msg;
+push @files, $filename;
+# ---
+
+# send it!
+system "phpbb2-post --bbcode=1 --profile=noforum --topic_id=$App::options{topic_id} " . join( " ", @files );
+unlink @files;
+
+SKIP1: 1;
+
+sub esc {
+    local $_ = shift;
+    s/'/'"'"'/g;
+    "'$_'";
+}
