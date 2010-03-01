@@ -1,0 +1,22 @@
+#!/usr/bin/perl -w
+
+use autodie;
+use strict;
+
+print "Checking repo status ...\n";
+my $which = $0 =~ /-pc$/ ? "pc" : "netbook";
+my $cmd = "repo-check-status-$which";
+my $output = `$cmd 2>&1`;
+
+if ($? != 0) { die "$cmd command failed, please check first.\n$cmd Output:\n$output" }
+if ($output =~ /needs commit|Untracked files/) { die "Some repos are not clean, please check first.\n$cmd Output:\n$output" }
+if ($output =~ /not a git/) { die "Some dirs are not repos, please check first.\n$cmd Output:\n$output" }
+
+print "Searching for backup media ...\n";
+my $mp;
+unless (($mp) =~ `LANG=C mount` =~ m! on (/media/cruzer0?)!m) { die "Can't find mounted backup media" }
+
+print "Doing backup ... \n";
+system "rsync --include '/repo/*/.git/' --del --force --delete-excluded $ENV{HOME}/repo $mp/repo/";
+
+if ($? != 0) { die "Backup does not succeed, please check" }
