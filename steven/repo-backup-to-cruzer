@@ -14,7 +14,7 @@ if ($output =~ /not a git/) { die "Some dirs are not repos, please check first.\
 
 print "Searching for backup media ...\n";
 my $mp;
-unless (($mp) =~ `LANG=C mount` =~ m! on (/media/cruzer0?)!m) { die "Can't find mounted backup media" }
+unless (($mp) = `LANG=C mount` =~ m! on (/media/cruzer0?)!m) { die "Can't find mounted backup media" }
 
 print "Doing backup ... \n";
 system "rsync --include '/repo/*/.git/' --del --force --delete-excluded $ENV{HOME}/repo $mp/repo/";
