@@ -20,13 +20,17 @@ unless ($App::options{nocheck}) {
     if ($output =~ /not a git/) { LOGDIE "Some dirs are not repos, please check first.\n$cmd Output:\n$output" }
 }
 
-print "Searching for backup media ...\n";
+INFO "Searching for backup media ...";
 my $mp;
-unless (($mp) = `LANG=C mount` =~ m! on (/media/cruzer0?)!m) { die "Can't find mounted backup media" }
+unless (($mp) = `LANG=C mount` =~ m! on (/media/cruzer0?)!m) { LOGDIE "Can't find mounted backup media" }
 
-print "Doing backup ... \n";
+INFO "Doing backup ...";
 system "rsync -Pav --include /repo ".
     "--include '/repo/*' --include '/repo/*/.git' --include '/repo/*/.git/**' ".
     "--include '/repo/.remote' --include '/repo/.remote/**' ".
     "--exclude '*' --del --force --delete-excluded $ENV{HOME}/repo $mp/";
-if ($? != 0) { LOGDIE "Backup does not succeed, please check" }
+if ($? != 0) { LOGDIE "Backup did not succeed, please check" }
+
+INFO "ls-laR ...";
+system "cd $ENV{HOME}/repo && ( ls -laR | gzip -c > .ls-laR.gz ) && cp .ls-laR.gz $mp/repo/";
+if ($? != 0) { LOGDIE "ls-laR did not succeed, please check" }

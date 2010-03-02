@@ -8,7 +8,7 @@ use strict;
 Log::Log4perl->easy_init($INFO);
 
 my $src = "$ENV{HOME}/repo";
-my $dest = "$ENV{HOME}/he_/repo";
+my $dest = "$ENV{HOME}/he/repo";
 
 if ($0 =~ /pc2netbook/) {
     ($src, $dest) = ($dest, $src);

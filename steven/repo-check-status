@@ -7,7 +7,7 @@ use Log::Log4perl qw(:easy);
 #Log::Log4perl->easy_init($TRACE);
 Log::Log4perl->easy_init($WARN);
 
-my $repodir = $0 =~ /-pc$/ ? "$ENV{HOME}/he_/repo" : "$ENV{HOME}/repo";
+my $repodir = $0 =~ /-pc$/ ? "$ENV{HOME}/he/repo" : "$ENV{HOME}/repo";
 
 chdir $repodir;
 for my $repo (grep {-d} <*>) {
