@@ -1,0 +1,6 @@
+#!/usr/bin/perl -0777 -pi~
+
+s!<style[^>]*>.+?</style>\s*!!sig;
+s!<link[^>]*rel="?stylesheet"?[^>]*\s+/>!!sig;
+s!<script[^>]*>.+?</script>!!sig;
+s#<!--.*?-->##sg;

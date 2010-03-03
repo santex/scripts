@@ -1,0 +1,3 @@
+#!/usr/bin/perl -0777 -pi~
+
+s!<form[^>]*>.*?</form>\s*!!sig;
