@@ -1,0 +1,255 @@
+#!/usr/bin/perl -w
+
+# this script logins to forum and repeatedly searches for new posts
+# mentioning itself, looking for commands, e.g.: "infobot, cariin
+# gambar kucing".
+#
+# if a command is found, it will try to reply to the same topic with
+# the answer.
+
+use strict;
+
+use DBI;
+use Data::Dumper;
+use File::Slurp;
+use List::Util qw(shuffle);
+use Log::Log4perl qw(:easy);
+use WWW::Google::Images;
+use WWW::Mechanize;
+
+use App::Options (
+    option => {
+        # general settings
+        profile => { type => 'string', required => 0, default => 'default', },
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+
+        # forum settings
+        username => { type => 'string', required => 1, },
+        password => { type => 'string', required => 1, },
+        base_url => { type => 'string', required => 1, },
+
+        # bot settings
+        botname => { type => 'string', required => 1, },
+        delay => { type => 'int', required => 1, default => 30, },
+        post_delay => { type => 'int', required => 1, default => 4, },
+        db_path => { type => 'string', required => 1, default => "$ENV{HOME}/phpbb2-infobot.db", },
+    },
+);
+
+my $Mech = new WWW::Mechanize;
+my $GI = new WWW::Google::Images;
+my $Db;
+
+my @Responses = (
+
+    {pat => qr/^\s*$/,
+     name => 'EMPTY',
+     handler => sub {
+         pick("ya gan?",
+              "ada apa gan?",
+              "kenapa gan?",
+              "hadir gan!",
+              "yup gan?",
+          );
+     }},
+
+    {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(\d+\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
+     name => 'SEARCH IMAGE',
+     handler => sub {
+         my (%args) = @_;
+         my $res = $GI->search($args{match}[2],
+                               min_size => 25,
+                               max_size => 150,
+                               limit => 10,
+                           );
+         my @im;
+         while (my $im = $res->next) { $im = $im->content_url; push @im, $im unless $im =~ /[%?]/ } # phpbb2 sucks!
+         @im = shuffle @im;
+         my $n = $args{match}[1] || 1;
+         splice @im, $n;
+         if (@im) {
+             return join("", map {"[img]".$_."[/img]\n\n"} @im);
+         } else {
+             return "gak dapet gan :(";
+         }
+     }},
+
+    {pat => qr/^(ban|kick)\s+(.+)$/i,
+     name => 'DUMMY KICK',
+     handler => sub {
+         pick("ini bukan IRC gan...",
+              "aduh ane mana bisa ngeban/ngekick orang di forum?",
+              "silakan hubungi admin gan :-)",
+          );
+     }},
+
+    {pat => qr//,
+     name => 'DEFAULT',
+     handler => sub {
+         pick("maaf gan, ane kagak ngerti perintahnya nih",
+              "maaf gan, ane agak belet, bisa diulang perintahnya?",
+              "what??",
+              "gak ngerti gan...",
+              "au ah gelap",
+              "'paan c???",
+              "entahlah.",
+              "bodo",
+              "(pura-pura gak denger...)",
+              "???",
+              "maksudnya apa nih???",
+              "o gitu... tapi maksudnya apa ya?",
+              "ngerti ngerti ... tapi maksudnya apa ya?",
+              "ic ic ... tapi maksudnya apa ya?",
+          );
+     }},
+);
+
+if ( $App::options{log_level} eq 'FATAL' ) {
+    Log::Log4perl->easy_init($FATAL);
+}
+elsif ( $App::options{log_level} eq 'ERROR' ) {
+    Log::Log4perl->easy_init($ERROR);
+}
+elsif ( $App::options{log_level} eq 'WARN' ) {
+    Log::Log4perl->easy_init($WARN);
+}
+elsif ( $App::options{log_level} eq 'INFO' ) {
+    Log::Log4perl->easy_init($INFO);
+}
+else { Log::Log4perl->easy_init($DEBUG) }
+
+INFO "Starting infobot $App::options{botname} ...";
+
+init_db();
+login();
+while (1) {
+    find_new_commands();
+    for (unreplied_commands()) {
+        respond_command($_);
+    }
+    sleep $App::options{delay};
+}
+
+sub init_db {
+    $Db = DBI->connect("dbi:SQLite:dbname=$App::options{db_path}", "", "", {RaiseError=>1});
+    $Db->do("CREATE TABLE IF NOT EXISTS posts (
+               id INTEGER PRIMARY KEY,
+               username TEXT NOT NULL,
+               forum_id INTEGER NOT NULL,
+               topic_id INTEGER NOT NULL,
+               ctime BIGINT NOT NULL,
+               status TEXT NOT NULL DEFAULT 'new',
+               raw_command TEXT NOT NULL,
+               note TEXT)");
+}
+
+sub respond_command {
+    my ($cmd) = @_;
+    INFO "Parsing command: $cmd->{raw_command} ...";
+    for my $r (@Responses) {
+        if ($cmd->{raw_command} =~ $r->{pat}) {
+            INFO "Command matches $r->{name}";
+            my $resp = $r->{handler}->(r=>$r, match=>[$0, $1, $2, $3, $4, $5, $6, $7, $8, $9]);
+            forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
+                       bbcode=>1,
+                       message => "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp);
+            $Db->do("UPDATE posts SET status='replied' WHERE id=?", {}, $cmd->{id});
+            return;
+        }
+    }
+    LOGDIE "Command not handled: $cmd->{raw_command}";
+}
+
+sub unreplied_commands {
+    my @res;
+    my $sth = $Db->prepare("SELECT * FROM posts WHERE status='new' ORDER by ctime");
+    $sth->execute;
+    while (my $row = $sth->fetchrow_hashref) { push @res, $row }
+    $sth->finish;
+    @res;
+}
+
+sub find_new_commands {
+    # search one-day worth of posts (well, only 1st page) mentioning me
+    $Mech->get(join "",
+               "$App::options{base_url}/search.php?mode=results",
+               "&search_keywords=$App::options{botname}",
+               "&search_terms=all&search_forum=-1&search_time=1&search_cat=-1&sort_by=0",
+               "&show_results=posts&return_chars=200");
+    my $ct = $Mech->content;
+    $ct =~ s/.+>Search found \d+ match(?:es)?<//s or do {
+        ERROR "Can't parse search result page, skipping";
+        return;
+    };
+    my $now = time;
+    while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+)&.+?<span class="postbody">(.*?)</span>!sg) {
+        my ($uid, $username, $forum_id, $post_id, $message) = ($1, $2, $3, $4, $5);
+        next unless $message =~ /^\Q$App::options{botname}\E\s*[:,]?\s*(.*?)(?:[.?!]+)?(?:\n|<br|\z)/;
+        my $raw_command = $1;
+        next if $Db->selectrow_array("SELECT id FROM posts WHERE id=$post_id");
+        DEBUG "Found new command (post #$post_id): $raw_command";
+        $Mech->get("$App::options{base_url}/viewtopic.php?p=$post_id");
+        $Mech->content =~ /<a class="maintitle" href="viewtopic.php\?t=(\d+)&/ or do {
+            ERROR "Can't get topic ID for post #$post_id, skipped";
+            next;
+        };
+        my $topic_id = $1;
+        $Db->do("INSERT INTO posts (id, ctime, forum_id, topic_id, username, raw_command) VALUES (?, ?, ?, ?, ?, ?)", {},
+                $post_id, $now, $forum_id, $topic_id, $username, $raw_command);
+    }
+}
+
+sub login {
+    INFO "Logging in to forum $App::options{base_url} ...";
+    $Mech->get("$App::options{base_url}/login.php");
+    $Mech->submit_form(
+        form_number => 1,
+        fields      => {
+            username => $App::options{username},
+            password => $App::options{password},
+        },
+        button => 'login',
+    );
+    #print $Mech->content();
+}
+
+sub forum_post {
+    my (%args) = @_;
+
+    INFO "Posting to forum (forum #$args{forum_id}".($args{topic_id} ? ", topic #$args{topic_id}" : "").") ...";
+
+    # get new posting form
+    $Mech->get(
+        $args{topic_id}
+        ? "$App::options{base_url}/posting.php?mode=reply&t=$args{topic_id}"
+        : "$App::options{base_url}/posting.php?mode=newtopic&f=$args{forum_id}"
+    );
+
+    if ($args{obfuscate_link}) {
+        $args{message} =~ s!\bhttp(s?)://!hxxp$1://!ig;
+    }
+
+    #DEBUG "posting = $posting";
+    $Mech->submit_form(
+        form_number => 1,
+        fields      => {
+            subject         => $args{subject} || "Re:",
+            message         => $args{message},
+            disable_html    => "on",
+            disable_bbcode  => ($args{bbcode} ? "off" : "on"),
+            disable_smilies => "on",
+        },
+        button => 'post',
+    );
+
+    #print $Mech->content;
+
+    unless ( $Mech->content =~ /successfully/i ) {
+        ERROR "Failed posting!";
+    }
+    sleep $App::options{post_delay};
+}
+
+sub pick {
+    $_[rand @_];
+}
