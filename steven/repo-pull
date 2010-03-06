@@ -10,7 +10,15 @@ Log::Log4perl->easy_init($INFO);
 my $src = "$ENV{HOME}/repo";
 my $dest = "$ENV{HOME}/he/repo";
 
-if ($0 =~ /pc2netbook/) {
+if ($0 =~ /[2-]builder/) {
+    $dest = "$ENV{HOME}/hb/repo";
+} elsif ($0 =~ /[2-]eddie/) {
+    $dest = "$ENV{HOME}/he/repo";
+} elsif ($0 =~ /[2-]capuchin/) {
+    $dest = "$ENV{HOME}/hc/repo";
+}
+
+if ($0 =~ /2home$/) {
     ($src, $dest) = ($dest, $src);
 }
 
