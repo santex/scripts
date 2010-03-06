@@ -53,6 +53,20 @@ my @Responses = (
           );
      }},
 
+    {pat => qr/^(thanks|tx|thx|tq|tenkyu|thank you|makasih|te?rima ?kasih|trm ksh|xie-xie|xie2)$/,
+     name => 'THANKS',
+     handler => sub {
+         pick("sama2x gan :))",
+              "u're welcome ;)",
+              "seim2x :)",
+              "no problem",
+              "sip...",
+              "it's oke :)...",
+              "my pleasure...",
+              "kembali :)",
+          );
+     }},
+
     {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(\d+\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
      name => 'SEARCH IMAGE',
      handler => sub {
