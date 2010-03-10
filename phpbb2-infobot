@@ -120,7 +120,7 @@ my @Responses = (
              my $resp = $1;
              my $extra = "";
              if ($args{match}[1] eq $App::options{botname} && $resp =~ /^SUCCESS/) {
-                 $extra = "\n\n" . ($args{match}[2] > 0 ? "tenkyu btw gan :)" : "hiks... tapi gpp gan :)");
+                 $extra = "\n\n" . ($args{match}[2] eq '++' ? "tenkyu btw gan :)" : "hiks... tapi gpp gan :)");
              }
              return $resp . $extra;
          } else {
