@@ -97,6 +97,16 @@ my @Responses = (
      name => 'KARMA GIVE',
      handler => sub {
          my (%args) = @_;
+         if ($args{cmd}{username} eq $args{match}[1]) {
+             return pick(
+                 "yee... ga aci ah gan",
+                 "yee...",
+                 "maaf, tidak diperbolehkan gan...",
+                 "nunggu dikasih org dong gan...",
+                 "ferplei dong gan...",
+                 "suportip dong gan...",
+             );
+         }
          my $url = join('',
                         "$App::options{base_url}/karma.php?mode=give",
                         "&from=".uri_escape($args{cmd}{username}),
@@ -107,7 +117,10 @@ my @Responses = (
                     );
          $Mech->get($url);
          if ($Mech->content =~ /^((?:SUCCESS|ERROR): .*)/m) {
-             return $1;
+             my $resp = $1;
+             my $extra = "";
+             if ($args{match}[1] eq $App::options{botname} && $resp =~ /^SUCCESS/) { $extra = "\n\ntenkyu btw gan :)" }
+             return $resp . $extra;
          } else {
              return "gagal gan :(";
          }
