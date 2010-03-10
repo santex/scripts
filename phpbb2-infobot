@@ -93,7 +93,7 @@ my @Responses = (
          }
      }},
 
-    {pat => qr/^(\S+)\s*(\+\+|--)(?:\s*\((.*)\))?$/i,
+    {pat => qr/^(\S+)\s*(\+\+|--)\s*(?:\((.*)\))?$/i,
      name => 'KARMA GIVE',
      handler => sub {
          my (%args) = @_;
@@ -119,8 +119,26 @@ my @Responses = (
          if ($Mech->content =~ /^((?:SUCCESS|ERROR): .*)/m) {
              my $resp = $1;
              my $extra = "";
-             if ($args{match}[1] eq $App::options{botname} && $resp =~ /^SUCCESS/) {
-                 $extra = "\n\n" . ($args{match}[2] eq '++' ? "tenkyu btw gan :)" : "hiks... tapi gpp gan :)");
+             if ($resp =~ /^SUCCESS/) {
+                 if ($args{match}[1] eq $App::options{botname}) {
+                     $extra = "\n\n" . ($args{match}[2] eq '++' ? "tenkyu btw gan :)" : "hiks... tapi gpp gan :)");
+                 } else {
+                     # some evilness
+                     $extra = "\n\n" . pick(
+                         "rasain lo!",
+                         "puas...",
+                         "emang enak...",
+                         "nah loh!",
+                         "sakiiiitttt!",
+                         "periiihhhh!",
+                         "ouch!",
+                         "mati lu!",
+                         "wakakakakak...",
+                         "hehehehehe...",
+                         "eug siah...",
+                         "modar koe...", # kasar gak sih?
+                     ) if $args{match}[2] eq '--';
+                 }
              }
              return $resp . $extra;
          } else {
@@ -128,7 +146,7 @@ my @Responses = (
          }
      }},
 
-    {pat => qr/^karma(?:\s+(\S+))$/i,
+    {pat => qr/^karma$/i,
      name => 'KARMA LIST',
      handler => sub {
          my (%args) = @_;
