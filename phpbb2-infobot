@@ -14,6 +14,7 @@ use Data::Dumper;
 use File::Slurp;
 use List::Util qw(shuffle);
 use Log::Log4perl qw(:easy);
+use URI::Escape;
 use WWW::Google::Images;
 use WWW::Mechanize;
 
@@ -85,6 +86,42 @@ my @Responses = (
              return join("", map {"[img]".$_."[/img]\n\n"} @im);
          } else {
              return "gak dapet gan :(";
+         }
+     }},
+
+    {pat => qr/^(\S+)\s*(\+\+|--)(?:\s*\((.*)\))?$/i,
+     name => 'KARMA GIVE',
+     handler => sub {
+         my (%args) = @_;
+         my $url = join('',
+                        "$App::options{base_url}/karma.php?mode=give",
+                        "&from=".uri_escape($args{cmd}{username}),
+                        "&to=".uri_escape($args{match}[1]),
+                        "&reason=".uri_escape($args{match}[3] || ""),
+                        "&ref=".uri_escape("ua=$0, ip=$ENV{REMOTE_ADDR}, post_id=$args{cmd}{id}, topic_id=$args{cmd}{topic_id}"),
+                        "&karma=".($args{match}[2] eq '++' ? 1 : -1),
+                    );
+         $Mech->get($url);
+         if ($Mech->content =~ /^((?:SUCCESS|ERROR): .*)/m) {
+             return $1;
+         } else {
+             return "gagal gan :(";
+         }
+     }},
+
+    {pat => qr/^karma(?:\s+(\S+))$/i,
+     name => 'KARMA LIST',
+     handler => sub {
+         my (%args) = @_;
+         my $url = join('',
+                        "$App::options{base_url}/karma.php?mode=list",
+                        ($args{match}[1] ? "&user".uri_escape($args{match}[1]) : ''),
+                    );
+         $Mech->get($url);
+         if ($Mech->content =~ /^(Karmas:.*)/ms) {
+             return $1;
+         } else {
+             return "gagal gan :(";
          }
      }},
 
@@ -163,7 +200,7 @@ sub respond_command {
     for my $r (@Responses) {
         if ($cmd->{raw_command} =~ $r->{pat}) {
             INFO "Command matches $r->{name}";
-            my $resp = $r->{handler}->(r=>$r, match=>[$0, $1, $2, $3, $4, $5, $6, $7, $8, $9]);
+            my $resp = $r->{handler}->(r=>$r, match=>[$0, $1, $2, $3, $4, $5, $6, $7, $8, $9], cmd=>$cmd);
             forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
                        bbcode=>1,
                        message => "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp);
