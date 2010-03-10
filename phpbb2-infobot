@@ -97,7 +97,8 @@ my @Responses = (
      name => 'KARMA GIVE',
      handler => sub {
          my (%args) = @_;
-         if ($args{cmd}{username} eq $args{match}[1]) {
+         my ($username, $to, $karma) = ($args{cmd}{username}, $args{match}[1], $args{match}[2]);
+         if ($username eq $to) {
              return pick(
                  "yee... ga aci ah gan",
                  "yee...",
@@ -109,11 +110,11 @@ my @Responses = (
          }
          my $url = join('',
                         "$App::options{base_url}/karma.php?mode=give",
-                        "&from=".uri_escape($args{cmd}{username}),
-                        "&to=".uri_escape($args{match}[1]),
+                        "&from=".uri_escape($username),
+                        "&to=".uri_escape($to),
                         "&reason=".uri_escape($args{match}[3] || ""),
                         "&ref=".uri_escape("ua=$0, ip=$ENV{REMOTE_ADDR}, post_id=$args{cmd}{id}, topic_id=$args{cmd}{topic_id}"),
-                        "&karma=".($args{match}[2] eq '++' ? 1 : -1),
+                        "&karma=".($karma eq '++' ? 1 : -1),
                     );
          $Mech->get($url);
          if ($Mech->content =~ /^((?:SUCCESS|ERROR): .*)/m) {
@@ -121,7 +122,7 @@ my @Responses = (
              my $extra = "";
              if ($resp =~ /^SUCCESS/) {
                  if ($args{match}[1] eq $App::options{botname}) {
-                     $extra = "\n\n" . ($args{match}[2] eq '++' ? "tenkyu btw gan :)" : "hiks... tapi gpp gan :)");
+                     $extra = "\n\n" . ($karma eq '++' ? "tenkyu btw gan :)" : "hiks... tapi gpp gan :)");
                  } else {
                      # some evilness
                      $extra = "\n\n" . pick(
@@ -137,7 +138,7 @@ my @Responses = (
                          "hehehehehe...",
                          "eug siah...",
                          "modar koe...", # kasar gak sih?
-                     ) if $args{match}[2] eq '--';
+                     ) if $karma eq '--';
                  }
              }
              return $resp . $extra;
