@@ -119,7 +119,9 @@ my @Responses = (
          if ($Mech->content =~ /^((?:SUCCESS|ERROR): .*)/m) {
              my $resp = $1;
              my $extra = "";
-             if ($args{match}[1] eq $App::options{botname} && $resp =~ /^SUCCESS/) { $extra = "\n\ntenkyu btw gan :)" }
+             if ($args{match}[1] eq $App::options{botname} && $resp =~ /^SUCCESS/) {
+                 $extra = "\n\n" . ($karma > 0 ? "tenkyu btw gan :)" : "hiks... tapi gpp gan :)");
+             }
              return $resp . $extra;
          } else {
              return "gagal gan :(";
