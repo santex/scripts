@@ -113,7 +113,7 @@ my @Responses = (
                         "&from=".uri_escape($username),
                         "&to=".uri_escape($to),
                         "&reason=".uri_escape($args{match}[3] || ""),
-                        "&ref=".uri_escape("ua=$0, ip=$ENV{REMOTE_ADDR}, post_id=$args{cmd}{id}, topic_id=$args{cmd}{topic_id}"),
+                        "&ref=".uri_escape("ua=$0, post_id=$args{cmd}{id}, topic_id=$args{cmd}{topic_id}"),
                         "&karma=".($karma eq '++' ? 1 : -1),
                     );
          $Mech->get($url);
@@ -134,11 +134,21 @@ my @Responses = (
                          "periiihhhh!",
                          "ouch!",
                          "mati lu!",
+                         "mampus lu!",
                          "wakakakakak...",
                          "hehehehehe...",
                          "eug siah...",
                          "modar koe...", # kasar gak sih?
                      ) if $karma eq '--';
+                     # biar balance deh
+                     $extra = "\n\n" . pick(
+                         "aseeeek!",
+                         "traktir traktir...",
+                         "wah enak...",
+                         "makan makan :)",
+                         "wuihhhhh...",
+                         "seeepppp gan...",
+                     ) if $karma eq '++';
                  }
              }
              return $resp . $extra;
@@ -273,10 +283,10 @@ sub find_new_commands {
     my $now = time;
     while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+)&.+?<span class="postbody">(.*?)</span>!sg) {
         my ($uid, $username, $forum_id, $post_id, $message) = ($1, $2, $3, $4, $5);
-        next unless $message =~ /^\Q$App::options{botname}\E\s*[:,]?\s*(.*?)(?:[.?!]+)?(?:\n|<br|\z)/;
+        next unless $message =~ /^\Q$App::options{botname}\E\s*[:,]?\s*(.*?)(?:[.?!]+)?(?:\015|\012|<br|\z)/;
         my $raw_command = $1;
         next if $Db->selectrow_array("SELECT id FROM posts WHERE id=$post_id");
-        DEBUG "Found new command (post #$post_id): $raw_command";
+        DEBUG "Found new command (post #$post_id): $raw_command (message=$message)";
         $Mech->get("$App::options{base_url}/viewtopic.php?p=$post_id");
         $Mech->content =~ /<a class="maintitle" href="viewtopic.php\?t=(\d+)&/ or do {
             ERROR "Can't get topic ID for post #$post_id, skipped";
