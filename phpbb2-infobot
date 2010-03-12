@@ -157,7 +157,7 @@ my @Responses = (
          }
      }},
 
-    {pat => qr/^karmas?(?:\s+(\S+))?$/i,
+    {pat => qr/^karma(?:s|-?nya)?(?:\s+(\S+))?$/i,
      name => 'KARMA LIST',
      handler => sub {
          my (%args) = @_;
