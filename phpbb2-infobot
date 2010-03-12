@@ -157,6 +157,22 @@ my @Responses = (
          }
      }},
 
+    {pat => qr/^karma\s+(?:dari|oleh)\s+(\S+)$/i,
+     name => 'KARMA GIVING LIST',
+     handler => sub {
+         my (%args) = @_;
+         my $url = join('',
+                        "$App::options{base_url}/karma.php?mode=list&from=",
+                        uri_escape($args{match}[1]),
+                    );
+         $Mech->get($url);
+         if ($Mech->content =~ /^(.*karma.*:.*)/ms) {
+             return $1;
+         } else {
+             return "gagal gan :(";
+         }
+     }},
+
     {pat => qr/^karma(?:s|-?nya)?(?:\s+(\S+))?$/i,
      name => 'KARMA LIST',
      handler => sub {
