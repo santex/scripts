@@ -11,8 +11,7 @@ use App::Options (option => {
 
 unless ($App::options{nocheck}) {
     INFO "Checking repo status ...";
-    my $which = $0 =~ /-pc$/ ? "pc" : "netbook";
-    my $cmd = "repo-check-status-$which";
+    my $cmd = "repo-check-status";
     my $output = `$cmd 2>&1`;
 
     if ($? != 0) { LOGDIE "$cmd command failed, please check first.\n$cmd Output:\n$output" }
