@@ -5,7 +5,7 @@ cd $HOME/repo/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 
-/c/sbin/spanel-multissh $@ --rsync --nouse-ip --user root -- -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
+/c/sbin/spanel-multissh $@ --rsync --nouse-ip --user root -- -rlptD -Pvz --del --exclude '.svn' --exclude '.git' --exclude '*~' \
   mail-templates \
   newaccount-templates \
   default-dns-zone.yaml \

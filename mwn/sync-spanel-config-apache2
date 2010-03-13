@@ -7,7 +7,7 @@ cd $HOME/repo/mwn/spanel-configs
 # owner jangan dipreserve :)
 
 /c/sbin/spanel-multissh $@ --rsync --nouse-ip --user root -- -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
-  apache2/ssl_masterweb_net.* \
-  servers/'[[SERVERID]]'/apache2/ssl_masterweb_net.conf \
+  apache2/masterweb_net.* \
+  servers/'[[SERVERID]]'/apache2/masterweb_net.conf \
   \
   '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/apache2/

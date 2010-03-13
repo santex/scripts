@@ -1,5 +1,5 @@
 #!/bin/sh
-src=/home/steven/proj/mwn/dns/zone=masterweb.net
+src=$HOME/proj/mwn/dns/zone=masterweb.net
 h=root@23.masterweb.net
 p=/u/mwn/sysetc
 
