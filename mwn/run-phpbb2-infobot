@@ -1,0 +1,18 @@
+#!/usr/bin/perl -w
+
+use autodie;
+use strict;
+use vars qw($log);
+use Log::Any::App qw($log);
+use Proc::PID::File;
+
+if (Proc::PID::File->running(dir=>"$ENV{HOME}/var/run")) {
+    $log->warn("Another instance of $0 already running, exiting ...");
+    exit 0;
+}
+
+while (1) {
+    $log->info("Starting infobot ...");
+    system "phpbb2-infobot";
+    sleep 60;
+}
