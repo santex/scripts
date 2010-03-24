@@ -27,7 +27,7 @@ EOF
 }
 
 my @files;
-if (@ARGV) { @files = @ARGV } else { @files = (<*.ape>, <*.APE>) }
+if (@ARGV) { @files = @ARGV } else { @files = (<*.flac>, <*.FLAC>) }
 
 for my $f (@files) {
   if (-f "$f.mp3") {
