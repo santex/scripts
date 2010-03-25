@@ -128,14 +128,14 @@ my @Responses = (
      handler => sub {
          my (%args) = @_;
          my ($username, $to, $karma) = ($args{cmd}{username}, $args{match}[1], $args{match}[2]);
-         if ($username eq $to) {
+         if ($username eq $to && $karma eq '++') {
              return pick(
                  "yee... ga aci ah say",
                  "yee...",
                  "maaf, tidak diperbolehkan say...",
                  "nunggu dikasih org dong say...",
                  "ferplei dong say...",
-                 "suportip dong say...",
+                 "sportip dong say...",
              );
          }
          my $url = join('',
