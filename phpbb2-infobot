@@ -310,7 +310,7 @@ sub find_new_commands {
     my $now = time;
     while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+)&.+?<span class="postbody">(.*?)</span>!sg) {
         my ($uid, $username, $forum_id, $post_id, $message) = ($1, $2, $3, $4, $5);
-        next unless $message =~ /^$Botname_Regex\s*[:,]?\s*(.*?)(?:[.?!]+)?(?:\015|\012|<br|\z)/;
+        next unless $message =~ /^$Botname_Regex\s*[:,]?\s*(\b.*?)(?:[.?!]+)?(?:\015|\012|<br|\z)/;
         my $raw_command = $1;
         next if $Db->selectrow_array("SELECT id FROM posts WHERE id=$post_id");
         DEBUG "Found new command (post #$post_id): $raw_command (message=$message)";
