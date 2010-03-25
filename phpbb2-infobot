@@ -85,6 +85,19 @@ my @Responses = (
           );
      }},
 
+    {pat => qr/^status(-?(ka)?mu)?$/,
+     name => 'STATUS',
+     handler => sub {
+         pick("single",
+              "masih jomlo nih",
+              "janda beranak satu",
+              "baru putus",
+              "available",
+          ) . "\n\nkidding :)\n\n" .
+              sprintf("Real status: Uptime: %.1f jam, User: %s, PID: %d, Database path: %s",
+                      (time - $^T) / 3600, $ENV{USER}, $$, $App::options{db_path});
+     }},
+
     {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(\d+\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
      name => 'SEARCH IMAGE',
      handler => sub {
@@ -180,9 +193,11 @@ my @Responses = (
      name => 'KARMA GIVING LIST',
      handler => sub {
          my (%args) = @_;
+         my $u = $args{match}[1];
+         $u = $args{cmd}{username} if $u =~ /^(guah?|gw|gueh?|saya|sy|aku|abang)$/i;
          my $url = join('',
                         "$App::options{base_url}/karma.php?mode=list&from=",
-                        uri_escape($args{match}[1]),
+                        uri_escape($u),
                     );
          $Mech->get($url);
          if ($Mech->content =~ /^(.*karma.*:.*)/ms) {
@@ -196,9 +211,11 @@ my @Responses = (
      name => 'KARMA LIST',
      handler => sub {
          my (%args) = @_;
+         my $u = $args{match}[1];
+         $u = $args{cmd}{username} if $u =~ /^(guah?|gw|gueh?|saya|sy|aku|abang)$/i;
          my $url = join('',
                         "$App::options{base_url}/karma.php?mode=list",
-                        ($args{match}[1] ? "&user=".uri_escape($args{match}[1]) : ''),
+                        ($args{match}[1] ? "&user=".uri_escape($u) : ''),
                     );
          $Mech->get($url);
          if ($Mech->content =~ /^(.*karma.*:.*)/ms) {
