@@ -213,7 +213,7 @@ my @Responses = (
      name => 'KARMA LIST',
      handler => sub {
          my (%args) = @_;
-         my $u = $args{match}[1];
+         my $u = $args{match}[1] || "";
          $u = $args{cmd}{username} if $u =~ /^(guah?|gw|gueh?|saya|sy|aku|abang)$/i;
          my $url = join('',
                         "$App::options{base_url}/karma.php?mode=list",
@@ -268,9 +268,7 @@ init_db();
 login();
 while (1) {
     find_new_commands();
-    for (unreplied_commands()) {
-        respond_command($_);
-    }
+    respond_command(unreplied_commands());
     sleep $App::options{delay};
 }
 
@@ -289,20 +287,38 @@ sub init_db {
 }
 
 sub respond_command {
-    my ($cmd) = @_;
-    INFO "Parsing command: $cmd->{raw_command} ...";
-    for my $r (@Responses) {
-        if ($cmd->{raw_command} =~ $r->{pat}) {
-            INFO "Command matches $r->{name}";
-            my $resp = $r->{handler}->(r=>$r, match=>[$0, $1, $2, $3, $4, $5, $6, $7, $8, $9], cmd=>$cmd);
-            forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
-                       bbcode=>1,
-                       message => "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp);
-            $Db->do("UPDATE cmds SET status='replied' WHERE id=?", {}, $cmd->{id});
-            return;
-        }
+    my (@cmds) = @_;
+    return unless @cmds;
+    my %cmds_by_post_id; # key = post_id, val = [cmd, ...]
+    for (@cmds) {
+        $cmds_by_post_id{$_->{post_id}} //= [];
+        push @{ $cmds_by_post_id{$_->{post_id}} }, $_;
     }
-    LOGDIE "Command not handled: $cmd->{raw_command}";
+
+    for my $post_id (keys %cmds_by_post_id) {
+        my $overall_resp = "";
+        my $cmd;
+        for (@{ $cmds_by_post_id{$post_id} }) {
+            $cmd = $_;
+            INFO "Parsing command: $cmd->{raw_command} ...";
+            my $handled;
+            for my $r (@Responses) {
+                if ($cmd->{raw_command} =~ $r->{pat}) {
+                    INFO "Command matches $r->{name}";
+                    my $resp = $r->{handler}->(r=>$r, match=>[$0, $1, $2, $3, $4, $5, $6, $7, $8, $9], cmd=>$cmd);
+                    $overall_resp .= "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp;
+
+                    $Db->do("UPDATE cmds SET status='replied' WHERE id=?", {}, $cmd->{id});
+                    $handled++;
+                    last;
+                }
+            }
+            LOGDIE "Command not handled: $cmd->{raw_command}" unless $handled;
+        }
+        forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
+                   bbcode=>1,
+                   message => $overall_resp);
+    }
 }
 
 sub unreplied_commands {
