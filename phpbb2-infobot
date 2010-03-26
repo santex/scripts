@@ -97,7 +97,7 @@ my @Responses = (
               "available",
           ) . "\n\nkidding :)\n\n" .
               sprintf("Real status: Uptime: %.1f jam, Versi skrip: %s, Host: %s, User: %s, PID: %d, Database path: %s",
-                      (time - $^T) / 3600, $VERSION, $ENV{HOSTNAME}, $ENV{USER}, $$, $App::options{db_path});
+                      (time - $^T) / 3600, $VERSION, ($ENV{HOSTNAME} || "?"), $ENV{USER}, $$, $App::options{db_path});
      }},
 
     {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(\d+\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
@@ -145,7 +145,7 @@ my @Responses = (
                         "&from=".uri_escape($username),
                         "&to=".uri_escape($to),
                         "&reason=".uri_escape($args{match}[3] || ""),
-                        "&ref=".uri_escape("ua=$0, post_id=$args{cmd}{id}, topic_id=$args{cmd}{topic_id}"),
+                        "&ref=".uri_escape("ua=$0, post_id=$args{cmd}{post_id}, topic_id=$args{cmd}{topic_id}"),
                         "&karma=".($karma eq '++' ? 1 : -1),
                     );
          $Mech->get($url);
@@ -276,8 +276,9 @@ while (1) {
 
 sub init_db {
     $Db = DBI->connect("dbi:SQLite:dbname=$App::options{db_path}", "", "", {RaiseError=>1});
-    $Db->do("CREATE TABLE IF NOT EXISTS posts (
-               id INTEGER PRIMARY KEY,
+    $Db->do("CREATE TABLE IF NOT EXISTS cmds (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               post_id INTEGER NOT NULL,
                username TEXT NOT NULL,
                forum_id INTEGER NOT NULL,
                topic_id INTEGER NOT NULL,
@@ -297,7 +298,7 @@ sub respond_command {
             forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
                        bbcode=>1,
                        message => "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp);
-            $Db->do("UPDATE posts SET status='replied' WHERE id=?", {}, $cmd->{id});
+            $Db->do("UPDATE cmds SET status='replied' WHERE id=?", {}, $cmd->{id});
             return;
         }
     }
@@ -306,7 +307,7 @@ sub respond_command {
 
 sub unreplied_commands {
     my @res;
-    my $sth = $Db->prepare("SELECT * FROM posts WHERE status='new' ORDER by ctime");
+    my $sth = $Db->prepare("SELECT * FROM cmds WHERE status='new' ORDER by ctime");
     $sth->execute;
     while (my $row = $sth->fetchrow_hashref) { push @res, $row }
     $sth->finish;
@@ -322,25 +323,47 @@ sub find_new_commands {
                "&search_terms=all&search_forum=-1&search_time=1&search_cat=-1&sort_by=0",
                "&show_results=posts&return_chars=200");
     my $ct = $Mech->content;
-    $ct =~ s/.+>Search found \d+ match(?:es)?<//s or do {
+    $ct =~ s/.+>Search found (\d+) match(?:es)?<//s or do {
         ERROR "Can't parse search result page, skipping";
         return;
     };
     my $now = time;
-    while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+)&.+?<span class="postbody">(.*?)</span>!sg) {
-        my ($uid, $username, $forum_id, $post_id, $message) = ($1, $2, $3, $4, $5);
-        next unless $message =~ /^$Botname_Regex\s*[:,]?\s*(\b.*?)(?:[.?!]+)?(?:\015|\012|<br|\z)/;
-        my $raw_command = $1;
-        next if $Db->selectrow_array("SELECT id FROM posts WHERE id=$post_id");
-        DEBUG "Found new command (post #$post_id): $raw_command (message=$message)";
+    while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+)&!sg) {
+        my ($uid, $username, $forum_id, $post_id) = ($1, $2, $3, $4);
+        next if $Db->selectrow_array("SELECT id FROM cmds WHERE post_id=$post_id");
         $Mech->get("$App::options{base_url}/viewtopic.php?p=$post_id");
         $Mech->content =~ /<a class="maintitle" href="viewtopic.php\?t=(\d+)&/ or do {
             ERROR "Can't get topic ID for post #$post_id, skipped";
             next;
         };
         my $topic_id = $1;
-        $Db->do("INSERT INTO posts (id, ctime, forum_id, topic_id, username, raw_command) VALUES (?, ?, ?, ?, ?, ?)", {},
-                $post_id, $now, $forum_id, $topic_id, $username, $raw_command);
+        $Mech->content =~ m!<a name="$post_id">.+?<span class="postbody">(.+?)</span><span class="gensmall">!s or do {
+            ERROR "Can't grab message body ID for post #$post_id, skipped";
+            next;
+        };
+        my $message = $1;
+        for ($message) {
+            s!<br />!\n!g;
+            s!<td class="quote">.+</td>!!sg;
+            s!\012?\015\012?!\n!g;
+            s!<[^>]+>!!sg;
+        }
+        my @cmds;
+        while ($message =~ /^$Botname_Regex\s*[:,]\s*(\b.*?)(?:[.?!]+)?$/mg) {
+            push @cmds, $1;
+        }
+        @cmds = grep { $_ eq '' || /\w/ } @cmds;
+        next unless @cmds;
+        if (@cmds > 5) {
+            WARN "Too many commands (".scalar(@cmds).", will only process 5";
+            splice @cmds, 5;
+        }
+        DEBUG "Found command(s) in post #$post_id: " . join(", ", map {"'$_'"} @cmds);
+        DEBUG "Message is (quotes cleaned): $message";
+        for (@cmds) {
+            $Db->do("INSERT INTO cmds (post_id, ctime, forum_id, topic_id, username, raw_command) VALUES (?, ?, ?, ?, ?, ?)", {},
+                    $post_id, $now, $forum_id, $topic_id, $username, $_);
+        }
     }
 }
 
