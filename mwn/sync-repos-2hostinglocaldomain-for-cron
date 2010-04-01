@@ -10,3 +10,4 @@ eval `../ssh-existing-agent`
 ./sync-repos_mwn-2hostinglocaldomain
 ./sync-repos_shscripts-2hostinglocaldomain
 ./sync-repos_webdev-2hostinglocaldomain
+./sync-repos_mwn_site-2hostinglocaldomain

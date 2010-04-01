@@ -22,9 +22,25 @@ if ($0 =~ /2home$/) {
     ($src, $dest) = ($dest, $src);
 }
 
+chdir $src;
+my @srcrepos = grep {-d} <*>;
+
 chdir $dest;
-for my $repo (grep {-d} <*>) {
+for my $repo (@srcrepos) {
     INFO "Processing repo `$repo` ...";
+    unless (-d $repo) {
+        if (-e $repo) {
+            FATAL "Repo `$repo` is not a dir? skipped";
+            next;
+        }
+        system "cp -a '$src'/$repo .";
+        if (($? & 255) == 0) {
+            FATAL "Can't successfully copy repo `$repo` from $src";
+        } else {
+            INFO "Repo `$repo` copied";
+        }
+        next;
+    }
     chdir $repo;
     my $output = `LANG=C git pull '$src'/$repo 2>&1`;
     my $exit = $? & 255;
