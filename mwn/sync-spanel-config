@@ -21,3 +21,4 @@ cd $HOME/repo/mwn/spanel-configs
 
 sync-spanel-config-plans $@
 sync-spanel-config-apache2 $@
+sync-spanel-config-sshkey-remotebackup $@
