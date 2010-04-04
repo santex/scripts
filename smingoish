@@ -64,20 +64,21 @@ sub ask_word {
     my $maxguesses = $App::options{maxguesses} || length($w);
     my $j = 0;
     my $correct;
+    my $guessed = substr($w, 0, 1) . ("*" x (length($w)-1));
     print "\nWord $i:\n";
     while ($j <= $maxguesses) {
         $j++;
-        $gw = substr($w, 0, 1);
+        $gw = $guessed;
         if ($j > 1) {
             print $j <= $maxguesses ? "Your guess (".($j-1)."/$maxguesses)? " : "Your last guess? ";
             chomp($gw = <STDIN>);
             unless (is_word($gw)) {
-                show_diff($w, substr($w, 0, 1));
+                show_diff($w, $guessed);
                 print "Sorry, not a word! ";
                 next;
             }
             unless (length($gw) eq length($w)) {
-                show_diff($w, substr($w, 0, 1));
+                show_diff($w, $guessed);
                 print "Sorry, not a ".length($w)."-letter word! ";
                 next;
             }
@@ -89,15 +90,24 @@ sub ask_word {
                 last;
             }
         }
-        show_diff($w, $gw);
+        my $guessed2 = show_diff($w, $gw);
+        $guessed = $guessed2 if num_chars($guessed, '*') > num_chars($guessed2, '*');
     }
     unless ($correct) {
         print "Chances used up. The correct word is: $w\n";
     }
 }
 
+sub num_chars {
+    my ($s, $char) = @_;
+    my $orig = $s;
+    $s =~ s/\Q$char//ig;
+    length($orig) - length($s);
+}
+
 sub show_diff {
     my ($w, $gw) = @_;
+    my $guessed = "";
     #print "diff: $w vs $gw\n";
     $gw = lc($gw);
     my $w2 = $w;
@@ -114,14 +124,18 @@ sub show_diff {
         my $gl = length($gw) > $i ? substr($gw, $i, 1) : "";
         if ($l eq $gl) {
             print "$l ";
+            $guessed .= $l;
         } elsif (length($gl) && $w2 =~ s/\Q$gl//) {
             print "$gl*";
+            $guessed .= "*";
         } else {
             print "_ ";
+            $guessed .= "*";
         }
         print " ";
     }
     #print "\n";
+    $guessed;
 }
 
 sub show_total_score {
