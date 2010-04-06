@@ -9,6 +9,7 @@ use App::Options (
         minlength => { type => 'int', required => 1, default => 5, },
         maxlength => { type => 'int', required => 1, default => 5, },
         maxguesses => { type => 'int', required => 0, },
+        ignorecapwords => { type => 'boolean', required => 1, default => 1, },
         dict => { type => 'string', required => 1, },
         numwords => { type => 'int', required => 1, default => 10, },
     },
@@ -32,6 +33,7 @@ sub read_dict {
     while (<F>) {
         chomp;
         next if /[^A-Za-z]/;
+        next if /[A-Z]/ && $App::options{ignorecapwords};
         push @words, lc;
     }
 }
