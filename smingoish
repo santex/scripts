@@ -77,11 +77,13 @@ sub ask_word {
             unless (is_word($gw)) {
                 show_diff($w, $guessed);
                 print "Sorry, not a word! ";
+                $j--;
                 next;
             }
             unless (length($gw) eq length($w)) {
                 show_diff($w, $guessed);
                 print "Sorry, not a ".length($w)."-letter word! ";
+                $j--;
                 next;
             }
             if (lc($gw) eq $w) {
