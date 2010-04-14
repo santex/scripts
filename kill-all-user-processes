@@ -1,0 +1,23 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $sig = 'TERM';
+if ($ARGV[0] && $ARGV[0] =~ /^-(\d+|\w+)$/) {
+    $sig = $1;
+    shift @ARGV;
+}
+
+if (!@ARGV) {
+    print "Usage: $0 [-SIG] <user>\n";
+    exit;
+}
+my $wanted_user = $ARGV[0];
+
+# kalo nama usernya panjang, kepotong
+for (`ps aux`) {
+    my ($user, $pid) = split /\s+/, $_, 3;
+    next unless $pid =~ /^\d+$/;
+    next unless $user eq $wanted_user;
+    kill $sig => $pid;
+}
