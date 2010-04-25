@@ -4,8 +4,8 @@ use strict;
 use POSIX qw(strftime);
 use App::Options (
     option => {
-        proj_dir => {type=>"string", required=>1, default=>"/home/steven/proj/spanel"},
-        target_dir => {type=>"string", required=>1, default=>"/home/steven/tmp"},
+        proj_dir => {type=>"string", required=>1, default=>"$ENV{HOME}/proj/spanel"},
+        target_dir => {type=>"string", required=>1, default=>"$ENV{HOME}/tmp"},
         history => {type=>"int", required=>0, default=>30},
         branch => "master",
     }

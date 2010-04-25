@@ -3,8 +3,8 @@
 use POSIX qw(strftime);
 
 BEGIN {
-  $PROJ_DIR = "/home/steven/proj/spanel";
-  $TARGET_DIR = "/home/steven/tmp";
+  $PROJ_DIR = "$ENV{HOME}/proj/spanel";
+  $TARGET_DIR = "$ENV{HOME}/tmp";
 }
 
 # ---

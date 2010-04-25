@@ -17,6 +17,9 @@ if (!$day_now or !$mon_now or !$year_now) {
 $ndays_now = calc_ndays($day_now,$mon_now,$year_now);
 @matches = ();
 
+# didisable dulu, kadang2x infinite loop WWW::GI nya, sucks.
+my $GOOGLE_IMAGES = 0;
+
 while (<>) {
   next unless /\S/;
   next if /^[#;]/;
@@ -59,7 +62,7 @@ while (<>) {
               $t eq 'BIRTHDAY' ? "$msg ultah" :
               $msg;
 
-      my $do_gi = $opts->{gi} && ($opts->{gi}{day} == $delta || $t eq 'BIRTHDAY');
+      my $do_gi = $opts->{gi} && ($opts->{gi}{day} == $delta || $t eq 'BIRTHDAY') && $GOOGLE_IMAGES;
       if ($do_gi) {
           my $s = $opts->{gi};
           print "DEBUG: retrieving google images ($s->{q})..." if $debug;
@@ -106,7 +109,7 @@ if ($stdout_instead) {
 sub calc_ndays {
   my ($d,$m,$y)=@_;
   my $c;
-  
+
   $dom[1] = $y%4==0 ? 29:28;
   $c=0;
   for(0..$m-2){$c+=$dom[$_]}
