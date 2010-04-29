@@ -64,7 +64,7 @@ while (<>) {
       if ($do_gi) {
           my $s = $opts->{gi};
           print "DEBUG: retrieving google images ($s->{q})..." if $debug;
-          my $res = REST::Google::Search::Images->search(
+          my $res = REST::Google::Search::Images->new(
               q => $s->{q},
               #min_size => ($s->{min_size} || 25),
               #max_size => ($s->{max_size} || 150),
