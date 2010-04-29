@@ -13,12 +13,12 @@ use DBI;
 use Data::Dumper;
 use File::Slurp;
 use List::Util qw(shuffle);
-use Log::Log4perl qw(:easy);
+use Log::Any::App '$log';
 use URI::Escape;
 use WWW::Google::Images;
 use WWW::Mechanize;
 
-our $VERSION = '0.1003261';
+our $VERSION = '0.100429a';
 
 use App::Options (
     option => {
@@ -45,7 +45,7 @@ my $Db;
 
 my $Botname_Regex = join "|", split /,\s*/, $App::options{botname};
 $Botname_Regex = qr/(?:$Botname_Regex)/i;
-DEBUG "Botname_Regex=$Botname_Regex";
+$log->debug("Botname_Regex=$Botname_Regex");
 
 my @Responses = (
 
@@ -248,21 +248,7 @@ my @Responses = (
      }},
 );
 
-if ( $App::options{log_level} eq 'FATAL' ) {
-    Log::Log4perl->easy_init($FATAL);
-}
-elsif ( $App::options{log_level} eq 'ERROR' ) {
-    Log::Log4perl->easy_init($ERROR);
-}
-elsif ( $App::options{log_level} eq 'WARN' ) {
-    Log::Log4perl->easy_init($WARN);
-}
-elsif ( $App::options{log_level} eq 'INFO' ) {
-    Log::Log4perl->easy_init($INFO);
-}
-else { Log::Log4perl->easy_init($DEBUG) }
-
-INFO "Starting infobot $App::options{botname} ...";
+$log->info("Starting infobot $App::options{botname} ...");
 
 init_db();
 login();
@@ -300,11 +286,11 @@ sub respond_command {
         my $cmd;
         for (@{ $cmds_by_post_id{$post_id} }) {
             $cmd = $_;
-            INFO "Parsing command: $cmd->{raw_command} ...";
+            $log->info("Parsing command: $cmd->{raw_command} ...");
             my $handled;
             for my $r (@Responses) {
                 if ($cmd->{raw_command} =~ $r->{pat}) {
-                    INFO "Command matches $r->{name}";
+                    $log->info("Command matches $r->{name}");
                     my $resp = $r->{handler}->(r=>$r, match=>[$0, $1, $2, $3, $4, $5, $6, $7, $8, $9], cmd=>$cmd);
                     $overall_resp .= "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp;
 
@@ -313,7 +299,7 @@ sub respond_command {
                     last;
                 }
             }
-            LOGDIE "Command not handled: $cmd->{raw_command}" unless $handled;
+            do { $log->fatal("Command not handled: $cmd->{raw_command}"); die } unless $handled;
         }
         forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
                    bbcode=>1,
@@ -340,7 +326,7 @@ sub find_new_commands {
                "&show_results=posts&return_chars=200");
     my $ct = $Mech->content;
     $ct =~ s/.+>Search found (\d+) match(?:es)?<//s or do {
-        ERROR "Can't parse search result page, skipping";
+        $log->error("Can't parse search result page, skipping");
         return;
     };
     my $now = time;
@@ -349,12 +335,12 @@ sub find_new_commands {
         next if $Db->selectrow_array("SELECT id FROM cmds WHERE post_id=$post_id");
         $Mech->get("$App::options{base_url}/viewtopic.php?p=$post_id");
         $Mech->content =~ /<a class="maintitle" href="viewtopic.php\?t=(\d+)&/ or do {
-            ERROR "Can't get topic ID for post #$post_id, skipped";
+            $log->error("Can't get topic ID for post #$post_id, skipped");
             next;
         };
         my $topic_id = $1;
         $Mech->content =~ m!<a name="$post_id">.+?<span class="postbody">(.+?)</span><span class="gensmall">!s or do {
-            ERROR "Can't grab message body ID for post #$post_id, skipped";
+            $log->error("Can't grab message body ID for post #$post_id, skipped");
             next;
         };
         my $message = $1;
@@ -371,11 +357,11 @@ sub find_new_commands {
         @cmds = grep { $_ eq '' || /\w/ } @cmds;
         next unless @cmds;
         if (@cmds > 5) {
-            WARN "Too many commands (".scalar(@cmds).", will only process 5";
+            $log->warn("Too many commands (".scalar(@cmds).", will only process 5");
             splice @cmds, 5;
         }
-        DEBUG "Found command(s) in post #$post_id: " . join(", ", map {"'$_'"} @cmds);
-        DEBUG "Message is (quotes cleaned): $message";
+        $log->debugf("Found command(s) in post #$post_id: %s", \@cmds);
+        $log->debug("Message is (quotes cleaned): $message");
         for (@cmds) {
             $Db->do("INSERT INTO cmds (post_id, ctime, forum_id, topic_id, username, raw_command) VALUES (?, ?, ?, ?, ?, ?)", {},
                     $post_id, $now, $forum_id, $topic_id, $username, $_);
@@ -384,7 +370,7 @@ sub find_new_commands {
 }
 
 sub login {
-    INFO "Logging in to forum $App::options{base_url} ...";
+    $log->info("Logging in to forum $App::options{base_url} ...");
     $Mech->get("$App::options{base_url}/login.php");
     $Mech->submit_form(
         form_number => 1,
@@ -400,7 +386,7 @@ sub login {
 sub forum_post {
     my (%args) = @_;
 
-    INFO "Posting to forum (forum #$args{forum_id}".($args{topic_id} ? ", topic #$args{topic_id}" : "").") ...";
+    $log->info("Posting to forum (forum #$args{forum_id}".($args{topic_id} ? ", topic #$args{topic_id}" : "").") ...");
 
     # get new posting form
     $Mech->get(
@@ -413,7 +399,7 @@ sub forum_post {
         $args{message} =~ s!\bhttp(s?)://!hxxp$1://!ig;
     }
 
-    #DEBUG "posting = $posting";
+    #$log->debug("posting = $posting");
     $Mech->submit_form(
         form_number => 1,
         fields      => {
@@ -429,7 +415,7 @@ sub forum_post {
     #print $Mech->content;
 
     unless ( $Mech->content =~ /successfully/i ) {
-        ERROR "Failed posting!";
+        $log->error("Failed posting!");
     }
     sleep $App::options{post_delay};
 }
