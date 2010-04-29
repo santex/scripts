@@ -17,6 +17,7 @@ $ndays_now = calc_ndays($day_now,$mon_now,$year_now);
 
 # didisable dulu, kadang2x infinite loop WWW::GI nya, sucks.
 my $GOOGLE_IMAGES = 1;
+REST::Google::Search::Images->http_referer('http://example.com');
 
 while (<>) {
   next unless /\S/;

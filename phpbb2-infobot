@@ -42,6 +42,8 @@ use App::Options (
 my $Mech = new WWW::Mechanize;
 my $Db;
 
+REST::Google::Search::Images->http_referer('http://example.com');
+
 my $Botname_Regex = join "|", split /,\s*/, $App::options{botname};
 $Botname_Regex = qr/(?:$Botname_Regex)/i;
 $log->debug("Botname_Regex=$Botname_Regex");
