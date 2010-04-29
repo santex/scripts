@@ -15,7 +15,7 @@ use File::Slurp;
 use List::Util qw(shuffle);
 use Log::Any::App '$log';
 use URI::Escape;
-use WWW::Google::Images;
+use REST::Google::Search::Images;
 use WWW::Mechanize;
 
 our $VERSION = '0.100429a';
@@ -40,7 +40,6 @@ use App::Options (
 );
 
 my $Mech = new WWW::Mechanize;
-my $GI = new WWW::Google::Images;
 my $Db;
 
 my $Botname_Regex = join "|", split /,\s*/, $App::options{botname};
@@ -106,16 +105,20 @@ my @Responses = (
          my (%args) = @_;
          my $res;
          eval {
-             $res = $GI->search($args{match}[2],
-                                min_size => 25,
-                                max_size => 150,
-                                limit => 10,
-                            );
+             $res = REST::Google::Search::Images->new(
+                 q => $args{match}[2],
+                 #min_size => 25,
+                 #max_size => 150,
+                 #limit => 10,
+             );
          };
          if ($@) { return "lagi gak bisa ngakses gugel imejes nih kayaknya han ..." }
-         my @im;
-         while (my $im = $res->next) { $im = $im->content_url; push @im, $im unless $im =~ /[%?]/ } # phpbb2 sucks!
-         @im = shuffle @im;
+         if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ..." }
+         my @im = shuffle @{ $res->responseData->results };
+         if (!@im) { return "gugel imejes gak punya gambar itu tuh han ..." }
+         for (@im) { $_ = $_->{url} }
+         @im = grep { !/[%?]/ } @im; # phpbb2 sucks!
+         if (!@im) { return "gak nemu imejes yang layak tayang di phpbb2 nih han ..." }
          my $n = $args{match}[1] || 1;
          splice @im, $n;
          if (@im) {

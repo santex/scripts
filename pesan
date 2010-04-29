@@ -5,10 +5,8 @@ $stdout_instead = 1;
 #($day_now,$mon_now,$year_now)=(29,3,2003);
 
 use Mail::Sendmail;
-use WWW::Google::Images;
+use REST::Google::Search::Images;
 use YAML::Syck;
-
-my $gi;
 
 @dom = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
 if (!$day_now or !$mon_now or !$year_now) {
@@ -18,7 +16,7 @@ $ndays_now = calc_ndays($day_now,$mon_now,$year_now);
 @matches = ();
 
 # didisable dulu, kadang2x infinite loop WWW::GI nya, sucks.
-my $GOOGLE_IMAGES = 0;
+my $GOOGLE_IMAGES = 1;
 
 while (<>) {
   next unless /\S/;
@@ -66,18 +64,20 @@ while (<>) {
       if ($do_gi) {
           my $s = $opts->{gi};
           print "DEBUG: retrieving google images ($s->{q})..." if $debug;
-          $gi ||= new WWW::Google::Images;
-          my $res = $gi->search($s->{q},
-                                min_size => ($s->{min_size} || 25),
-                                max_size => ($s->{max_size} || 150),
-                                limit => ($s->{limit} || 10),
-                            );
-          my @im;
-          while (my $im = $res->next) { $im = $im->content_url; push @im, $im unless $im =~ /[%?]/ } # phpbb2 sucks!
+          my $res = REST::Google::Search::Images->search(
+              q => $s->{q},
+              #min_size => ($s->{min_size} || 25),
+              #max_size => ($s->{max_size} || 150),
+              #limit => ($s->{limit} || 10),
+          );
+          if ($res->responseStatus != 200) {
+              $msg_opt .= "(can't query google images for query `$s->{q}`: ".$res->responseStatus.")";
+          }
+          my @im = map { $_->{url} } @{ $res->responseData->results };
           if (@im) {
               $msg_opt .= "[img]".$im[rand @im]."[/img]";
           } else {
-              $msg_opt .= "(got no suitable results from google images)";
+              $msg_opt .= "(no images returned by google images for query `$s->{q}`)";
           }
       }
 
