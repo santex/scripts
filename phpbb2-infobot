@@ -149,6 +149,7 @@ my @Responses = (
              );
          }
          my $reason = $args{match}[3] || "";
+         if (!$reason) { return "alasannya dong han..." }
          my $time = time;
          my $url = join('',
                         "$App::options{base_url}/karma.php?mode=give",
