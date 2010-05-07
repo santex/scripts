@@ -17,6 +17,7 @@ use Log::Any::App '$log';
 use URI::Escape;
 use REST::Google::Search::Images;
 use WWW::Mechanize;
+use Digest::MD5 qw(md5_hex);
 
 our $VERSION = '0.100429a';
 
@@ -25,6 +26,8 @@ use App::Options (
         # general settings
         profile => { type => 'string', required => 0, default => 'default', },
         log_level => { type => 'string', required => 0, default => 'DEBUG' },
+
+        secret_key => { type => 'string', required => 0, },
 
         # forum settings
         username => { type => 'string', required => 1, },
@@ -145,12 +148,16 @@ my @Responses = (
                  "sportip dong say...",
              );
          }
+         my $reason = $args{match}[3] || "";
+         my $time = time;
          my $url = join('',
                         "$App::options{base_url}/karma.php?mode=give",
                         "&from=".uri_escape($username),
                         "&to=".uri_escape($to),
-                        "&reason=".uri_escape($args{match}[3] || ""),
+                        "&reason=".uri_escape($reason),
                         "&ref=".uri_escape("ua=$0, post_id=$args{cmd}{post_id}, topic_id=$args{cmd}{topic_id}"),
+                        "&time=$time",
+                        ($App::options{secret_key} ? "&hash=".md5_hex("$App::options{secret_key}|$username|$to|$reason|$time") : ""),
                         "&karma=".($karma eq '++' ? 1 : -1),
                     );
          $Mech->get($url);
