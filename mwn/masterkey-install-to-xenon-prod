@@ -8,6 +8,7 @@ rsync -e ssh -Pavz \
   mwnwhmcs@xenon:
 
 ssh mwnwhmcs@xenon masterkey/bin/masterkey-install \
+  --site mwn \
   --branch prod \
   --source /home/mwnwhmcs/masterkey \
   --target /s/masterkey.masterweb.net/www/ \
@@ -29,6 +30,6 @@ ssh root@xenon \
    --include "- *" \
    /s/masterkey.masterweb.net/www/ /usr/local/masterkey/;
  rsync -av /s/masterkey.masterweb.net/etc/configuration.php /usr/local/masterkey/; # 2009-04-01 - 2 minggu lalu demi security gw memindahkan DOCROOT/configuration.php yg berisi password internet banking dll jadi symlink ke ../etc/.
-   
+
 '
 

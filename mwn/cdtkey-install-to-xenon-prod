@@ -8,6 +8,7 @@ rsync -e ssh -Pavz \
   cdt@xenon:
 
 ssh cdt@xenon masterkey/bin/masterkey-install \
+  --site cdt \
   --branch cdtprod \
   --source /home/cdt/masterkey \
   --target /s/client.cyberdata.co.id/www/ \

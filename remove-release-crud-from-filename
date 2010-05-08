@@ -27,23 +27,23 @@ www.dream2008.cn@
 www.uubird.com-youyouniaoyingshiluntan-
 [dianyingtiantangwww.dygod.cn]
 [www.ppnow.com]
-[#aznmp3] 
+[#aznmp3]
 
 ysdg-xvid-
 [www.arableland.com]
-^mininova.org^' 
+^mininova.org^'
  -[mininova.org]-
 -[mininova.org]-
-=mininova.org= 
-^mininova.org^ 
-b-mininova.org-d 
+=mininova.org=
+^mininova.org^
+b-mininova.org-d
 -mininova.org-_
 _-mininova.org-_
--~mininova.org~- 
-+-mininova.org-+ 
-_mininova.org_- 
+-~mininova.org~-
++-mininova.org-+
+_mininova.org_-
 
-[isoHunt] 
+[isoHunt]
 _bbs.cnxp.com_._.
 _bbs.cnxp.com_._r.
 _www.cnxp.com_._.
@@ -54,7 +54,7 @@ www.torrent.to...
 www.d-p-t.dl.am...
 [LonE]_
 [LonE]
-XXX artinya various artists - VA - 
+XXX artinya various artists - VA -
 XXX artinya various artists - VA-
 IMAX.
 HDTV.
@@ -65,6 +65,7 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.dsr.xvid-shotv
 .WS.PDTV.XviD-FQM
 .pdtv.xvid-aaf
 .pdtv.xvid-ingot
