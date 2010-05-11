@@ -1,0 +1,8 @@
+#!/bin/bash
+sshfs s1@builder:/ /media/builder
+
+# sucky eee's eth. di sekitar 11MB pasti putus dulu. tapi kalo udah
+# gagal sekali, biasanya jadi sukses. jadi kita pancing dulu aja
+# gagalnya sekali di sini. opera=18M
+rsync -Pavz s1@builder:/usr/lib/opera/opera /tmp/
+rm -f /tmp/opera
