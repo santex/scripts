@@ -1,2 +1,0 @@
-#!/bin/bash
-perlrename -e 'use Text::Unaccent; $_=unac_string("utf8", $_)' "$@"

@@ -1,3 +1,3 @@
 #!/bin/bash
-deploy-spanel --all --has mwn --has hosting --has hosting-plan:vps --lack intranet --lack demo --lack NOT-YET "$@"
+time deploy-spanel --all --has mwn --has hosting --has hosting-plan:vps --lack intranet --lack demo --lack NOT-YET "$@"
 

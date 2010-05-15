@@ -1,2 +1,0 @@
-#!/bin/bash
-perlrename -e 'use Lingua::Han::PinYin; $h||=Lingua::Han::PinYin->new; $_=$h->han2pinyin($_)' "$@"

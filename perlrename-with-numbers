@@ -1,6 +1,0 @@
-#!/bin/bash
-perlrename -e '$i||=0; $i++ unless $TESTING;
-  /.+\.(.+)/; $ext=$1;
-  $ndig = @ARGV >= 1000 ? 4 : @ARGV >= 100 ? 3 : @ARGV >= 10 ? 2 : 1;
-  $_ = sprintf "%0${ndig}d%s", $i, (defined($ext) ? ".$ext" : "");' \
-  "$@"
