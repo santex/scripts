@@ -25,7 +25,7 @@ unless ($App::options{nocheck}) {
 
 INFO "Searching for backup media ...";
 my $mp;
-unless (($mp) = `LANG=C mount` =~ m! on (/media/cruzer0?)!m) { LOGDIE "Can't find mounted backup media" }
+unless (($mp) = `LANG=C mount` =~ m! on (/media/(?:cruzer0?|b92c91cb-7f29-4b36-9f31-90bab7db0583))!m) { LOGDIE "Can't find mounted backup media" }
 
 unless ($App::options{norsync}) {
     INFO "Doing backup ...";
