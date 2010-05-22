@@ -46,6 +46,9 @@ for my $repo (@srcrepos) {
     my $exit = $? & 255;
     if ($exit == 0 && $output =~ /Already up-to-date/) {
         DEBUG "Repo `$repo` is up to date, nothing to do";
+    } elsif ($output =~ /^error: (.+)/m) {
+        FATAL "Can't successfully pull: $1";
+        die;
     } elsif ($exit == 0 && $output =~ /^Updating |^Merge made by recursive/m) {
         INFO "Repo `$repo` updated";
     } else {
