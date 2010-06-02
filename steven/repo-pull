@@ -42,7 +42,7 @@ for my $repo (@srcrepos) {
         next;
     }
     chdir $repo;
-    my $output = `LANG=C git pull '$src'/$repo 2>&1`;
+    my $output = `LANG=C git pull '$src'/$repo master 2>&1`;
     my $exit = $? & 255;
     if ($exit == 0 && $output =~ /Already up-to-date/) {
         DEBUG "Repo `$repo` is up to date, nothing to do";
