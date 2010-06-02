@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+use Module::CoreList;
+for (@ARGV) {
+    my $v = Module::CoreList->first_release($_);
+    if ($v) {
+        print "$_: in core since Perl $v\n";
+    } else {
+        print "$_: NOT in core\n";
+    }
+}
