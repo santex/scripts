@@ -17,8 +17,9 @@ use File::HomeDir;
 use File::Path;
 use File::Slurp;
 use Finance::Bank::ID::BCA;
-use Log::Dispatch::Dir;
 use Log::Log4perl;
+use Log::Dispatch::Dir;
+use Log::Any;
 use Log::Any::Adapter;
 use YAML;
 
@@ -47,7 +48,7 @@ die "Can't create log_dir `$App::options{log_dir}'"   unless (-d $App::options{l
 
 mkpath("$App::options{log_dir}/dumps")                unless (-d "$App::options{log_dir}/dumps");
 die "Can't create `$App::options{log_dir}'/dumps"     unless (-d "$App::options{log_dir}/dumps");    
-    
+
 
 my $log_config = <<_;
 log4perl.logger.Messages=$level, SCREEN, LOGFILE
@@ -77,7 +78,7 @@ my $ibank = Finance::Bank::ID::BCA->new(
     username    => $App::options{username},
     password    => $App::options{password},
     logger      => $log,
-    logger_dump => Log::Any->get_logger(category => "Dumps")
+    logger_dump => Log::Any->get_logger(category => "Dumps"),
 );
 
 eval {
@@ -94,21 +95,21 @@ eval {
         $stmt->{start_date}->ymd,
         $stmt->{end_date}->ymd;
     $log->info("Writing statements to YAML file `$filename' ...");
-    
+
     # stringify DateTime objects so dump becomes simpler and shorter
     $stmt->{start_date} = $stmt->{start_date}->ymd;
     $stmt->{end_date} = $stmt->{end_date}->ymd;
     for (@{ $stmt->{transactions} }) {
         $_->{date} = $_->{date}->ymd;
     }
-    
+
     write_file($filename, Dump($stmt));
 };
 
 if ($@) {
     $log->error("die: $@");
 }
-    
+
 # no matter what, try to logout so we're not locked out for 10 minutes, annoying
 eval { $ibank->logout; };
 
