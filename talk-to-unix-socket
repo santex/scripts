@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use IO::Select;
 use IO::Socket::UNIX;
 use Getopt::Long;
 use Log::Log4perl qw(:easy);
@@ -17,22 +18,21 @@ my $path = $ARGV[0];
 my $sock = new IO::Socket::UNIX(Type=>SOCK_STREAM, Peer=>$path);
 if (!$sock) { FATAL "Can't bind to socket $path: $@"; exit 1 }
 
-print "Commands: s=send a line, r=read a line, q=quit\n\n";
+my $sel = new IO::Select($sock);
 
-for (;;) {
-  print "command> ";
-  my $cmd = <STDIN>; chomp($cmd);
-  if ($cmd eq 'q') {
-    exit;
-  } elsif ($cmd eq 'r') {
-    my $reply = <$sock>;
-    print "recv> $reply";
-  } elsif ($cmd eq 's') {
-    print "send> ";
+while (1) {
+    while (1) {
+        my @ready = $sel->can_read(0.1);
+        if (@ready) {
+            my $reply = <$sock>;
+            print $reply;
+        } else {
+            last;
+        }
+    }
+    exit if !defined($sock); # sock is closed
+    print "> ";
     my $line = <STDIN>;
     $sock->print($line);
-  } else {
-    ERROR "Invalid command";
-  }
 }
 
