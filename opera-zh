@@ -1,6 +1,0 @@
-#!/bin/sh
-source set-zh
-exec opera
-
-
-
