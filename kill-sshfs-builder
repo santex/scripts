@@ -1,0 +1,3 @@
+#!/bin/bash
+killall -9 ssh sshfs
+fusermount -u /media/builder
