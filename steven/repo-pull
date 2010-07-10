@@ -16,6 +16,8 @@ if ($0 =~ /[2-]builder/) {
     $dest = "$ENV{HOME}/he/repo";
 } elsif ($0 =~ /[2-]capuchin/) {
     $dest = "$ENV{HOME}/hc/repo";
+} elsif ($0 =~ /[2-]backpacker/) {
+    $dest = "$ENV{HOME}/repo-backpacker";
 }
 
 if ($0 =~ /2home$/) {
