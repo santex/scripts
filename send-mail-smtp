@@ -16,29 +16,55 @@ $message_file = undef;
 $message = "This is the default message.\n";
 $from = undef;
 $smtp = "localhost";
+$repeat_message = 1;
 $n = 1;
 @to = ();
 $raw_session_file = undef;
+$help = 0;
 
 GetOptions(
   "subject=s" => \$subject,
   "from=s" => \$from,
   "message=s" => \$message,
+  "repeat-message=i" => \$repeat_message, # a quick way to send a large body, by duplicating message N times
   "message-file=s" => \$message_file,
   "smtp=s" => \$smtp,
   'to=s' => \@to,
   'n=i' => \$n,
   'raw-session=s' => \$raw_session,
   'raw-session-file=s' => \$raw_session_file,
+  'help' => \$help,
 );
 
-%args = (); 
+if ($help) {
+print <<_;
+$0 - send email via SMTP (using Mail::SendMail or raw socket)
+
+Options:
+  --subject=SUBJECT   [required]
+  --from=SENDER       [required]
+  --message=STRING    [required, unless --message-file is specified]
+  --repeat-message=N  You can send a large body by repeating the message N
+                        times. Default is 1 (no repeat).
+  --message-file=FILENAME
+  --smtp=HOST         [required]
+  --to=RECIPIENT      [required]
+  --n=N               Send N times (separate SMTP session), default is 1.
+  --raw-session=STRING
+                      Send STRING as-is to SMTP server session.
+  --raw-session-file=FILENAME
+                      Send content of FILENAME as-is to SMTP server session.
+_
+exit 0;
+}
+
+%args = ();
 $args{subject} = $subject;
 $args{smtp} = $smtp;
 if ($message_file) {
   $args{message} = read_file $message_file;
 } else {
-  $args{message} = $message;
+  $args{message} = $message x $repeat_message;
 }
 $args{from} = $args{"return-path"} = $from if defined $from;
 $args{to} = join ", ",@to if @to;
