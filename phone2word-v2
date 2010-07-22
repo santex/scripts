@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+# versi yang menggunakan regex, terinspirasi posting blog Beautiful Perl:
+# http://transfixedbutnotdead.com/2010/07/16/beautiful-perl/
+
+use strict;
+use warnings;
+use File::Slurp;
+
+my @dictfiles = qw(
+/usr/share/dict/words
+);
+
+my %dig2re = (
+    2 => '[ABCabc]',
+    3 => '[DEFdef]',
+    4 => '[GHIghi]',
+    5 => '[JKLjkl]',
+    6 => '[MNOmno]',
+    7 => '[PQRSpqrs]',
+    8 => '[TUVtuv]',
+    9 => '[WXYZwxyz]',
+);
+
+my $wordlist = join("\n", map {read_file($_)} grep {!/#/} @dictfiles);
+
+for (@ARGV) {
+    s/\D++//g;
+    do { warn "$0: invalid number `$_', skipped\n"; next } unless /^[2-9]+$/;
+    my $re = $_; $re =~ s/(\d)/$dig2re{$1}/g; $re = qr/^$re$/m;
+    print "$_ = $1\n" while $wordlist =~ /($re)/g;
+}
