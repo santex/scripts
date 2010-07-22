@@ -13,6 +13,6 @@ if (Proc::PID::File->running(dir=>"$ENV{HOME}/var/run")) {
 
 while (1) {
     $log->info("Starting infobot ...");
-    system "phpbb2-infobot";
+    system "ulimit -v 200000; phpbb2-infobot";
     sleep 60;
 }
