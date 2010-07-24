@@ -38,6 +38,6 @@ unlink (splice @d, 0, $App::options{history});
 system qq(git archive --prefix=$targetn/ $App::options{branch}\@{HEAD} | gzip -c >$targetp.tar.gz);
 system qq(ls -l $targetp.tar.gz);
 
-# point spanel-latest to the latest tarball.
-unlink "$App::options{target_dir}/spanel-latest.tar.gz";
-symlink "$targetn.tar.gz", "$App::options{target_dir}/spanel-latest.tar.gz";
+# point spanel-latest_dev to the latest tarball.
+unlink "$App::options{target_dir}/spanel-latest_dev.tar.gz";
+symlink "$targetn.tar.gz", "$App::options{target_dir}/spanel-latest_dev.tar.gz";
