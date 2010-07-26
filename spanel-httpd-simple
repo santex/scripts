@@ -7,20 +7,39 @@
 # user (by editing /etc/passwd and just copying my user's line to spanel-cgi user
 #
 
+use 5.010;
 use warnings;
 use strict;
 
 package Spanel::HTTPD::Simple;
+use Capture::Tiny qw(capture);
+use Data::Dump qw(dump);
+use FileHandle;
 use File::Slurp;
 use HTTP::Server::Simple::CGI;
+#use IPC::Open2; # yes, can't catch stderr with this, but it's simpler to use
 use String::ShellQuote;
 use base qw(HTTP::Server::Simple::CGI);
 
 sub handle_request {
     my ($self, $cgi) = @_;
 
-    my $path = "/c/www" . $cgi->path_info();
+    my $path = $cgi->path_info();
     # XXX check attempt to go outside of docroot
+
+    if ($path =~ m!^/debug!) {
+        print "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n";
+        print "\$self: ", dump($self), "\n\n";
+        print "\$cgi: ", dump($cgi), "\n\n";
+        print "\$self->{_r}: ", dump($self->{_r}), "\n\n";
+        return;
+    }
+
+    if ($path =~ m!^/webapps/!) {
+        $path = "/c$path";
+    } else {
+        $path = "/c/www$path";
+    }
 
     if (!(-e $path)) {
         print "HTTP/1.0 404 Not found\r\n\r\nNot found";
@@ -29,8 +48,10 @@ sub handle_request {
         print "HTTP/1.0 403 OK\r\n\r\nDirectory Viewing Not Allowed";
 
     } elsif ($path =~ /\.(html|php)$/) {
-        # a php script
-        print "HTTP/1.0 200 OK\r\n\r\nPHP script";
+        $self->handle_php(cgi => $cgi, path => $path);
+
+    } elsif ($path =~ /\.(cgi)$/) {
+        $self->handle_cgi(cgi => $cgi, path => $path);
 
     } else {
         my $cmd = "file --mime-type ".shell_quote($path);
@@ -41,6 +62,60 @@ sub handle_request {
         print "\r\n";
         print read_file($path);
     }
+}
+
+sub setup {
+    my ($self, %args) = @_;
+    $self->{_r} //= {};
+    $self->{_r}{$_} = $args{$_} for keys %args;
+    $self->SUPER::setup(%args);
+}
+
+sub handle_php {
+    my ($self, %args) = @_;
+    $self->handle_cgi(%args, interpreter=>"/usr/bin/php");
+}
+
+sub handle_cgi {
+    my ($self, %args) = @_;
+    my $cgi = $args{cgi};
+    my $path = $args{path};
+
+    $ENV{REQUEST_METHOD} = $self->{_r}{method};
+    $ENV{REQUEST_URI} = $self->{_r}{request_uri};
+    $ENV{QUERY_STRING} = $self->{_r}{query_string};
+    $ENV{SERVER_PROTOCOL} = $self->{_r}{protocol};
+    $ENV{SERVER_ADDR} = "127.0.0.1";
+    $ENV{SERVER_PORT} = $self->port;
+    $ENV{SERVER_NAME} = $0;
+    $ENV{REMOTE_ADDR} = $self->{_r}{peeraddr};
+    $ENV{REMOTE_HOST} = $self->{_r}{peername};
+    $ENV{REMOTE_PORT} = $self->{_r}{peerport};
+    $ENV{PATH_INFO} = $cgi->path_info;
+
+    my @cmd;
+    push @cmd, $args{interpreter} if $args{interpreter};
+    push @cmd, shell_quote($path);
+    my ($chld_out, $chld_in);
+
+    my ($stdout, $stderr);
+    #open2 -> gagal capture
+    #open CGI, "| ".join(" ", @cmd) + capture::tiny -> gagal capture
+    #system join(" ", @cmd) + capture::tiny -> gagal capture
+    # wtf? gw terpaksa pake qx, tapi
+    my $cmd = join(" ", @cmd);
+    $stdout = `$cmd`;
+
+        if ($self->{_r}{method} eq 'POST') {
+            # print to child's input
+        }
+
+        # XXX parse Location & Status, and change http status accordingly
+
+
+    $self->stdout_handle->print("HTTP/1.0 200 OK\r\n\r\n");
+    $self->stdio_handle->print($stdout);
+
 }
 
 package main;
