@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+# used to run Spanel web interface (for development only!) on my PC without
+# installing the whole Spanel. Currently also need these tricks to run:
+#
+# 1. I symlink /c to my Spanel repo, so I created spanel-cgi as a clone of my
+# user (by editing /etc/passwd and just copying my user's line to spanel-cgi user
+#
+
+use warnings;
+use strict;
+
+package Spanel::HTTPD::Simple;
+use File::Slurp;
+use HTTP::Server::Simple::CGI;
+use String::ShellQuote;
+use base qw(HTTP::Server::Simple::CGI);
+
+sub handle_request {
+    my ($self, $cgi) = @_;
+
+    my $path = "/c/www" . $cgi->path_info();
+    # XXX check attempt to go outside of docroot
+
+    if (!(-e $path)) {
+        print "HTTP/1.0 404 Not found\r\n\r\nNot found";
+
+    } elsif (-d $path) {
+        print "HTTP/1.0 403 OK\r\n\r\nDirectory Viewing Not Allowed";
+
+    } elsif ($path =~ /\.(html|php)$/) {
+        # a php script
+        print "HTTP/1.0 200 OK\r\n\r\nPHP script";
+
+    } else {
+        my $cmd = "file --mime-type ".shell_quote($path);
+        my ($mime) = `$cmd` =~ /.+: (.+)/;
+        print "HTTP/1.0 200 OK\r\n";
+        print "Content-Length: ", (-s $path), "\r\n";
+        print "Content-Type: $mime\r\n";
+        print "\r\n";
+        print read_file($path);
+    }
+}
+
+package main;
+
+my $server = Spanel::HTTPD::Simple->new(80);
+$server->run;
+
+1;
