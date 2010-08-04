@@ -16,18 +16,22 @@ use Capture::Tiny qw(capture);
 use Data::Dump qw(dump);
 use FileHandle;
 use File::Slurp;
+use HTML::Entities qw(encode_entities);
 use HTTP::Server::Simple::CGI;
-#use IPC::Open2; # yes, can't catch stderr with this, but it's simpler to use
+use IPC::Open2; # yes, can't catch stderr with this, but it's simpler to use
 use String::ShellQuote;
+use URI::Escape;
 use base qw(HTTP::Server::Simple::CGI);
 
 sub handle_request {
     my ($self, $cgi) = @_;
 
-    my $path = $cgi->path_info();
+    my $uripath = $cgi->path_info();
+    my $pathinfo;
+    my $docroot;
     # XXX check attempt to go outside of docroot
 
-    if ($path =~ m!^/debug!) {
+    if ($uripath =~ m!^/debug!) {
         print "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n";
         print "\$self: ", dump($self), "\n\n";
         print "\$cgi: ", dump($cgi), "\n\n";
@@ -35,32 +39,42 @@ sub handle_request {
         return;
     }
 
-    if ($path =~ m!^/webapps/!) {
-        $path = "/c$path";
+    if ($uripath =~ m!^/webapps/!) {
+        $docroot = "/c";
     } else {
-        $path = "/c/www$path";
+        $docroot = "/c/www";
     }
 
-    if (!(-e $path)) {
-        print "HTTP/1.0 404 Not found\r\n\r\nNot found";
-
-    } elsif (-d $path) {
-        print "HTTP/1.0 403 OK\r\n\r\nDirectory Viewing Not Allowed";
-
-    } elsif ($path =~ /\.(html|php)$/) {
-        $self->handle_php(cgi => $cgi, path => $path);
-
-    } elsif ($path =~ /\.(cgi)$/) {
-        $self->handle_cgi(cgi => $cgi, path => $path);
-
-    } else {
-        my $cmd = "file --mime-type ".shell_quote($path);
-        my ($mime) = `$cmd` =~ /.+: (.+)/;
-        print "HTTP/1.0 200 OK\r\n";
-        print "Content-Length: ", (-s $path), "\r\n";
-        print "Content-Type: $mime\r\n";
-        print "\r\n";
-        print read_file($path);
+    my $path = $docroot;
+    my @pe = (grep {length} split m!/+!, $uripath);
+    @pe = ("") if !@pe;
+    my $pe;
+    while (defined($pe = shift @pe)) {
+        $path .= (length($pe) ? "/" : "") . $pe;
+        if (!(-e $path)) {
+            print "HTTP/1.0 404 Not found\r\n\r\nNot found";
+            return;
+        } elsif (-d $path) {
+            next;
+        } elsif (-f $path) {
+            $pathinfo = substr($uripath, length($path));
+            if ($path =~ /\.(html|php)$/) {
+                $self->handle_php(cgi => $cgi, uripath=>$uripath,
+                                  path=>$path, pathinfo => $pathinfo);
+                return;
+            } elsif ($path =~ /\.(cgi)$/) {
+                $self->handle_cgi(cgi => $cgi, uripath=>$uripath,
+                                  path=>$path, pathinfo => $pathinfo);
+                return;
+            } else {
+                $self->serve_file($path);
+                return;
+            }
+        }
+    }
+    if (-d $path) {
+        $self->handle_dir($path, $uripath);
+        return;
     }
 }
 
@@ -71,9 +85,38 @@ sub setup {
     $self->SUPER::setup(%args);
 }
 
+sub serve_file {
+    my ($self, $path) = @_;
+    my $cmd = "file --mime-type ".shell_quote($path);
+    my ($mime) = `$cmd` =~ /.+: (.+)/;
+    print "HTTP/1.0 200 OK\r\n";
+    print "Content-Length: ", (-s $path), "\r\n";
+    print "Content-Type: $mime\r\n";
+    print "\r\n";
+    print read_file($path);
+}
+
+sub handle_dir {
+    my ($self, $path, $uripath) = @_;
+    #print "HTTP/1.0 403 Forbidden\r\n\r\nDirectory Viewing Not Allowed"; return;
+    print "HTTP/1.0 200 OK\r\nContent-Type: text/html\n\n";
+    my $euripath = encode_entities($uripath);
+    print "<title>$euripath</title><h1>$euripath</h1>\n";
+    local *D;
+    chdir $path;
+    opendir D, ".";
+    for my $f (sort readdir D) {
+        next if $f eq ".";
+        my $suffix = (-d $f) ? "/" : "";
+        print "<a href=\"".uri_escape($f)."$suffix\">".encode_entities($f).$suffix."</a><br>\n";
+    }
+    closedir D;
+}
+
 sub handle_php {
     my ($self, %args) = @_;
-    $self->handle_cgi(%args, interpreter=>"/usr/bin/php");
+    $ENV{REDIRECT_STATUS} = $args{cgi}->path_info;
+    $self->handle_cgi(%args, interpreter=>"/usr/bin/php5-cgi");
 }
 
 sub handle_cgi {
@@ -97,25 +140,28 @@ sub handle_cgi {
     push @cmd, $args{interpreter} if $args{interpreter};
     push @cmd, shell_quote($path);
     my ($chld_out, $chld_in);
-
     my ($stdout, $stderr);
+
     #open2 -> gagal capture
+    my $pid = open2($chld_out, $chld_in, @cmd);
+
     #open CGI, "| ".join(" ", @cmd) + capture::tiny -> gagal capture
     #system join(" ", @cmd) + capture::tiny -> gagal capture
     # wtf? gw terpaksa pake qx, tapi
     my $cmd = join(" ", @cmd);
-    $stdout = `$cmd`;
+    print STDERR "DEBUG: cmd=$cmd\n";
+    #$stdout = `$cmd`;
 
-        if ($self->{_r}{method} eq 'POST') {
-            # print to child's input
-        }
+    if ($self->{_r}{method} eq 'POST') {
+        # print to child's input
+    }
 
-        # XXX parse Location & Status, and change http status accordingly
+    # XXX parse Location & Status, and change http status accordingly
+    $self->stdout_handle->print("HTTP/1.0 200 OK\r\n");
+    #$self->stdio_handle->print($stdout);
+    $self->stdout_handle->print(<$chld_in>);
 
-
-    $self->stdout_handle->print("HTTP/1.0 200 OK\r\n\r\n");
-    $self->stdio_handle->print($stdout);
-
+    waitpid($pid, 0);
 }
 
 package main;
