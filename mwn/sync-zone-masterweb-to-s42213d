@@ -1,7 +1,7 @@
 #!/bin/sh
 src=$HOME/proj/mwn/dns/zone=masterweb.net
-h=root@23.masterweb.net
-p=/u/mwn/sysetc
+h=root@server42213d.masterweb.net
+p=/u/masterw/sysetc
 
 # karena ketiga file ini hardlink satu sama lain, gak perlu, cukup kopikan 1 aja
 #for f in zone={masterweb.net,masterwebnet.com,mwn.co.id}; do
