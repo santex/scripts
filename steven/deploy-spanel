@@ -8,7 +8,7 @@ TARGET=
 
 echo "Updating source trees (~/spanel on remote servers) ..."
 $SBINDIR/spanel-multissh $@ --background --debug --nouse-ip --user root -- \
-  'rsync::' -Pavz --del --force --delete-excluded --exclude '.svn' --exclude '.bzr' --exclude '.git' --exclude '*~' \
+  'rsync::' -avz --del --force --delete-excluded --exclude '.svn' --exclude '.bzr' --exclude '.git' --exclude '*~' \
     "$SRC" '[[USER]]@[[IP_OR_HOSTNAME]]':$TARGET \
   'ssh::' spanel/sbin/spanel-install --nocheck install
   # XXX not yet: optional: run spanel-setup
