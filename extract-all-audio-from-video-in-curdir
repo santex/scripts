@@ -73,7 +73,7 @@ Log::Log4perl->easy_init($log_level);
 
 my $cwd = getcwd;
 my @files;
-if (@ARGV) { @files = @ARGV } else { @files = (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>) }
+if (@ARGV) { @files = @ARGV } else { @files = (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>, <*.flv>, <*.mp4>) }
 for my $f (@files) {
   chdir $cwd;
   INFO "Processing file: `$f'...";
