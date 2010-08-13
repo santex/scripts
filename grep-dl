@@ -2,7 +2,7 @@
 
 $cmd = "";
 for (@ARGV) {
-    if (!length($cmd)) { $cmd = "grep -i '$_' ~/notes/todl.txt ~/notes/done-dl.txt ~/notes/done-deleted-dl.txt" }
+    if (!length($cmd)) { $cmd = "grep -i '$_' ~/notes/2dl ~/notes/todl.txt ~/notes/donedl ~/notes/done-deleted-dl.txt" }
     else { $cmd .= " | grep -i '$_'"; }
 }
 

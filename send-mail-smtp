@@ -84,7 +84,7 @@ for $i (1..$n) {
     #$banner = <$sock>;
     $sock->printflush($raw_session);
     $sock->printflush("\n") unless $raw_session =~ /\n\z/;
-    $sock->printflush(".\n") unless $raw_session =~ /.\n\z/;
+    $sock->printflush(".\n") unless $raw_session =~ /\.\n\z/;
     while ($resp = <$sock>) { print $resp }
     $sock->close;
   } else {

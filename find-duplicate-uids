@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+
+use strict;
+open F, "/etc/passwd";
+my %users;
+while (<F>) {
+    chomp;
+    my ($user, $pwd, $uid, $gid) = split /:/, $_;
+    if (defined($users{$uid})) {
+        warn "Duplicate UID ($uid): $user and $users{$uid}\n";
+    } else {
+        $users{$uid} = $user;
+    }
+}
