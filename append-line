@@ -1,5 +1,0 @@
-#!/usr/bin/perl
-open F, ">>/home/u1/tmp/clipboard";
-#while (<>) { print F }
-print F @ARGV, "\n";
-close F;

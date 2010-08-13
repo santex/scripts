@@ -1,3 +1,0 @@
-#!/bin/sh
-
-backup-with-history ~/writings /backup/encrypted/steven/quickbackup/writings

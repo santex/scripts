@@ -1,6 +1,0 @@
-#!/bin/sh
-ROOTDIR=/home/steven/masterkey
-
-$ROOTDIR/bin/lintdb \
-  $* \
-  --host localhost --user steven_masterkey steven_masterkey

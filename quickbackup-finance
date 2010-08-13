@@ -1,3 +1,0 @@
-#!/bin/sh
-
-backup-with-history ~/notes /backup/encrypted/steven/quickbackup/notes
