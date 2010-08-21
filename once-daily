@@ -1,16 +1,16 @@
 #!/usr/bin/perl -w
 
-# each time this script is called, it will log a line to log file. if called with
-# the same label and date, it won't log another line and will exit 99. used for
-# tasks that need to be done only once per day.
+# this script can be used to run a command once daily. if command is successful,
+# another call to this script with the same label and date won't run the command
+# again.
 
 use 5.010;
 use autodie;
 use strict;
 use Fcntl qw(:DEFAULT);
 
-if (@ARGV != 2) { die "Usage: $0 <label> <yyyy-mm-dd>, exit 99 if already logged\n" }
-my ($label, $date) = @ARGV;
+if (@ARGV <= 2) { die "Usage: $0 <label> <yyyy-mm-dd> <cmd ...>\n" }
+my ($label, $date, @cmd) = @ARGV;
 if ($label !~ /^\S+/) { die "Invalid label, please use nonblanks only" }
 if ($date !~ /^\d\d\d\d-\d\d-\d\d$/) { die "Invalid date, please use yyyy-mm-dd" }
 
@@ -29,6 +29,13 @@ while (<$log>) {
 }
 
 if ($rec{$label}{$date}) { exit 99 }
-print $log "$label|$date\n";
-close $log;
-exit 0;
+
+system @cmd;
+
+if ($? == 0) {
+    print $log "$label|$date\n";
+    close $log;
+    exit 0;
+} else {
+    warn "Command exits $?, won't be recorded\n";
+}
