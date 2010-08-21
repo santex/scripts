@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+
+# each time this script is called, it will log a line to log file. if called with
+# the same label and date, it won't log another line and will exit 99. used for
+# tasks that need to be done only once per day.
+
+use 5.010;
+use autodie;
+use strict;
+use Fcntl qw(:DEFAULT);
+
+if (@ARGV != 2) { die "Usage: $0 <label> <yyyy-mm-dd>, exit 99 if already logged\n" }
+my ($label, $date) = @ARGV;
+if ($label !~ /^\S+/) { die "Invalid label, please use nonblanks only" }
+if ($date !~ /^\d\d\d\d-\d\d-\d\d$/) { die "Invalid date, please use yyyy-mm-dd" }
+
+my $log_path = "$ENV{HOME}/logs/once-daily.log";
+my %rec; # <label> <date>
+sysopen my($log), $log_path, O_RDWR | O_CREAT;
+sysseek $log, 0, 0;
+while (<$log>) {
+    next unless /\S/;
+    next if /^#/;
+    /^(\S+)\|(\d\d\d\d-\d\d-\d\d)$/ or do {
+        warn "Syntax error in $log_path:$. (skipped): $_\n";
+        next;
+    };
+    $rec{$1}{$2} = 1;
+}
+
+if ($rec{$label}{$date}) { exit 99 }
+print $log "$label|$date\n";
+close $log;
+exit 0;
