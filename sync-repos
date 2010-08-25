@@ -97,9 +97,9 @@ sub sync_repo {
     my $output;
     for my $branch (@src_branches) {
         if (@src_branches > 1) {
-            DEBUG "  Updating branch `$branch` ...";
+            INFO "  Updating branch `$branch` ...";
             my $make_branch = ($branch ~~ @dest_branches) ? "" : "git branch '$branch'; ";
-            $output = myqx("cd '$dest/$repo'; ${make_branch}git checkout '$branch'; LANG=C git pull '$src/$repo' '$branch' 2>&1");
+            $output = myqx("cd '$dest/$repo'; ${make_branch}git checkout '$branch' 2>/dev/null; LANG=C git pull '$src/$repo' '$branch' 2>&1");
         }
         $exit = $? & 255;
         if ($exit == 0 && $output =~ /Already up-to-date/) {
