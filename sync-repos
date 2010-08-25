@@ -50,7 +50,7 @@ my @wanted_repos;
 chdir $src;
 my @src_repos = grep {-d} <*>;
 
-chdir $dest;
+$CWD = $dest;
 for my $repo (@src_repos) {
     next if @wanted_repos && !($repo ~~ @wanted_repos);
     INFO "Processing repo `$repo` ...";
@@ -59,7 +59,7 @@ for my $repo (@src_repos) {
             FATAL "Repo `$repo` is not a dir? skipped";
             next;
         }
-        mysystem("cp -a '$src'/$repo '$dest'/");
+        mysystem("cp -a '$src'/$repo .");
         if (($? & 255) != 0) {
             FATAL "Can't successfully copy repo `$repo` from $src: $?";
         } else {
@@ -77,7 +77,7 @@ sub sync_repo {
     my @src_branches;
     my @dest_branches;
 
-    chdir "$src/$repo";
+    local $CWD = "$src/$repo";
     @src_branches = map {(/^[* ] (.+)/, $1)[-1]} myqx("LANG=C git branch");
     $exit = $? & 255;
     if ($exit) {
@@ -86,7 +86,7 @@ sub sync_repo {
     }
     DEBUG "  src branches: ".join(", ", @src_branches);
 
-    chdir "$dest/$repo";
+    $CWD = "$dest/$repo";
     @dest_branches = map {(/^[* ] (.+)/, $1)[-1]} myqx("LANG=C git branch");
     if ($exit) {
         FATAL "  Can't list branches on dest repo `$repo/$repo`: $?";
