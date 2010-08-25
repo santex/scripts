@@ -41,7 +41,7 @@ defined($src) or die "Please specify src\n";
 defined($dest) or die "Please specify dest\n";
 (-d $src)  or die "src dir `$src` not exist or not a dir\n";
 $src = abs_path($src);
-(-d $dest) or die "dest dir `$dest` not exist or not a dir\n";
+(-d $dest) or mkdir $dest;
 $dest = abs_path($dest);
 my @wanted_repos;
 @wanted_repos = split(/,\s*/, $App::options{wanted_repos})
