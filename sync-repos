@@ -1,0 +1,143 @@
+#!/usr/bin/perl -w
+
+use 5.010;
+use autodie;
+use strict;
+
+# sync git repos
+
+use App::Options (
+    option => {
+        profile      => { type => 'string', required => 0, default => 'default', },
+        log_level    => { type => 'string', required => 0, default => 'DEBUG', },
+        src          => { type => 'string', required => 1, },
+        dest         => { type => 'string', required => 1, },
+        wanted_repos => { type => 'string', required => 0, default => '', }, # comma-separated list of wanted repos, empty means all
+        delete       => { type => 'boolean', required => 0, default => 0, } # whether to delete branches in dest repo not existing in src repo
+    }
+);
+
+use Cwd 'abs_path';
+use File::chdir;
+use Log::Log4perl qw(:easy);
+#use String::ShellQuote; #sementara pakai 'foo' doang
+
+my $l = $App::options{log_level};
+$l = $l eq 'FATAL' ? $FATAL :
+    ($l eq 'ERROR' ? $ERROR :
+         ($l eq 'WARN' ? $WARN :
+              ($l eq 'INFO' ? $INFO :
+                   ($l eq 'DEBUG' ? $DEBUG :
+                        ($l eq 'TRACE' ? $TRACE :
+                             $DEBUG)))));
+Log::Log4perl->easy_init($l);
+
+my $src = $App::options{src};
+my $dest = $App::options{dest};
+
+my $cmd;
+
+defined($src) or die "Please specify src\n";
+defined($dest) or die "Please specify dest\n";
+(-d $src)  or die "src dir `$src` not exist or not a dir\n";
+$src = abs_path($src);
+(-d $dest) or die "dest dir `$dest` not exist or not a dir\n";
+$dest = abs_path($dest);
+my @wanted_repos;
+@wanted_repos = split(/,\s*/, $App::options{wanted_repos})
+    if length($App::options{wanted_repos});
+
+chdir $src;
+my @src_repos = grep {-d} <*>;
+
+chdir $dest;
+for my $repo (@src_repos) {
+    next if @wanted_repos && !($repo ~~ @wanted_repos);
+    INFO "Processing repo `$repo` ...";
+    unless (-d $repo) {
+        if (-e $repo) {
+            FATAL "Repo `$repo` is not a dir? skipped";
+            next;
+        }
+        mysystem("cp -a '$src'/$repo .");
+        if (($? & 255) != 0) {
+            FATAL "Can't successfully copy repo `$repo` from $src: $?";
+        } else {
+            INFO "Repo `$repo` copied";
+        }
+        next;
+    }
+    sync_repo($src, $dest, $repo);
+}
+
+sub sync_repo {
+    my ($src, $dest, $repo) = @_;
+    my $exit;
+
+    my @src_branches;
+    my @dest_branches;
+
+    chdir "$src/$repo";
+    @src_branches = map {(/^[* ] (.+)/, $1)[-1]} myqx("LANG=C git branch");
+    $exit = $? & 255;
+    if ($exit) {
+        FATAL "  Can't list branches on src repo `$src/$repo`: $?";
+        die;
+    }
+    DEBUG "  src branches: ".join(", ", @src_branches);
+
+    chdir "$dest/$repo";
+    @dest_branches = map {(/^[* ] (.+)/, $1)[-1]} myqx("LANG=C git branch");
+    if ($exit) {
+        FATAL "  Can't list branches on dest repo `$repo/$repo`: $?";
+        die;
+    }
+    DEBUG "  dest branches: ".join(", ", @dest_branches);
+
+    my $output;
+    for my $branch (@src_branches) {
+        if (@src_branches > 1) {
+            DEBUG "  Updating branch `$branch` ...";
+            my $make_branch = ($branch ~~ @dest_branches) ? "" : "git branch '$branch'; ";
+            $output = myqx("cd '$src/$repo'; git checkout '$branch' 2>/dev/null; ".
+                           "cd '$dest/$repo'; ${make_branch}git checkout '$branch'; LANG=C git pull '$src/$repo' '$branch' 2>&1 && cd '$src'");
+        }
+        $exit = $? & 255;
+        if ($exit == 0 && $output =~ /Already up-to-date/) {
+            DEBUG "  Branch `$branch` is up to date, nothing to do";
+        } elsif ($output =~ /^error: (.+)/m) {
+            FATAL "  Can't successfully git pull branch `$branch`: $1";
+            die;
+        } elsif ($exit == 0 && $output =~ /^Updating |^Merge made by recursive/m) {
+            INFO "  Repo `$branch` updated";
+        } else {
+            FATAL "  Can't figure out result of 'git pull' for branch `$branch`: exit=$exit, output=$output";
+            die;
+        }
+        DEBUG "  Result of 'git pull' for branch `$branch`: exit=$exit, output=$output";
+    }
+
+    if ($App::options{delete}) {
+        for my $branch (@dest_branches) {
+            next if $branch ~~ @src_branches;
+            next if $branch eq 'master'; # can't delete master branch
+            INFO "  Deleting branch `$branch` because it no longer exists in src ...";
+            mysystem("cd '$dest/$repo' && git checkout master 2>/dev/null && git branch -D '$branch'");
+            if (($? & 255) != 0) {
+                ERROR "  Can't successfully delete branch `$branch`: $?";
+            }
+        }
+    }
+
+}
+
+sub mysystem {
+    DEBUG "system(): ".join(" ", @_);
+    system @_;
+}
+
+sub myqx {
+    my $cmd = shift;
+    DEBUG "qx(): $cmd";
+    `$cmd`
+}

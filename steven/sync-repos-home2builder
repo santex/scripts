@@ -1,0 +1,2 @@
+#!/bin/bash
+sync-repos --src=$HOME/repo --dest=$HOME/hb/repo --delete --log_level=INFO
