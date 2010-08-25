@@ -14,7 +14,7 @@ my ($label, $date, @cmd) = @ARGV;
 if ($label !~ /^\S+/) { die "Invalid label, please use nonblanks only" }
 if ($date !~ /^\d\d\d\d-\d\d-\d\d$/) { die "Invalid date, please use yyyy-mm-dd" }
 
-my $log_path = "$ENV{HOME}/logs/once-daily.log";
+my $log_path = "$ENV{HOME}/once-daily.log";
 my %rec; # <label> <date>
 sysopen my($log), $log_path, O_RDWR | O_CREAT;
 sysseek $log, 0, 0;
