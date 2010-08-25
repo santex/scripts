@@ -99,8 +99,7 @@ sub sync_repo {
         if (@src_branches > 1) {
             DEBUG "  Updating branch `$branch` ...";
             my $make_branch = ($branch ~~ @dest_branches) ? "" : "git branch '$branch'; ";
-            $output = myqx("cd '$src/$repo'; git checkout '$branch' 2>/dev/null; ".
-                           "cd '$dest/$repo'; ${make_branch}git checkout '$branch'; LANG=C git pull '$src/$repo' '$branch' 2>&1 && cd '$src'");
+            $output = myqx("cd '$dest/$repo'; ${make_branch}git checkout '$branch'; LANG=C git pull '$src/$repo' '$branch' 2>&1");
         }
         $exit = $? & 255;
         if ($exit == 0 && $output =~ /Already up-to-date/) {
