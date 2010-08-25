@@ -1,0 +1,50 @@
+#!/usr/bin/perl -w
+
+use 5.010;
+use autodie;
+use feature 'switch';
+use strict;
+
+use App::Options (
+    option => {
+        profile    => { type => 'string', required => 0, default => 'default', },
+        log_level  => { type => 'string', required => 0, default => 'DEBUG', },
+        dir        => { type => 'string', required => 1, },
+    }
+);
+
+use Log::Log4perl qw(:easy);
+#use String::ShellQuote; #sementara pakai 'foo' dulu aja deh
+
+my $l = $App::options{log_level};
+$l = $l eq 'FATAL' ? $FATAL :
+    ($l eq 'ERROR' ? $ERROR :
+         ($l eq 'WARN' ? $WARN :
+              ($l eq 'INFO' ? $INFO :
+                   ($l eq 'DEBUG' ? $DEBUG :
+                        ($l eq 'TRACE' ? $TRACE :
+                             $DEBUG)))));
+Log::Log4perl->easy_init($l);
+
+chdir $App::options{dir};
+for my $repo (grep {-d} <*>) {
+    DEBUG "Checking repo `$repo` ...";
+    chdir $repo;
+    my $output = `LANG=C git status 2>&1`;
+    my $exit = $? & 255;
+    if ($exit == 0 && $output =~ /nothing to commit/) {
+        DEBUG "Repo `$repo` is clean, nothing to do";
+    } elsif ($exit == 0 && $output =~ /Changes to be committed|Changed but/) {
+        WARN "Repo `$repo` needs commit";
+    } elsif ($exit == 0 && $output =~ /Untracked files/) {
+        WARN "Repo `$repo` has untracked files";
+    } elsif ($exit == 128 && $output =~ /Not a git repository/) {
+        ERROR "Repo `$repo` is not a git repo";
+    } else {
+        FATAL "Can't figure out result of 'git status' for repo `$repo`: ".
+            "exit=$exit, output=$output";
+        die;
+    }
+    chdir "..";
+}
+

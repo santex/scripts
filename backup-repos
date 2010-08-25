@@ -1,0 +1,91 @@
+#!/usr/bin/perl -w
+
+# this script backs up only the .git/ directory of repositories, to save disk
+# space (because the checked-out files can be restored from the .git/). since git
+# does not store file mtime/ctime, we store it for restore purposes.
+
+use 5.010;
+use autodie;
+use strict;
+
+use App::Options (
+    option => {
+        profile    => { type => 'string', required => 0, default => 'default', },
+        log_level  => { type => 'string', required => 0, default => 'DEBUG', },
+        nostatus => {
+            type => 'boolean', required => 1, default => 0,
+            description => 'do not run status-repos first before backup',
+        },
+        nocheck  => {
+            type => 'boolean', required => 1, default => 0,
+            description => 'alias for --nostatus',
+        },
+        norsync  => {
+            type => 'boolean', required => 1, default => 0,
+            description => 'do not run the copy (rsync) phase',
+        },
+        nocopy  => {
+            type => 'boolean', required => 1, default => 0,
+            description => 'alias for --norsync',
+        },
+        noindex  => {
+            type => 'boolean', required => 1, default => 0,
+            description => 'do not run the index phase',
+        },
+        src      => { type => 'string' , required => 1, },
+        dest     => { type => 'string' , required => 1, },
+    }
+);
+
+use File::Find;
+use File::Slurp;
+use Log::Log4perl qw(:easy);
+#use String::ShellQuote; # sementara pakai 'foo' dulu aja deh
+
+my $l = $App::options{log_level};
+$l = $l eq 'FATAL' ? $FATAL :
+    ($l eq 'ERROR' ? $ERROR :
+         ($l eq 'WARN' ? $WARN :
+              ($l eq 'INFO' ? $INFO :
+                   ($l eq 'DEBUG' ? $DEBUG :
+                        ($l eq 'TRACE' ? $TRACE :
+                             $DEBUG)))));
+Log::Log4perl->easy_init($l);
+
+my $src  = $App::options{src};
+my $dest = $App::options{dest};
+
+unless ($App::options{nostatus} || $App::options{nocheck}) {
+    INFO "Checking repo status ...";
+    my $cmd = "status-repos --dir='$src' --log_level=INFO";
+    my $output = `$cmd 2>&1`;
+
+    if ($? != 0) {
+        FATAL "$cmd command failed, please check first:\n$output";
+        exit 1;
+    }
+    if ($output =~ /needs commit|Untracked files/) {
+        FATAL "Some repos are not clean, please check first:\n$output";
+        exit 1;
+    }
+    if ($output =~ /not a git/) {
+        FATAL "Some dirs are not repos, please check first:\n$output";
+        exit 1;
+    }
+}
+
+unless ($App::options{norsync} || $App::options{nocopy}) {
+    INFO "Doing backup ...";
+    system "rsync -Pav --include / ".
+        "--include '/*' --include '/*/.git' --include '/*/.git/**' ".
+        "--include '/.remote' --include '/.remote/**' ".
+        "--exclude '*' --del --force --delete-excluded '$src'/ '$dest'/";
+    if ($? != 0) { FATAL "Copy did not succeed, please check"; exit 1 }
+}
+
+unless ($App::options{noindex}) {
+    INFO "Indexing ...";
+    system "cd $ENV{HOME}/repo && ".
+        "( ls -laR | gzip -c > .ls-laR.gz ) && cp .ls-laR.gz '$dest'/";
+    if ($? != 0) { FATAL "ls-laR did not succeed, please check"; exit 1 }
+}
