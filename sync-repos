@@ -59,7 +59,7 @@ for my $repo (@src_repos) {
             FATAL "Repo `$repo` is not a dir? skipped";
             next;
         }
-        mysystem("cp -a '$src'/$repo .");
+        mysystem("cp -a '$src'/$repo '$dest'/");
         if (($? & 255) != 0) {
             FATAL "Can't successfully copy repo `$repo` from $src: $?";
         } else {
