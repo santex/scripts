@@ -6,9 +6,12 @@ SRC=$HOME/repo/spanel
 # default is home directory
 TARGET=
 
-echo "Updating source trees (~/spanel on remote servers) ..."
+echo "Preparing distribution directory ..."
+$SRC/devscripts/spanel-prepare-dist
+
+echo "Updating distribution directory (~/spanel) on remote servers ..."
 $SBINDIR/spanel-multissh $@ --background --debug --nouse-ip --user root -- \
   'rsync::' -avz --del --force --delete-excluded --exclude '.svn' --exclude '.bzr' --exclude '.git' --exclude '*~' \
-    "$SRC" '[[USER]]@[[IP_OR_HOSTNAME]]':$TARGET \
+    /tmp/spanel '[[USER]]@[[IP_OR_HOSTNAME]]':$TARGET \
   'ssh::' spanel/sbin/spanel-install --nocheck install
   # XXX not yet: optional: run spanel-setup

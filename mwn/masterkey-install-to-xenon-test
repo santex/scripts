@@ -2,7 +2,11 @@
 rsync -e ssh -Pavz --del --delete-excluded --force --exclude '/.bzr' --exclude '/.git' --exclude '*~' \
   ~/proj/mwn/masterkey mwnwhmcs@xenon:
 rsync -e ssh -Pavz \
-  ~/proj/spanel/lib/php/{sh_functions.inc.php,sh_translation.inc.php} \
+  ~/proj/spanel/lib/php/sh_functions.inc.php \
+  ~/proj/spanel/lib/php/sh_translationutils.inc.php \
+  ~/proj/spanel/lib/php/sh_utils.inc.php \
+  ~/proj/spanel/lib/php/sh_grid.inc.php \
+  ~/proj/spanel/lib/php/sh_activerecord.inc.php \
   ~/proj/spanel/lang \
   mwnwhmcs@xenon:
 

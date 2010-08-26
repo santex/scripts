@@ -1,26 +1,3 @@
-#!/usr/bin/perl
-
-use POSIX qw(strftime);
-
-BEGIN {
-  $PROJ_DIR = "$ENV{HOME}/proj/spanel";
-  $TARGET_DIR = "$ENV{HOME}/tmp";
-  $PROJ_NAME = "spanel";
-}
-
-# ---
-
-use lib "$PROJ_DIR/lib/perl";
-use Spanel;
-
-chdir $PROJ_DIR or die "FATAL: Can't chdir to `$PROJ_DIR': $!\n";
-
-my $timestamp = strftime "%Y%m%d", localtime;
-my $targetn   = "$PROJ_NAME-$Spanel::VERSION.$Spanel::REVISION";
-my $targetnl  = "$PROJ_NAME-latest_release";
-my $targetp   = "$TARGET_DIR/$targetn";
-my $targetpl  = "$TARGET_DIR/$targetnl";
-
-system qq{git archive -v --prefix=$targetn/ HEAD | gzip -c > $targetp.tar.gz};
-system qq{cd "$TARGET_DIR"; rm -f $targetnl.tar.gz; ln -s $targetn.tar.gz $targetnl.tar.gz};
-system qq{ls -l $targetp.tar.gz $targetpl.tar.gz };
+#!/bin/bash
+SRC=$HOME/repo/spanel
+$SRC/devscripts/spanel-prepare-dist --branch=stable
