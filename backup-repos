@@ -32,7 +32,8 @@ use App::Options (
             type => 'boolean', required => 1, default => 0,
             description => 'do not run the index phase',
         },
-        src      => { type => 'string' , required => 1, },
+        src      => { type => 'string' , required => 1,
+                      default => "$ENV{HOME}/repos", },
         dest     => { type => 'string' , required => 1, },
     }
 );

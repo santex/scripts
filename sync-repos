@@ -8,7 +8,8 @@ use App::Options (
     option => {
         profile    => { type => 'string', required => 0, default => 'default', },
         log_level  => { type => 'string', required => 0, default => 'DEBUG', },
-        src        => { type => 'string', required => 1, },
+        src        => { type => 'string', required => 1,
+                        default => "$ENV{HOME}/repos" },
         dest       => { type => 'string', required => 1, },
         wanted_repos => {
             type => 'string', required => 0, default => '',
