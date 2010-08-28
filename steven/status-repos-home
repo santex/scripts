@@ -1,2 +1,0 @@
-#!/bin/bash
-status-repos --dir=$HOME/repo --log_level=INFO
