@@ -81,6 +81,8 @@ sub sync_repo {
 
     my @src_branches;
     my @dest_branches;
+    my %src_heads; # last revisions for each branch
+    my %dest_heads; # last revisions for each branch
 
     local $CWD = "$src/$repo";
     @src_branches = map {(/^[* ] (.+)/, $1)[-1]} myqx("LANG=C git branch");
@@ -90,6 +92,20 @@ sub sync_repo {
         die;
     }
     DEBUG "  src branches: ".join(", ", @src_branches);
+    for my $branch (@src_branches) {
+        my $output = myqx("LANG=C git log -1 '$branch'");
+        $exit = $? & 255;
+        if ($exit) {
+            FATAL "  Can't find out head for branch `$branch` on src repo `$src/$repo`: $?";
+            die;
+        }
+        $output =~ /commit (\S+)/ or do {
+            FATAL "  Can't recognize git log output (searching for commit XXX): $output";
+            die;
+        };
+        $src_heads{$branch} = $1;
+    }
+    DEBUG "  src branch heads: ".join(", ", map {"$_ => $src_heads{$_}"} keys %src_heads);
 
     $CWD = "$dest/$repo";
     @dest_branches = map {(/^[* ] (.+)/, $1)[-1]} myqx("LANG=C git branch");
@@ -98,9 +114,28 @@ sub sync_repo {
         die;
     }
     DEBUG "  dest branches: ".join(", ", @dest_branches);
+    for my $branch (@dest_branches) {
+        my $output = myqx("LANG=C git log -1 '$branch'");
+        $exit = $? & 255;
+        if ($exit) {
+            FATAL "  Can't find out head for branch `$branch` on dest repo `$dest/$repo`: $?";
+            die;
+        }
+        $output =~ /commit (\S+)/ or do {
+            FATAL "  Can't recognize git log output (searching for commit XXX): $output";
+            die;
+        };
+        $dest_heads{$branch} = $1;
+    }
+    DEBUG "  dest branch heads: ".join(", ", map {"$_ => $dest_heads{$_}"} keys %dest_heads);
 
     my $output;
     for my $branch (@src_branches) {
+        if ($src_heads{$branch} && $dest_heads{$branch} &&
+                $src_heads{$branch} eq $dest_heads{$branch}) {
+            DEBUG "  Skipping branch `$branch` because head already the same";
+            next;
+        }
         DEBUG "  Updating branch `$branch` ..." if @src_branches > 1;
         $output = myqx("cd '$dest/$repo'; ".
                        ($branch ~~ @dest_branches ? "":"git branch '$branch'; ").
