@@ -28,7 +28,6 @@ www.uubird.com-youyouniaoyingshiluntan-
 [dianyingtiantangwww.dygod.cn]
 [www.ppnow.com]
 [#aznmp3]
-
 ysdg-xvid-
 [www.arableland.com]
 ^mininova.org^'
@@ -42,7 +41,6 @@ _-mininova.org-_
 -~mininova.org~-
 +-mininova.org-+
 _mininova.org_-
-
 [isoHunt]
 _bbs.cnxp.com_._.
 _bbs.cnxp.com_._r.
@@ -65,6 +63,25 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.PROPER.DVDRip.XviD-VoMiT
+.(PDTV).BiTSrg
+  DVDRip (SiRiUs sHaRe)
+_DivX
+ [CuPpY]
+.vXv
+.hdtv.xvid-yt
+.XviD.AC3.MVGroup.org
+-Kole
+.WS-PDTV.XviD.Ekolb
+.HDTV.XviD-TekOne
+.PDTV.XviD-MG
+.WS.DSR.XviD-SYS
+.XviD.AC3{www.desibbrg.com}
+ WS-PDTV
+.SWESUB.DVDRip.XViD-GRiSEN
+.HDTV.XviD-aAF
+.DSRip.XviD-aAF
+.XviD-aAF
 -PHRENiC
 .dvdrip.xvid-reward
 .HDTV.XviD-SYS
@@ -320,7 +337,6 @@ _-_irc.tveps.net
  [audiobook]
 _(PAL_VCD)
  - English
-
  by Criminal
 .hdtv.xvid.notv.[VTV]
 [justinb]
