@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w
+#
+# An example hook script that is called after a successful
+# commit is made.
+#
+# To enable this hook, make this file executable.
+
+use strict;
+use File::Slurp;
+
+`git branch` =~ /^\* (.+)/m or die "Can't get current branch name";
+my $branch = $1;
+
+my $counter_path = "/media/bismuthb/home/sloki/user/steven/public/git/spanel-last-rev-posted-to-forum-branch=$branch.txt";
+my $counter = read_file($counter_path) or die "Can't read counter file or counter not initialized: $counter_path";
+chomp($counter);
+
+my @revs;
+for (`git log $counter..HEAD --pretty=oneline --reverse`) {
+    /^(\w+) .+/ or die "Weird line in git log output: $_";
+    push @revs, $1;
+}
+
+my $fail = 0;
+for (@revs) {
+    print "Posting rev $_ ke forum ...\n";
+    system "( echo 'Subject: commit message (branch: $branch)'; echo; echo -n '[code]'; git log -1 -p $_; echo '[/code]' ) | phpbb2-post --profile=commit_spanel --bbcode=1 -";
+    if ($?) {
+        warn "Gagal post (exit=$?), aborting ...";
+        $fail++;
+        last;
+    }
+    unless ($fail) {
+        write_file($counter_path, $revs[-1]);
+    }
+}
