@@ -8,10 +8,12 @@ use 5.010;
 use autodie;
 use strict;
 use Fcntl qw(:DEFAULT);
+use POSIX qw(strftime);
 
-if (@ARGV <= 2) { die "Usage: $0 <label> <yyyy-mm-dd> <cmd ...>\n" }
+if (@ARGV <= 2) { die "Usage: $0 <label> <yyyy-mm-dd | 'today' | '-'> <cmd ...>\n" }
 my ($label, $date, @cmd) = @ARGV;
 if ($label !~ /^\S+/) { die "Invalid label, please use nonblanks only" }
+$date = strftime("%Y-%m-%d", localtime) if $date =~ /^(today|-)$/;
 if ($date !~ /^\d\d\d\d-\d\d-\d\d$/) { die "Invalid date, please use yyyy-mm-dd" }
 
 my $log_path = "$ENV{HOME}/once-daily.log";
