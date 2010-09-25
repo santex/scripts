@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rsync --del -e "ssh -c arcfour" -Pavz \
+  $HOME/repo/php-sh_functions \
+  steven@hosting.localdomain:/u/steven/public/git/

@@ -7,6 +7,7 @@ if [ $? != 0 ]; then exit; fi
 
 eval `../ssh-existing-agent`
 ./sync-repos_spanel-2hostinglocaldomain
+./sync-repos_php_sh_functions-2hostinglocaldomain
 ./sync-repos_mwn-2hostinglocaldomain
 ./sync-repos_shscripts-2hostinglocaldomain
 ./sync-repos_webdev-2hostinglocaldomain
