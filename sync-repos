@@ -131,6 +131,8 @@ sub sync_repo {
 
     my $output;
     for my $branch (@src_branches) {
+        # XXX we should allow fetching tags only even if head is the same, but
+        # right now tags are not that important
         if ($src_heads{$branch} && $dest_heads{$branch} &&
                 $src_heads{$branch} eq $dest_heads{$branch}) {
             DEBUG "  Skipping branch `$branch` because head already the same";
@@ -158,6 +160,15 @@ sub sync_repo {
         }
         DEBUG "  Result of 'git pull' for branch `$branch`: ".
             "exit=$exit, output=$output";
+
+        $output = myqx("cd '$dest/$repo'; ".
+                       "LANG=C git fetch --tags '$src/$repo' 2>&1");
+        $exit = $? & 255;
+        if ($exit != 0) {
+            FATAL "  Can't successfully fetch --tags: $output (exit=$exit)";
+            die;
+        }
+
     }
 
     if ($App::options{delete}) {
