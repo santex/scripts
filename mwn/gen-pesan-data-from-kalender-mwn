@@ -60,29 +60,38 @@ my %bulan_short = (
 my $year = $ARGV[0] || strftime("%Y", localtime);
 $year =~ /^\d{4}$/ or die "FATAL: Invalid year syntax";
 
-my $URL = "https://kb.mwn.localdomain/internalwiki/Kalender_MWN_$year";
-( $_ = get $URL) or die "FATAL: Can't get $URL: $!";
-m#<span class="mw-headline">\s*berdasarkan bulan\s*</span></h2>\s*(.+?)<a name="#s
-    or die
-    "FATAL: Can't find 'berdasarkan bulan' section in $URL";
+my %ITEMS = (
+    "https://kb.mwn.localdomain/internalwiki/Kalender_MWN_$year" =>
+        {year=>$year},
+    "https://kb.mwn.localdomain/internalwiki/Kalender_Internal_MWN" =>
+        {year=>0}, # yearly
+);
+while (my ($url, $opts) = each %ITEMS) {
+    ($_ = get $url) or die "FATAL: Can't retrieve URL `$url`: $!";
+    m#<span class="mw-headline">\s*berdasarkan bulan\s*</span></h2>\s*(.+?)<a name="#s
+        or die
+            "FATAL: Can't find 'berdasarkan bulan' section in $url";
 
-$_ = $1;
-my $cur_month = 0;
-for ( split /\015?\012/, $_ ) {
-    m#^(?:<p>|</p><p>)?($bulan_long_re)#
-        and do { $cur_month = $bulan_long{$1}; next };
-    m#^</li></ul>$# and next;
-    m#^</p>$#       and next;
-    m#^<p><br />$#  and next;
-    m#</p><p><br /># and next;
-    m#^$#           and next;
+    $_ = $1;
+    my $cur_month = 0;
+    for ( split /\015?\012/, $_ ) {
+        m#^(?:<p>|</p><p>)?($bulan_long_re)#
+            and do { $cur_month = $bulan_long{$1}; next };
+        m#^</li></ul>$# and next;
+        m#^</p>$#       and next;
+        m#^<p><br />$#  and next;
+        m#</p><p><br /># and next;
+        m#^$#           and next;
 
-    my ( $name, $day, $bulan_short, $opts )
-        = m#^(?:<ul><li>|</li><li>)\s*(.+?)\s+-\s+(\d+)(?:\s+(\w{3,5})\w*)\s*('[^']+'|"[^"]+")?$#
-        or die "FATAL: Can't parse line: $_";
-    die "FATAL: Unknown bulan `$bulan_short' in line `$_'"
-        unless $bulan_short{$bulan_short};
-    my $bulan = $bulan_short ? $bulan_short{$bulan_short} : $cur_month;
+        my ( $name, $day, $bulan_short, $entry_opts )
+            = m#^(?:<ul><li>|</li><li>)\s*(.+?)\s+-\s+(\d+)(?:\s+(\w{3,5})\w*)\s*('[^']+'|"[^"]+")?$#
+                or die "FATAL: Can't parse line: $_";
+        die "FATAL: Unknown bulan `$bulan_short' in line `$_'"
+            unless $bulan_short{$bulan_short};
+        my $bulan = $bulan_short ? $bulan_short{$bulan_short} : $cur_month;
 
-    printf "ONETIME %02d%02d%04d \"%s\" -7 -1 0 %s\n", $day, $bulan, $year, $name, ($opts || "");
+        printf "%s %02d%02d%04d \"%s\" -7 -1 0 %s\n",
+            ($opts->{year} ? "ONETIME" : "YEARLY"),
+            $day, $bulan, ($opts->{year} || $year), $name, ($entry_opts || "");
+    }
 }
