@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# browser cache files are randomly named so we deduce order from its mtime.
+
+ls --sort=t -r | xargs perlmv -vx to-number-ext -e'"part$_.flv"'

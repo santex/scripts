@@ -1,5 +1,5 @@
 #!/bin/sh
 
 rsync --del -e "ssh -c arcfour" -Pavz \
-  $HOME/repo/spanel \
+  $HOME/repo/spanel{,-phpmyadmin,-phppgadmin,-squirrelmail,-roundcube} \
   steven@hosting.localdomain:/u/steven/public/git/
