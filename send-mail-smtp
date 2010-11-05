@@ -130,6 +130,8 @@ for my $i (1..$n) {
             { from => $from,
               transport => Email::Sender::Transport::SMTP->new({
                   host => $host, port => $port,
+                  sasl_username => $username,
+                  sasl_password => $password,
               })
           });
     }
