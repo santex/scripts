@@ -11,6 +11,12 @@ use App::Options (
         src        => { type => 'string', required => 1,
                         default => "$ENV{HOME}/repos" },
         dest       => { type => 'string', required => 1, },
+        rsync_dot_dirs => {
+            type => 'boolean', required => 0, default => 1,
+            description => 'do one-way rsync for dot directories (i usually '.
+                'put old data here, these directories are currently not git '.
+                'repos)',
+        },
         wanted_repos => {
             type => 'string', required => 0, default => '',
             description => 'comma-separated list of wanted repos, '.
@@ -56,6 +62,9 @@ chdir $src;
 my @src_repos = grep {-d} <*>;
 
 $CWD = $dest;
+
+rsync_dot_dirs($src, $dest) if $App::options{rsync_dot_dirs};
+
 for my $repo (@src_repos) {
     next if @wanted_repos && !($repo ~~ @wanted_repos);
     INFO "Processing repo `$repo` ...";
@@ -73,6 +82,11 @@ for my $repo (@src_repos) {
         next;
     }
     sync_repo($src, $dest, $repo);
+}
+
+sub rsync_dot_dirs {
+    INFO "Processing dot directories ...";
+    mysystem("rsync -az '$src'/.??* '$dest'/");
 }
 
 sub sync_repo {
