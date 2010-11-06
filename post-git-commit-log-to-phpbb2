@@ -14,9 +14,11 @@ use App::Options (
             type => 'string', required => 0,
             description => 'Only post commits with author matching this regex',
         },
+        dry_run => { type => 'boolean', required => 0, default => 0, },
     },
 );
 use File::Slurp;
+use Log::Any::App '$log';
 
 my $counter;
 if ($App::options{counter}) {
@@ -37,15 +39,26 @@ if ($App::options{author_re}) {
 my @revs0;
 my @revs;
 my $output = `git log $counter..HEAD --reverse`;
+die "Failed doing 'git log $counter..HEAD': $!" if $?;
 push @revs0, [$1, $2] while $output =~ /^commit ([0-9a-f]+)\nAuthor: (.+)/mg;
-for (@revs) {
-    next if $author_re && $_->[1] !~ $author_re;
+$log->infof("Number of commits between $counter .. HEAD: %d", scalar(@revs0));
+for (@revs0) {
+    if ($author_re && $_->[1] !~ $author_re) {
+        $log->debug("Skipping commit $_->[0] because author ($_->[1]) ".
+                    "doesn't match author_re ($author_re)");
+    }
     push @revs, $_->[0];
 }
 
+$log->infof("Number of commits to post: %d", scalar(@revs));
+
 my $fail = 0;
 for (@revs) {
-    print "Posting rev $_ to phpBB2 forum ...\n";
+    if ($App::options{dry_run}) {
+        $log->info("DRYRUN: Posting rev $_ to phpBB2 forum ...");
+        next;
+    }
+    $log->info("Posting rev $_ to phpBB2 forum ...");
     system "( echo 'Subject: commit message'; echo; echo -n '[code]'; ".
         "git log -1 -p $_; echo '[/code]' ) | ".
         "phpbb2-post --profile=$App::options{phpbb2_post_profile} --bbcode=1 -";
@@ -54,6 +67,9 @@ for (@revs) {
         $fail++;
         last;
     } else {
-        write_file($App::options{counter_path}, $_);
+        if ($App::options{counter_path}) {
+            $log->debug("Updating counter file to $_ ...");
+            write_file($App::options{counter_path}, $_);
+        }
     }
 }
