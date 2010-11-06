@@ -31,6 +31,6 @@ for (@revs) {
         $fail++;
         last;
     } else {
-        write_file($counter_path, $_);
+        write_file($App::options{counter_path}, $_);
     }
 }
