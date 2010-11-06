@@ -4,20 +4,43 @@ use strict;
 use App::Options (
     option => {
         counter_path => { type => 'string', required => 1,},
+        counter => {
+            type => 'string', required => 0,
+            description => 'As an alternative to --counter_path, you can also '.
+                'specify last commit ID posted directly via --counter',
+        },
         phpbb2_post_profile => { type => 'string', required => 1, },
+        author_re => {
+            type => 'string', required => 0,
+            description => 'Only post commits with author matching this regex',
+        },
     },
 );
 use File::Slurp;
 
-my $counter = read_file($App::options{counter_path})
-    or die "Can't read counter file or counter not initialized: ".
-    "$App::options{counter_path}";
-chomp($counter);
+my $counter;
+if ($App::options{counter}) {
+    $counter = $App::options{counter};
+} else {
+    read_file($App::options{counter_path})
+        or die "Can't read counter file or counter not initialized: ".
+            "$App::options{counter_path}";
+    chomp($counter);
+}
 
+my $author_re;
+if ($App::options{author_re}) {
+    eval { $author_re = qr/$App::options{author_re}/ };
+    die "Invalid regex: $App::options{author_re}: $@" if $@;
+}
+
+my @revs0;
 my @revs;
-for (`git log $counter..HEAD --pretty=oneline --reverse`) {
-    /^(\w+) .+/ or die "Weird line in git log output: $_";
-    push @revs, $1;
+my $output = `git log $counter..HEAD --reverse`;
+push @revs0, [$1, $2] while $output =~ /^commit ([0-9a-f]+)\nAuthor: (.+)/mg;
+for (@revs) {
+    next if $author_re && $_->[1] !~ $author_re;
+    push @revs, $_->[0];
 }
 
 my $fail = 0;
