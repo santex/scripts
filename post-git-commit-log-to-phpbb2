@@ -22,7 +22,7 @@ my $counter;
 if ($App::options{counter}) {
     $counter = $App::options{counter};
 } else {
-    read_file($App::options{counter_path})
+    $counter = read_file($App::options{counter_path})
         or die "Can't read counter file or counter not initialized: ".
             "$App::options{counter_path}";
     chomp($counter);
