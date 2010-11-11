@@ -8,9 +8,11 @@ cd $HOME/repo/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 
-/c/sbin/spanel-multissh $@ --type shared --rsync --nouse-ip --user root -- -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
+/c/sbin/spanel-multissh $@ --type shared --nouse-ip --user root -- \
+  'rsync::' -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
   plans-shared.yaml \
   '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/plans.yaml
-/c/sbin/spanel-multissh $@ --type vps    --rsync --nouse-ip --user root -- -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
+/c/sbin/spanel-multissh $@ --type vps    --nouse-ip --user root -- \
+  'rsync::' -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
   plans-vps.yaml \
   '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/plans.yaml
