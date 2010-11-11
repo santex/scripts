@@ -20,14 +20,21 @@ use App::Options (
 use File::Slurp;
 use Log::Any::App '$log';
 
+my ($branch) = `git branch` =~ /^\* (.+)/m
+    or die "Can't find out current branch (can't grok output of `git branch`)";
+
 my $counter;
 if ($App::options{counter}) {
     $counter = $App::options{counter};
 } else {
-    $counter = read_file($App::options{counter_path})
-        or die "Can't read counter file or counter not initialized: ".
-            "$App::options{counter_path}";
-    chomp($counter);
+    for ("$App::options{counter_path}.branch=$branch",
+         $App::options{counter_path}) {
+        $counter = read_file($_, err_mode => 'quiet');
+        last if $counter;
+    }
+    die "Can't read counter file or counter not initialized: ".
+        "$App::options{counter_path} or ".
+            "$App::options{counter_path}.branch=$branch" unless $counter;
 }
 
 my $author_re;
