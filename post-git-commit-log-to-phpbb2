@@ -28,6 +28,7 @@ my ($branch) = $output =~ /^\* (.+)/m
 my $multi_branch = $output =~ /^\  (.+)/m ? 1:0;
 
 my $counter;
+my $counter_file;
 if ($App::options{counter}) {
     $counter = $App::options{counter};
 } else {
@@ -39,7 +40,7 @@ if ($App::options{counter}) {
     }
     for (@files) {
         $counter = read_file($_, err_mode => 'quiet');
-        last if $counter;
+        do { $counter_file = $_; last } if $counter;
     }
     die "Can't read counter file (or counter not initialized) in these ".
       "locations: ".join(", ", @files) unless $counter;
@@ -82,7 +83,7 @@ for (@revs) {
         $fail++;
         last;
     } else {
-        if ($App::options{counter_path}) {
+        if ($counter_file) {
             $log->debug("Updating counter file to $_ ...");
             write_file($App::options{counter_path}, $_);
         }
