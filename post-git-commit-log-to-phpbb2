@@ -85,7 +85,7 @@ for (@revs) {
     } else {
         if ($counter_file) {
             $log->debug("Updating counter file to $_ ...");
-            write_file($App::options{counter_path}, $_);
+            write_file($counter_file, $_);
         }
     }
 }
