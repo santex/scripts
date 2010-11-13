@@ -10,6 +10,6 @@ sshfs s1@builder:/ /media/builder
     # sucky eee's eth. di sekitar 11MB pasti putus dulu. tapi kalo udah
     # gagal sekali, biasanya jadi sukses. jadi kita pancing dulu aja
     # gagalnya sekali di sini. opera=18M
-    rsync -Pavz s1@builder:/home/s1/repo/spanel/share/installers/moodle* /tmp/
+    rsync -Pavz s1@builder:/home/s1/repo/spanel/share/installers/others/moodle* /tmp/
     rm -rf /tmp/moodle*
 #done
