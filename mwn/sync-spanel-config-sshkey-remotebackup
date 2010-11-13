@@ -7,6 +7,7 @@ SRC=$HOME/mwn/ssh/hosting-remote-backup
 
 # owner jangan dipreserve :)
 
-/c/sbin/spanel-multissh $@ --rsync --nouse-ip --user root -- -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
+/c/sbin/spanel-multissh $@ --nouse-ip --user root -- \
+  'rsync::' -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
   $SRC/ \
   '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/ssh

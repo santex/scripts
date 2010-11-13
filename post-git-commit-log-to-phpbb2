@@ -20,14 +20,30 @@ use App::Options (
 use File::Slurp;
 use Log::Any::App '$log';
 
+my $output;
+
+$output = `git branch`;
+my ($branch) = $output =~ /^\* (.+)/m
+    or die "Can't find out current branch (can't grok output of `git branch`)";
+my $multi_branch = $output =~ /^\  (.+)/m ? 1:0;
+
 my $counter;
+my $counter_file;
 if ($App::options{counter}) {
     $counter = $App::options{counter};
 } else {
-    $counter = read_file($App::options{counter_path})
-        or die "Can't read counter file or counter not initialized: ".
-            "$App::options{counter_path}";
-    chomp($counter);
+    my @files;
+    if ($multi_branch) {
+        @files = ("$App::options{counter_path}.branch=$branch");
+    } else {
+        @files = ($App::options{counter_path});
+    }
+    for (@files) {
+        $counter = read_file($_, err_mode => 'quiet');
+        do { $counter_file = $_; last } if $counter;
+    }
+    die "Can't read counter file (or counter not initialized) in these ".
+      "locations: ".join(", ", @files) unless $counter;
 }
 
 my $author_re;
@@ -38,7 +54,7 @@ if ($App::options{author_re}) {
 
 my @revs0;
 my @revs;
-my $output = `git log $counter..HEAD --reverse`;
+$output = `git log $counter..HEAD --reverse`;
 die "Failed doing 'git log $counter..HEAD': $!" if $?;
 push @revs0, [$1, $2] while $output =~ /^commit ([0-9a-f]+)\nAuthor: (.+)/mg;
 $log->infof("Number of commits between $counter .. HEAD: %d", scalar(@revs0));
@@ -67,9 +83,9 @@ for (@revs) {
         $fail++;
         last;
     } else {
-        if ($App::options{counter_path}) {
+        if ($counter_file) {
             $log->debug("Updating counter file to $_ ...");
-            write_file($App::options{counter_path}, $_);
+            write_file($counter_file, $_);
         }
     }
 }

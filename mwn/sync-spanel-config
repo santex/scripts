@@ -1,24 +1,6 @@
 #!/bin/sh
 
-# ganti jika source mwn gak mirip dg yg di sini
-cd $HOME/repo/mwn/spanel-configs
-
-# owner jangan dipreserve :)
-
-/c/sbin/spanel-multissh $@ --rsync --nouse-ip --user root -- -rlptD -Pvz --del --exclude '.svn' --exclude '.git' --exclude '*~' \
-  mail-templates \
-  newaccount-templates \
-  default-dns-zone.yaml \
-  dns-zone-templates \
-  error-pages \
-  hooks \
-  servers/'[[SERVERID]]'/spanel.yaml \
-  www \
-  www-templates \
-  ssl \
-  \
-  '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
-
+sync-spanel-config-main $@
 sync-spanel-config-plans $@
 sync-spanel-config-apache2 $@
 sync-spanel-config-sshkey-remotebackup $@

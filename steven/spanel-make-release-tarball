@@ -1,3 +1,0 @@
-#!/bin/bash
-SRC=$HOME/repo/spanel
-$SRC/devscripts/spanel-prepare-dist --branch=stable
