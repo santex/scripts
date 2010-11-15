@@ -75,7 +75,8 @@ for (@revs) {
         next;
     }
     $log->info("Posting rev $_ to phpBB2 forum ...");
-    system "( echo 'Subject: commit message'; echo; echo -n '[code]'; ".
+    system "( echo 'Subject: commit message".($multi_branch ? " (branch $branch)" : "")."'; ".
+        "echo; echo -n '[code]'; ".
         "git log -1 -p $_; echo '[/code]' ) | ".
         "phpbb2-post --profile=$App::options{phpbb2_post_profile} --bbcode=1 -";
     if ($?) {
