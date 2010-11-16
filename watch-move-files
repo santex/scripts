@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+use autodie;
+use strict;
+use warnings;
+use App::Options (
+    option => {
+        src  => { type => 'string', required => 1, default => '.' },
+        dest => { type => 'string', required => 1, },
+        freq => { type => 'int'   , required => 1, default => 60 },
+    },
+);
+use String::ShellQuote;
+
+while (1) {
+    opendir my($dh), $App::options{src};
+    for (readdir $dh) {
+        next if $_ eq '.' || $_ eq '..';
+        print "Moving $App::options{src}/$_ to $App::options{dest}/ ...\n";
+        system "mv ".shell_quote("$App::options{src}/$_")." ".
+            shell_quote("$App::options{dest}/");
+    }
+    sleep $App::options{freq};
+}
+
