@@ -13,21 +13,13 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # See the complete licence at http://dev.bateauknowledge.nl/svn/COPYING
-
-my $basename;
-
-sub BEGIN {
-    $basename = 'rrdaddsource';
-    $SIG{__WARN__} = sub { warn "$basename: $_[0]"; };
-    $SIG{__DIE__} = sub { die "$basename: $_[0]"; };
-}
 
 use strict;
 
@@ -35,7 +27,7 @@ my $rrdtool = '/usr/bin/rrdtool';
 
 if (defined $ARGV[0] and $ARGV[0] eq '--help') {
 	print <<".";
-usage:  $basename <original rrd file> <new rrd file> <data source>
+usage:  $0 ds <xmldump >newxmldump
 
 Adds a new data source to an RRD database. Uses rrdtool to dump the original
 database to an XML file, edits it and then restores it to the new database.
@@ -48,11 +40,7 @@ for validity.
 	exit;
 }
 
-die "illegal number of arguments\n" unless $#ARGV == 2;
-
-my $infile = $ARGV[0];
-my $outfile = $ARGV[1];
-my $source = $ARGV[2];
+my $source = $ARGV[0];
 
 my ($dsname, $dstype, $dshb, $dsmin, $dsmax, $undef) = split(/:/, $source);
 die "illegal source format\n" unless defined $dsmax and not defined $undef;
