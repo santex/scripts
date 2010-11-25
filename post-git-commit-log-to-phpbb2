@@ -40,7 +40,7 @@ if ($App::options{counter}) {
     }
     for (@files) {
         $counter = read_file($_, err_mode => 'quiet');
-        do { $counter_file = $_; last } if $counter;
+        do { chomp($counter); $counter_file = $_; last } if $counter;
     }
     die "Can't read counter file (or counter not initialized) in these ".
       "locations: ".join(", ", @files) unless $counter;
