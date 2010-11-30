@@ -27,6 +27,12 @@ use App::Options (
             description => 'whether to delete branches in dest repo '.
                 'not existing in src repo',
         },
+        lock => {
+            type => 'boolean', required => 0, default => 1,
+            description => 'if set to false, delete .git/index.lock first '.
+                'before pulling (if you do this, make sure no other process '.
+                'is acting on your repository)',
+        },
     },
 );
 
@@ -144,6 +150,7 @@ sub sync_repo {
     DEBUG "  dest branch heads: ".join(", ", map {"$_ => $dest_heads{$_}"} keys %dest_heads);
 
     my $output;
+    my $lock_deleted;
     for my $branch (@src_branches) {
         # XXX we should allow fetching tags only even if head is the same, but
         # right now tags are not that important
@@ -151,6 +158,12 @@ sub sync_repo {
                 $src_heads{$branch} eq $dest_heads{$branch}) {
             DEBUG "  Skipping branch `$branch` because head already the same";
             next;
+        }
+        if (!$App::options{lock} && !$lock_deleted++) {
+            DEBUG "Deleting locks first ...";
+            no autodie;
+            unlink "$src/$repo/.git/index.lock";
+            unlink "$dest/$repo/.git/index.lock";
         }
         DEBUG "  Updating branch `$branch` ..." if @src_branches > 1;
         $output = myqx("cd '$dest/$repo'; ".
