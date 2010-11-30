@@ -1,2 +1,2 @@
 #!/bin/bash
-sync-repos --dest=$HOME/hb/repos --delete --log_level=INFO "$@"
+sync-repos --dest=$HOME/hb/repos --delete --lock=0 --log_level=INFO "$@"
