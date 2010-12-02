@@ -1,0 +1,121 @@
+#!/usr/bin/perl
+
+# ngeluarin teks kayak gini:
+#
+# Perl 5.13.3 represents approximately one month of development since Perl
+# 5.13.2, and contains 12,184 lines of changes across 575 files from 104 authors
+# and committers.
+#
+# cara pake: cd ke git repo, lalu ketik: summarize-git-changes --software=Spanel
+# --from_commit=<commit-id> --from_version=5.13.2 --to_commit=<commit-id,
+# defaults to HEAD> --to_version=5.13.3.
+
+use 5.010;
+use autodie;
+use strict;
+use warnings;
+use DateTime::Format::MySQL;
+use Log::Any::App qw($log);
+use Number::Format;
+use App::Options (
+    option => {
+        software      => { type => 'string', required => 1 },
+        from_commit   => { type => 'string', required => 1 },
+        from_version  => { type => 'string', required => 0 },
+        to_commit     => { type => 'string', required => 0, default => 'HEAD' },
+        to_version    => { type => 'string', required => 0 },
+        skip_files_re => { type => 'string', required => 0 },
+    },
+);
+
+my %files;
+my %emails;
+my $max_date;
+my $min_date;
+my $n_commits;
+my $n_lines;
+my $last_commit;
+
+sub set_dates {
+    my ($d) = @_;
+    if (!defined($max_date)) { $max_date = $d }
+    if (!defined($min_date)) { $min_date = $d }
+    $max_date = $d if $d gt $max_date;
+    $min_date = $d if $d lt $min_date;
+}
+
+my $cmd = "git log --numstat --date=short ".
+    "$App::options{from_commit}..$App::options{to_commit}";
+my $skip_re; $skip_re = qr/$App::options{skip_files_re}/;
+my $file_skipped;
+open my($fh), "$cmd |";
+while (<$fh>) {
+    $log->trace("git log output line: $_");
+
+    if (/^commit (\S+)$/) {
+        $last_commit //= $1;
+        $n_commits++;
+    }
+
+    /^Author: .+<(.+)>$/ and $emails{$1}++;
+
+    /^Date:\s+(\d{4}-\d{2}-\d{2})$/ and set_dates($1);
+
+    if (/^(\d+)\s+(\d+)\s+(.+)$/) {
+        my ($i, $d, $f) = ($1, $2, $3);
+        my $l = $i+$d;
+
+        if ($skip_re && $f =~ $skip_re) {
+            $file_skipped = 1;
+        } else {
+            $file_skipped = 0;
+        }
+
+        if ($file_skipped) {
+            $log->trace("SKIPPED FILE: $f");
+        } else {
+            $files{$f}++;
+            $n_lines += $l;
+            $log->debug("Counted file: $f ($l, curtot=$n_lines)");
+        }
+    } else {
+        $file_skipped = 0;
+    }
+    #/^ \d+ files changed, (\d+) insertions\(\+\), (\d+) deletions\(-\)$/
+}
+
+$log->debug("Dates: min=$min_date, max=$max_date");
+$log->debug("lines=$n_lines");
+$log->debug("commits=$n_commits");
+
+my @res;
+
+$last_commit =~ s/^(.{7}).+/$1/;
+push @res, "This is revision $last_commit. ";
+
+$min_date = DateTime::Format::MySQL->parse_date($min_date);
+$max_date = DateTime::Format::MySQL->parse_date($max_date);
+my $dur = $max_date - $min_date;
+$dur->in_units('months');
+my $fdur = $dur->months . " month" . ($dur->months > 1 ? "s" : "");
+my $has_versions = $App::options{from_version} && $App::options{to_version};
+my $sw = $App::options{software};
+push @res, $has_versions ? "$sw $App::options{to_version}" : "This version of $sw";
+push @res, " represents approximately $fdur of development since ";
+push @res, $has_versions ? "$sw $App::options{from_version}" : "previous version of $sw";
+
+my $fmt = Number::Format->new;
+
+my $fn_lines = $fmt->format_number($n_lines);
+push @res, ", and contains $fn_lines lines of changes";
+
+my $fn_commits = $fmt->format_number($n_commits);
+push @res, " in $fn_commits commits";
+
+my $fn_files = $fmt->format_number(scalar keys %files);
+push @res, " across $fn_files files";
+
+my $fn_authors = $fmt->format_number(scalar keys %emails);
+push @res, " from $fn_authors authors and committers.";
+
+print join("", @res), "\n";
