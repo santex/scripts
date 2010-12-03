@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh mwnwhmcs@xenon 'cd wwwbin && perl -I. -MMasterkey::Utils -e'\''\'"''"'init_(); mkey_login(); $Mech_Mkey->get("$Masterkey::Config->{CONFIG_ADMIN_URL}/fa-sales-journal.php?period=2010-12&output_format=txtsummary1"); print $Mech_Mkey->content'\''\'
