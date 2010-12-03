@@ -1,2 +1,20 @@
 #!/bin/bash
-ssh mwnwhmcs@xenon 'cd wwwbin && perl -I. -MMasterkey::Utils -e'\''\'"''"'init_(); mkey_login(); $Mech_Mkey->get("$Masterkey::Config->{CONFIG_ADMIN_URL}/fa-sales-journal.php?period=2010-12&output_format=txtsummary1"); print $Mech_Mkey->content'\''\'
+ssh mwnwhmcs@xenon 'cd wwwbin && perl -I. -MMasterkey::Utils -e'\''\'"''"'init_(); mkey_login(); $Mech_Mkey->get("$Masterkey::Config->{CONFIG_ADMIN_URL}/fa-sales-journal.php?period=2010-12&output_format=txtsummary1"); print $Mech_Mkey->content'\''\' | \
+  perl -MNumber::Format -MDateTime -ne'
+    BEGIN {
+        $now = DateTime->now;
+        $eom = $now->clone; $eom->set_day(1); $eom->add(months=>1); $eom->subtract(days=>1);
+        $fmt = Number::Format->new;
+    }
+    if (my ($rp, $sen) = /^\s+Total PENDAPATAN\s+IDR\s+([0-9.]+),(\d\d) C/) {
+        $rp =~ s/\D//g;
+        $rp += $sen/100.0;
+        print;
+        printf "    --> Perkiraan hingga akhir tahun month: %s (days left=%d)\n",
+            $fmt->format_number($rp * $eom->day/$now->day), ($eom->day-$now->day);
+    } else {
+        print;
+    }
+    '
+
+
