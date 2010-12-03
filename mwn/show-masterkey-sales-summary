@@ -17,4 +17,6 @@ ssh mwnwhmcs@xenon 'cd wwwbin && perl -I. -MMasterkey::Utils -e'\''\'"''"'init_(
     }
     '
 
+# XXX seharusnya berdasarkan hari kerja agar lebih akurat: (total jum hari kerja
+# sen-jum ) / (jumlah hari kerja sen-jum yang sudah dilewati hingga hari ini)
 
