@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+# double-shell-quote-lines masih kurang dikit, kita perlu membuang quote terluarnya
+
+use String::ShellQuote;
+while (<>) {
+    chomp;
+    if (length $_) {
+        $_ = shell_quote(shell_quote($_));
+        s/^\\'//;
+        s/\\'$//;
+        print;
+    }
+    print "\n";
+}
