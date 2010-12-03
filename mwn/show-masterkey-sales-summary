@@ -10,7 +10,7 @@ ssh mwnwhmcs@xenon 'cd wwwbin && perl -I. -MMasterkey::Utils -e'\''\'"''"'init_(
         $rp =~ s/\D//g;
         $rp += $sen/100.0;
         print;
-        printf "    --> Perkiraan hingga akhir tahun month: %s (days left=%d)\n",
+        printf "    --> Perkiraan hingga akhir bulan: %s (sisa hari=%d)\n",
             $fmt->format_number($rp * $eom->day/$now->day), ($eom->day-$now->day);
     } else {
         print;
