@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+use String::ShellQuote;
+while (<>) {
+    chomp;
+    print shell_quote($_), "\n";
+}

@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+# biasanya berguna buat pass over ssh user@host ...
+
+use String::ShellQuote;
+while (<>) {
+    chomp;
+    print shell_quote(shell_quote($_)), "\n";
+}
