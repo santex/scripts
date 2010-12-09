@@ -16,19 +16,12 @@ ssh mwnwhmcs@xenon 'cd wwwbin && perl -I. -MMasterkey::Utils -e'\''\'"''"'init_(
         #printf "    --> Perkiraan hingga akhir bulan: %s (sisa hari=%d)\n",
         #    $fmt->format_number($rp * $eom->day/$now->day), ($eom->day-$now->day);
 
-        # business days & hours
-        $bt = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$eom);
-        $bs = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$now);
-        $bd_this_mon = $bt->getdays  + 1;
-        $bd_so_far   = $bs->getdays  + 1;
-        $bh_this_mon = $bt->gethours + 1;
-        $bh_so_far   = $bs->gethours + 1;
-        if ($bh_so_far) {
-            printf "    --> Perkiraan hingga akhir bulan: %s (total hari/jam kerja=%d/%d, hingga hari ini=%d/%d, sisa=%d/%d)\n",
-                $fmt->format_number($rp * $bh_this_mon/$bh_so_far),
-                $bd_this_mon, $bh_this_mon,
-                $bd_so_far, $bh_so_far,
-                ($bd_this_mon - $bd_so_far), ($bh_this_mon - $bh_so_far);
+        # business days
+        $bd_this_mon = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$eom)->getdays + 1;
+        $bd_so_far   = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$now)->getdays + 1;
+        if ($bd_so_far) {
+            printf "    --> Perkiraan hingga akhir bulan: %s (total hari kerja=%d, hingga hari ini=%d, sisa=%d)\n",
+                $fmt->format_number($rp * $bd_this_mon/$bd_so_far), $bd_this_mon, $bd_so_far, ($bd_this_mon - $bd_so_far);
         }
 
     } else {
