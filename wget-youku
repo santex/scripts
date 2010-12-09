@@ -1,2 +1,3 @@
 #!/bin/bash
-wget --no-cache -i urls.txt -nc -t0 -UMozilla/5.0
+wget --no-cache -i urls.txt -nc -t0 -UMozilla/5.0 "$*"
+
