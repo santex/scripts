@@ -3,8 +3,8 @@ ssh mwnwhmcs@xenon 'cd wwwbin && perl -I. -MMasterkey::Utils -e'\''\'"''"'init_(
   perl -MNumber::Format -MDateTime -MDateTime::BusinessHours -ne'
     BEGIN {
         $now = DateTime->now;
-        $eom = $now->clone; $eom->set_day(1); $eom->add(months=>1); $eom->subtract(days=>1); $eom->set_hour(23);
-        $som = $now->clone; $som->set_day(1); $som->set_hour(0);
+        $eom = $now->clone; $eom->set_day(1); $eom->add(months=>1); $eom->subtract(days=>1);
+        $som = $now->clone; $som->set_day(1);
         $fmt = Number::Format->new;
     }
     if (my ($rp, $sen) = /^\s+Total PENDAPATAN\s+IDR\s+([0-9.]+),(\d\d) C/) {
@@ -21,8 +21,8 @@ ssh mwnwhmcs@xenon 'cd wwwbin && perl -I. -MMasterkey::Utils -e'\''\'"''"'init_(
         $bs = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$now);
         $bd_this_mon = $bt->getdays  + 1;
         $bd_so_far   = $bs->getdays  + 1;
-        $bh_this_mon = $bt->gethours;
-        $bh_so_far   = $bs->gethours;
+        $bh_this_mon = $bt->gethours + 1;
+        $bh_so_far   = $bs->gethours + 1;
         if ($bh_so_far) {
             printf "    --> Perkiraan hingga akhir bulan: %s (total hari/jam kerja=%d/%d, hingga hari ini=%d/%d, sisa=%d/%d)\n",
                 $fmt->format_number($rp * $bh_this_mon/$bh_so_far),
