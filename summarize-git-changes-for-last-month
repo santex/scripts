@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use 5.010;
+use autodie;
+use strict;
+use warnings;
+use DateTime;
+use Log::Any::App qw($log);
+use Number::Format;
+use String::ShellQuote;
+use App::Options (
+    option => {
+        software      => { type => 'string', required => 0, default => 'software' },
+        skip_files_re => { type => 'string', required => 0 },
+    },
+);
+
+my $now = DateTime->now;
+my $lastmo = $now->clone; $lastmo->subtract(months=>1);
+my $cmd;
+
+$cmd = "git log -1 '\@{${\($lastmo->year)}-${\($lastmo->month)}-01 00:00:00}'";
+my ($from_commit) = `$cmd` =~ /^commit (\w+)/m;
+$from_commit or die "Can't get from_commit";
+$log->info("Last commit before ".$lastmo->year."-".$lastmo->month."-01 00:00:00 is $from_commit");
+
+$cmd = "git log -1 '\@{${\($now->year)}-${\($now->month)}-01 00:00:00}'";
+my ($to_commit) = `$cmd` =~ /^commit (\w+)/m;
+$to_commit or die "Can't get to_commit";
+$log->info("Last commit before ".$now->year."-".$now->month."-01 00:00:00 is $to_commit");
+
+print "Summary of activity in $App::options{software} project for ".$lastmo->year."-".$lastmo->month.": ";
+
+$cmd = "summarize-git-changes --from_commit=$from_commit --to_commit=$to_commit --software=".shell_quote($App::options{software});
+system $cmd;
+

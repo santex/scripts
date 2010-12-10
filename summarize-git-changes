@@ -46,7 +46,8 @@ sub set_dates {
 
 my $cmd = "git log --numstat --date=short ".
     "$App::options{from_commit}..$App::options{to_commit}";
-my $skip_re; $skip_re = qr/$App::options{skip_files_re}/;
+my $skip_re; $skip_re = defined($App::options{skip_files_re}) ?
+    qr/$App::options{skip_files_re}/ : undef;
 my $file_skipped;
 open my($fh), "$cmd |";
 while (<$fh>) {
