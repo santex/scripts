@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+
+use autodie;
+use strict;
+use warnings;
+use String::ShellQuote;
+use File::Temp qw(tempdir);
+use Log::Any::App '$log', -file=>0;
+
+die "Usage: $0 <tarname>" unless @ARGV == 1;
+my $tar = $ARGV[0];
+
+my $dir = tempdir(CLEANUP=>1);
+my $cmd = "tar xfz ".shell_quote($tar)." -C ".shell_quote($dir).
+    " && du -sb ".shell_quote($dir);
+$log->debug("cmd: $cmd");
+my $res = `$cmd`;
+$log->debug("output from cmd: $res");
+die "Strange output from du command: $res"
+    unless $res =~ m!^(\d+)\s+/.+$!;
+print $1, "\n";
