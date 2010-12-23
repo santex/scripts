@@ -10,8 +10,14 @@ use Log::Any::App '$log', -file=>0;
 die "Usage: $0 <tarname>" unless @ARGV == 1;
 my $tar = $ARGV[0];
 
+my $opt;
+if    ($tar =~ /\.(tar)$/i) { $opt = "" }
+elsif ($tar =~ /\.(tgz|tar\.gz)$/i) { $opt = "z" }
+elsif ($tar =~ /\.(tbz2?|tar\.bz2)$/i) { $opt = "j" }
+die "Can't determine tarball format" unless defined($opt);
+
 my $dir = tempdir(CLEANUP=>1);
-my $cmd = "tar xfz ".shell_quote($tar)." -C ".shell_quote($dir).
+my $cmd = "tar xf$opt ".shell_quote($tar)." -C ".shell_quote($dir).
     " && du -sb ".shell_quote($dir);
 $log->debug("cmd: $cmd");
 my $res = `$cmd`;
