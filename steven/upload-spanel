@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# upload spanel to spanel.sloki.com
+
+SRC=$HOME/tmp/spanel
+USER=spsloki
+HOST=spanel.sloki.com
+PATH_REPO=/u/spsloki/public/spanel/latest
+PATH_INSTALLER=/u/spsloki/sites/spanel.sloki.com/www
+
+echo "Uploading distribution ..."
+rsync -avz --del --force --delete-excluded --exclude 'XXX' $SRC/ $USER@$HOST:$PATH_REPO/
+
+echo "Uploading installer script ..."
+rsync -avz $SRC/installer/install-spanel $USER@$HOST:$PATH_INSTALLER/
