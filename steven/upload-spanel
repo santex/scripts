@@ -2,11 +2,15 @@
 
 # upload spanel to spanel.sloki.com
 
+SRCREPO=$HOME/proj/spanel
 SRC=$HOME/tmp/spanel
 USER=spsloki
 HOST=spanel.sloki.com
 PATH_REPO=/u/spsloki/public/spanel/latest
 PATH_INSTALLER=/u/spsloki/sites/spanel.sloki.com/www
+
+echo "Updating distribution ..."
+$SRCREPO/devscripts/fast-sync-to-dist --dest=$SRC
 
 echo "Uploading distribution ..."
 rsync -avz --del --force --delete-excluded --exclude 'XXX' $SRC/ $USER@$HOST:$PATH_REPO/
