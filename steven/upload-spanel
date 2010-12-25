@@ -9,11 +9,11 @@ HOST=spanel.sloki.com
 PATH_REPO=/u/spsloki/public/spanel/latest
 PATH_INSTALLER=/u/spsloki/sites/spanel.sloki.com/www
 
-echo "Updating distribution ..."
+echo "==> Updating distribution ..."
 $SRCREPO/devscripts/fast-sync-to-dist --dest=$SRC
 
-echo "Uploading distribution ..."
+echo "==> Uploading distribution ..."
 rsync -avz --del --force --delete-excluded --exclude 'XXX' $SRC/ $USER@$HOST:$PATH_REPO/
 
-echo "Uploading installer script ..."
+echo "==> Uploading installer script ..."
 rsync -avz $SRC/installer/install-spanel $USER@$HOST:$PATH_INSTALLER/
