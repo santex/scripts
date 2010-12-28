@@ -5,15 +5,32 @@
 SRCREPO=$HOME/proj/spanel
 SRC=$HOME/tmp/spanel
 USER=spsloki
-HOST=spanel.sloki.com
-PATH_REPO=/u/spsloki/public/spanel/latest
-PATH_INSTALLER=/u/spsloki/sites/spanel.sloki.com/www
+HOST1=spanel.sloki.com
+HOST2=us.spanel.sloki.com
+PATH_RELEASES=/u/spsloki/public/spanel/releases
+
+set -x
 
 echo "==> Updating distribution ..."
 $SRCREPO/devscripts/fast-sync-to-dist --dest=$SRC
 
-echo "==> Uploading distribution ..."
-rsync -avz --del --force --delete-excluded --exclude 'XXX' $SRC/ $USER@$HOST:$PATH_REPO/
+echo "==> Preparing and uploading installer script ..."
+$SRCREPO/devscripts/prepare-installer-script >/tmp/install-spanel && perl -c /tmp/install-spanel
+for HOST in $HOST1 $HOST2; do
+    PATH_INSTALLER=/u/$USER/sites/$HOST/www
+    rsync -avz /tmp/install-spanel $USER@$HOST:$PATH_INSTALLER/
+done
 
-echo "==> Uploading installer script ..."
-rsync -avz $SRC/installer/install-spanel $USER@$HOST:$PATH_INSTALLER/
+echo "==> Uploading distribution ..."
+for HOST in $HOST1 $HOST2; do
+    LAST_RELEASE=`ssh $USER@$HOST ls $PATH_RELEASES | sort | tail -1`
+    NEW_RELEASE=`date +'%Y%m%d%H%M%S'`
+    ssh $USER@$HOST "cd $PATH_RELEASES && cp -la $LAST_RELEASE .$NEW_RELEASE.rsync"
+    rsync -avz $SRC/ $USER@$HOST:$PATH_RELEASES/.$NEW_RELEASE.rsync/
+    ssh $USER@$HOST "cd $PATH_RELEASES && mv     .$NEW_RELEASE.rsync  $NEW_RELEASE"
+done
+
+echo "==> Updating release GUIDs ..."
+for HOST in $HOST1 $HOST2; do
+    ssh root@$HOST "/u/$USER/home/bin/publish-spanel-releases"
+done
