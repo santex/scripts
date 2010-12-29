@@ -14,11 +14,12 @@ set -x
 echo "==> Updating distribution ..."
 $SRCREPO/devscripts/fast-sync-to-dist --dest=$SRC
 
-echo "==> Preparing and uploading installer script ..."
-$SRCREPO/devscripts/prepare-installer-script >/tmp/install-spanel && perl -c /tmp/install-spanel
+echo "==> Preparing and uploading installer/upgrader script ..."
+$SRCREPO/devscripts/prepare-installer-script >/tmp/install-spanel && perl -c /tmp/install-spanel; [[ $? == 0 ]] || exit 1
+$SRCREPO/devscripts/prepare-upgrader-script  >/tmp/upgrade-spanel && perl -c /tmp/upgrade-spanel; [[ $? == 0 ]] || exit 1
 for HOST in $HOST1 $HOST2; do
     PATH_INSTALLER=/u/$USER/sites/$HOST/www
-    rsync -avz /tmp/install-spanel $USER@$HOST:$PATH_INSTALLER/
+    rsync -avz /tmp/{install,upgrade}-spanel $USER@$HOST:$PATH_INSTALLER/
 done
 
 echo "==> Uploading distribution ..."

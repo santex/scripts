@@ -2,8 +2,16 @@
 
 SRC=$HOME/repos/spanel-site
 USER=spsloki
-HOST=spanel.sloki.com
+HOST1=spanel.sloki.com
+HOST2=us.spanel.sloki.com
 PATH_WWW=www/
 
-rsync -avz --del --exclude '*~' --exclude 'install-spanel' --exclude '/lib' $SRC/www/ $USER@$HOST:$PATH_WWW/
-rsync -avz --del --exclude '*~'                            $SRC/lib  $USER@$HOST:$PATH_WWW/
+for HOST in $HOST1 $HOST2; do
+    echo "=> Deploying to $HOST ..."
+    rsync -avz --del --exclude '*~' \
+        --exclude 'install-spanel' --exclude 'upgrade-spanel' \
+        --exclude '/lib' \
+        $SRC/www/ $USER@$HOST:$PATH_WWW/
+    rsync -avz --del --exclude '*~' \
+        $SRC/lib  $USER@$HOST:$PATH_WWW/
+done
