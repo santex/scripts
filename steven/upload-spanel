@@ -27,7 +27,7 @@ for HOST in $HOST1 $HOST2; do
     LAST_RELEASE=`ssh $USER@$HOST ls $PATH_RELEASES | sort | tail -1`
     NEW_RELEASE=`date +'%Y%m%d%H%M%S'`
     ssh $USER@$HOST "cd $PATH_RELEASES && cp -la $LAST_RELEASE .$NEW_RELEASE.rsync"
-    rsync -avz $SRC/ $USER@$HOST:$PATH_RELEASES/.$NEW_RELEASE.rsync/
+    rsync -avz --del --force $SRC/ $USER@$HOST:$PATH_RELEASES/.$NEW_RELEASE.rsync/
     ssh $USER@$HOST "cd $PATH_RELEASES && mv     .$NEW_RELEASE.rsync  $NEW_RELEASE"
 done
 
