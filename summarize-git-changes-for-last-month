@@ -31,6 +31,10 @@ $log->info("Last commit before ".$now->year."-".$now->month."-01 00:00:00 is $to
 
 print "Summary of activity in $App::options{software} project for ".$lastmo->year."-".$lastmo->month.": ";
 
-$cmd = "summarize-git-changes --from_commit=$from_commit --to_commit=$to_commit --software=".shell_quote($App::options{software});
+my $args = "";
+$args .= " --software=".shell_quote($App::options{software});
+$args .= " --skip_files_re=".shell_quote($App::options{skip_files_re}) if $App::options{skip_files_re};
+
+$cmd = "summarize-git-changes --from_commit=$from_commit --to_commit=$to_commit".$args;
 system $cmd;
 

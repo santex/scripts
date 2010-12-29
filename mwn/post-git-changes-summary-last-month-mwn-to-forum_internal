@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd /u/steven/public/git/mwn && ( summarize-git-changes-for-last-month --software=mwn | phpbb2-post --profile=commit_mwn - )
+cd /u/steven/public/git/mwn && ( summarize-mwn-git-changes-for-last-month | phpbb2-post --profile=commit_mwn - )
 

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+SRC=$HOME/repos/spanel-site
+USER=spsloki
+HOST=spanel.sloki.com
+PATH_WWW=www/
+
+rsync -avz --del --exclude '*~' --exclude 'install-spanel' --exclude '/lib' $SRC/www/ $USER@$HOST:$PATH_WWW/
+rsync -avz --del --exclude '*~'                            $SRC/lib  $USER@$HOST:$PATH_WWW/
