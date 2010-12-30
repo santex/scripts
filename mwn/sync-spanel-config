@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sync-spanel-config-main $@
-sync-spanel-config-plans $@
-sync-spanel-config-apache2 $@
-sync-spanel-config-sshkey-remotebackup $@
+sync-spanel-config-main "$@"
+sync-spanel-config-plans "$@"
+sync-spanel-config-apache2 "$@"
+sync-spanel-config-sshkey-remotebackup "$@"

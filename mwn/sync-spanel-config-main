@@ -5,17 +5,7 @@ cd $HOME/repo/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 
-/c/sbin/spanel-multissh $@ --nouse-ip --user root -- \
-  'rsync::' -rlptD -Pvz --del --exclude '.svn' --exclude '.git' --exclude '*~' \
-  mail-templates \
-  newaccount-templates \
-  default-dns-zone.yaml \
-  dns-zone-templates \
-  error-pages \
-  hooks \
-  servers/'[[SERVERID]]'/spanel.yaml \
-  www \
-  www-templates \
-  ssl \
-  \
-  '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+/c/sbin/spanel-multissh $@               --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' common/                     '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+/c/sbin/spanel-multissh $@ --type shared --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-type/sharedhost/        '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+/c/sbin/spanel-multissh $@ --type vps    --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-type/vpshost/           '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+/c/sbin/spanel-multissh $@               --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-server/'[[SERVERID]]'/  '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/

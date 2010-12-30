@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# sama seperti sync-spanel-config, tapi hanya /etc/spanel/ssh-nya aja
-
 # no ending slash!
 SRC=$HOME/mwn/ssh/hosting-remote-backup
 

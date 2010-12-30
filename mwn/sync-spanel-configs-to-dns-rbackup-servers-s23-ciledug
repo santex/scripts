@@ -1,12 +1,5 @@
 #!/bin/sh
 
-SOURCE=$HOME/proj/mwn/spanel-configs/servers
-
-# note: -rlptD = -a minus -og (owner, group)
-
-/c/sbin/spanel-multissh --rsync --user root --none --servers 23,ciledug -- \
- --exclude '*~' --delete-excluded -rlptD -Pvz --del $SOURCE/* '[[USER]]@[[IP]]':/etc/spanel/servers/
-/c/sbin/spanel-multissh --rsync --user root --all --has mwn --has dns --lack intranet -- \
- --exclude '*~' --delete-excluded -rlptD -Pvz --del $SOURCE/* '[[USER]]@[[IP]]':/etc/spanel/servers/
-/c/sbin/spanel-multissh --rsync --user root --all --has mwn --has remote-backup -- \
- --exclude '*~' --delete-excluded -rlptD -Pvz --del $SOURCE/* '[[USER]]@[[IP]]':/etc/spanel/servers/
+sync-spanel-config --user root --none --servers 23,ciledug
+sync-spanel-config --user root --all --has mwn --has dns --lack intranet
+sync-spanel-config --user root --all --has mwn --has remote-backup

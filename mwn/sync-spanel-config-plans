@@ -10,9 +10,9 @@ cd $HOME/repo/mwn/spanel-configs
 
 /c/sbin/spanel-multissh $@ --type shared --nouse-ip --user root -- \
   'rsync::' -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
-  plans-shared.yaml \
+  per-type/sharedhost/plans.yaml \
   '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/plans.yaml
 /c/sbin/spanel-multissh $@ --type vps    --nouse-ip --user root -- \
   'rsync::' -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
-  plans-vps.yaml \
+  per-type/vpshost/plans.yaml \
   '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/plans.yaml
