@@ -124,6 +124,7 @@ my @Responses = (
          for (@im) { $_ = $_->{url} }
          @im = grep { !/[%?]/ } @im; # phpbb2 sucks!
          if (!@im) { return "gak nemu imejes yang layak tayang di phpbb2 nih han ..." }
+         $log->debugf("\@im = %s", \@im);
          my $n = $args{match}[1] || 1;
          splice @im, $n;
          if (@im) {
