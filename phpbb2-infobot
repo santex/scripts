@@ -58,6 +58,7 @@ my @Responses = (
      handler => sub {
          join("",
               "Bantuan: beberapa perintah yang saat ini dikenali:\n\n",
+              "* bantuan / help -> pesan ini\n",
               "* tampilkan gambar KATAKUNCI -> cari gambar di google images\n",
               "* status -> tampilkan uptime, hostname, pid, dll\n",
               "* USERNAME++ (ALASAN) / USERNAME-- (ALASAN) -> beri karma positif/negatif\n",
