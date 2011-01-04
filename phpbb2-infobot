@@ -298,6 +298,11 @@ sub init_db {
                status TEXT NOT NULL DEFAULT 'new',
                raw_command TEXT NOT NULL,
                note TEXT)");
+    # to avoid viewing a post multiple times and bubbling view count [noticed by
+    # bayo, 2011-01-04]
+    $Db->do("CREATE TABLE IF NOT EXISTS viewed_posts (
+               post_id INTEGER PRIMARY KEY,
+               ctime BIGINT NOT NULL)");
 }
 
 sub respond_command {
@@ -361,6 +366,7 @@ sub find_new_commands {
     while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+)&!sg) {
         my ($uid, $username, $forum_id, $post_id) = ($1, $2, $3, $4);
         next if $Db->selectrow_array("SELECT id FROM cmds WHERE post_id=$post_id");
+        next if $Db->selectrow_array("SELECT post_id FROM viewed_posts WHERE post_id=$post_id");
         $Mech->get("$App::options{base_url}/viewtopic.php?p=$post_id");
         $Mech->content =~ /<a class="maintitle" href="viewtopic.php\?t=(\d+)&/ or do {
             $log->error("Can't get topic ID for post #$post_id, skipped");
@@ -371,6 +377,7 @@ sub find_new_commands {
             $log->error("Can't grab message body ID for post #$post_id, skipped");
             next;
         };
+        $Db->do("INSERT INTO viewed_posts (post_id, ctime) VALUES (?, ?)", {}, $post_id, $now);
         my $message = $1;
         for ($message) {
             s!<br />!\n!g;
