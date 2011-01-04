@@ -53,6 +53,19 @@ $log->debug("Botname_Regex=$Botname_Regex");
 
 my @Responses = (
 
+    {pat => qr/^(bantuan|help)*$/,
+     name => 'HELP',
+     handler => sub {
+         join("",
+              "Bantuan: beberapa perintah yang saat ini dikenali:\n\n",
+              "* tampilkan gambar KATAKUNCI -> cari gambar di google images\n",
+              "* status -> tampilkan uptime, hostname, pid, dll\n",
+              "* USERNAME++ (ALASAN) / USERNAME-- (ALASAN) -> beri karma positif/negatif\n",
+              "* karma dari USERNAME -> tampilkan daftar karma yang diberikan seorang user\n",
+              "* karma USERNAME -> tampilkan daftar karma yang diterima seorang user\n",
+          );
+     }},
+
     {pat => qr/^\s*$/,
      name => 'EMPTY',
      handler => sub {
