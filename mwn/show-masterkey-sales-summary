@@ -1,5 +1,5 @@
 #!/bin/bash
-ssh mwnwhmcs@xenon 'cd sites/masterkey.masterweb.net/www/bin && perl -I../lib/perl -MMasterkey::AdminArea -e'\''\'"''"' Masterkey::AdminArea::login(); $Masterkey::AdminArea::mech->get("$Masterkey::Config::conf->{CONFIG_ADMIN_URL}/fa-sales-journal.php?period=2010-12&output_format=txtsummary1"); print $Masterkey::AdminArea::mech->content'\''\' | \
+ssh mwnwhmcs@xenon 'cd sites/masterkey.masterweb.net/www/bin && perl -I../lib/perl -MMasterkey::AdminArea -e'\''\'"''"' Masterkey::AdminArea::login(); $Masterkey::AdminArea::mech->get("$Masterkey::Config::conf->{CONFIG_ADMIN_URL}/fa-sales-journal.php?output_format=txtsummary1"); print $Masterkey::AdminArea::mech->content'\''\' | \
   perl -MNumber::Format -MDateTime -MDateTime::BusinessHours -ne'
     BEGIN {
         $now = DateTime->now;
