@@ -7,12 +7,13 @@
 # if a command is found, it will try to reply to the same topic with
 # the answer.
 
+use 5.010;
 use strict;
 
 use DBI;
 use Data::Dumper;
 use File::Slurp;
-use List::Util qw(shuffle);
+use List::Util qw(shuffle min);
 use Log::Any::App '$log';
 use URI::Escape;
 use REST::Google::Search::Images;
@@ -38,7 +39,12 @@ use App::Options (
         botname => { type => 'string', required => 1, description => 'bot name(s), separate with comma for multiple names' },
         delay => { type => 'int', required => 1, default => 30, },
         post_delay => { type => 'int', required => 1, default => 4, },
+        search_delay => { type => 'int', required => 1, default => 4, },
         db_path => { type => 'string', required => 1, default => "$ENV{HOME}/phpbb2-infobot.db", },
+
+        run_spelling_nazi => { type=>'boolean', default=>1 },
+        mispelled_words => { type => 'string', required => 1, description => 'mispelled words that wants to be reminded, in this format: bad=>good, anotheur=>another, ...' },
+        mispelled_batch => { type => 'string', required => 1, description => 'how many words should be searched at once', default=>20 },
     },
 );
 
@@ -283,6 +289,7 @@ login();
 while (1) {
     find_new_commands();
     respond_command(unreplied_commands());
+    spelling_nazi();
     sleep $App::options{delay};
 }
 
@@ -349,22 +356,32 @@ sub unreplied_commands {
     @res;
 }
 
-sub find_new_commands {
-    # search one-day worth of posts (well, only 1st page) mentioning me
-    my $n = join "+", split /,\s*/, $App::options{botname};
+sub forum_search {
+    my %args = @_;
+    $log->debug("Searching for $args{keywords} ...");
+    # by default search one-day worth of posts (well, only 1st page)
     $Mech->get(join "",
                "$App::options{base_url}/search.php?mode=results",
-               "&search_keywords=$n",
+               "&search_keywords=", uri_escape($args{keywords}),
                "&search_terms=all&search_forum=-1&search_time=1&search_cat=-1&sort_by=0",
-               "&show_results=posts&return_chars=200");
+               "&show_results=posts&return_chars=".($args{chars} // 200));
+    sleep $App::options{search_delay};
     my $ct = $Mech->content;
+    do {
+        $log->error("Search speed blocked, try increasing search_delay");
+        return [500, "Speed blocked, try increasing search_delay"];
+    } if $ct =~ /You cannot make another search so soon after your last/;
+    return [200, "No result", []]
+        if $ct =~ />No topics or posts met your search criteria</;
     $ct =~ s/.+>Search found (\d+) match(?:es)?<//s or do {
+        $log->debug("ct=$ct");
         $log->error("Can't parse search result page, skipping");
-        return;
+        return [500, "Can't parse search result page"];
     };
     my $now = time;
-    while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+)&!sg) {
-        my ($uid, $username, $forum_id, $post_id) = ($1, $2, $3, $4);
+    my @res;
+    while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+).+?>(.+?)<!sg) {
+        my ($uid, $username, $forum_id, $post_id, $subject) = ($1, $2, $3, $4, $5);
         next if $Db->selectrow_array("SELECT id FROM cmds WHERE post_id=$post_id");
         next if $Db->selectrow_array("SELECT post_id FROM viewed_posts WHERE post_id=$post_id");
         $Mech->get("$App::options{base_url}/viewtopic.php?p=$post_id");
@@ -385,8 +402,73 @@ sub find_new_commands {
             s!\012?\015\012?!\n!g;
             s!<[^>]+>!!sg;
         }
+
+        push @res, {
+            uid=>$uid,
+            username=>$username,
+            post_id=>$post_id,
+            topic_id=>$topic_id,
+            forum_id=>$forum_id,
+            subject=>$subject,
+            message=>$message,
+        };
+    }
+    $log->debug("Found ".scalar(@res)." result(s)");
+    [200, "OK", \@res];
+}
+
+sub spelling_nazi {
+    return unless $App::options{mispelled_words};
+
+    state $words;
+    if (!$words) {
+        $words = { split /\s*(?:,|=>)\s*/, lc($App::options{mispelled_words}) };
+    }
+    state $search_words;
+    if (!$search_words) { $search_words = [keys %$words] }
+    state $search_re;
+    if (!$search_re) {
+        $search_re = join("|", map {quotemeta} @$search_words);
+        $search_re = qr/(?:\b(?:$search_re)\b)/;
+    }
+
+    my $b = $App::options{mispelled_batch};
+    while (@$search_words) {
+        my @batch = splice @$search_words, 0,
+            min($App::options{mispelled_batch}, scalar(@$search_words));
+        my $res = forum_search(keywords=>join(" ", @batch), chars=>1000);
+        next unless $res->[0] == 200;
+        for my $r (@{ $res->[2] }) {
+            my @c;
+            for my $s ($r->{subject}, $r->{message}) {
+                my @s = $s =~ /($search_re)/ig;
+                for (@s) {
+                    $_ = lc;
+                    push @c, $_ unless $_ ~~ @c;
+                }
+            }
+            next unless @c;
+            my $reply = "";
+            $reply .= "[quote=\"$r->{username}\"]".join("", map{"$_ ...\n"} @c)."[/quote]\n\n";
+            $reply .= "maaf OOT say, cuma mo ngingetin aja bahwa ejaan yang benar utk:\n\n";
+            $reply .= join("", map {"* $_ => $words->{$_}\n"} @c);
+            forum_post(
+                forum_id=>$r->{forum_id}, topic_id=>$r->{topic_id},
+                bbcode=>1,
+                subject=>"spelling nazi",
+                message => $reply);
+        }
+    }
+}
+
+sub find_new_commands {
+    my $n = join " ", split /,\s*/, $App::options{botname};
+    my $res = forum_search(keywords=>$n);
+    return unless $res->[0] == 200;
+    my $now = time;
+    for my $r (@{ $res->[2] }) {
         my @cmds;
-        while ($message =~ /^$Botname_Regex\s*[:,]\s*(\b.*?)(?:[.?!]+)?$/mg) {
+        while ($r->{message} =~ /^$Botname_Regex\s*[:,]\s*(\b.*?)(?:[.?!]+)?$/mg) {
             push @cmds, $1;
         }
         @cmds = grep { $_ eq '' || /\w/ } @cmds;
@@ -395,11 +477,11 @@ sub find_new_commands {
             $log->warn("Too many commands (".scalar(@cmds).", will only process 5");
             splice @cmds, 5;
         }
-        $log->debugf("Found command(s) in post #$post_id: %s", \@cmds);
-        $log->debug("Message is (quotes cleaned): $message");
+        $log->debugf("Found command(s) in post #$r->{post_id}: %s", \@cmds);
+        $log->debug("Message is (quotes cleaned): $r->{message}");
         for (@cmds) {
             $Db->do("INSERT INTO cmds (post_id, ctime, forum_id, topic_id, username, raw_command) VALUES (?, ?, ?, ?, ?, ?)", {},
-                    $post_id, $now, $forum_id, $topic_id, $username, $_);
+                    $r->{post_id}, $now, $r->{forum_id}, $r->{topic_id}, $r->{username}, $_);
         }
     }
 }
