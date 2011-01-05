@@ -5,7 +5,7 @@ USER=spsloki
 HOST1=spanel.sloki.com
 HOST2=us.spanel.sloki.com
 PATH_WWW=www/
-PATH_BIN=www/
+PATH_BIN=bin/
 
 for HOST in $HOST1 $HOST2; do
     echo "=> Deploying to $HOST ..."
