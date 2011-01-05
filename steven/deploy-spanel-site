@@ -5,6 +5,7 @@ USER=spsloki
 HOST1=spanel.sloki.com
 HOST2=us.spanel.sloki.com
 PATH_WWW=www/
+PATH_BIN=www/
 
 for HOST in $HOST1 $HOST2; do
     echo "=> Deploying to $HOST ..."
@@ -14,4 +15,6 @@ for HOST in $HOST1 $HOST2; do
         $SRC/www/ $USER@$HOST:$PATH_WWW/
     rsync -avz --del --exclude '*~' \
         $SRC/lib  $USER@$HOST:$PATH_WWW/
+    rsync -avz --del --exclude '*~' \
+        $SRC/bin  $USER@$HOST:$PATH_BIN/
 done
