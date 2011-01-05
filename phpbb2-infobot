@@ -439,6 +439,8 @@ sub spelling_nazi {
         my $res = forum_search(keywords=>join(" ", @batch), chars=>1000);
         next unless $res->[0] == 200;
         for my $r (@{ $res->[2] }) {
+            # don't self-critize
+            next if $r->{username} eq $App::options{username};
             my @c;
             for my $s ($r->{subject}, $r->{message}) {
                 my @s = $s =~ /($search_re)/ig;
