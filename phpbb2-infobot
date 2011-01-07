@@ -10,11 +10,14 @@
 use 5.010;
 use strict;
 
+BEGIN { }
+
 use DBI;
 use Data::Dumper;
 use File::Slurp;
 use List::Util qw(shuffle min);
-use Log::Any::App '$log';
+use Log::Any::App '$log',
+    -screen=>{pattern_style=>'script_long'};
 use URI::Escape;
 use REST::Google::Search::Images;
 use WWW::Mechanize;
