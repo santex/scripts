@@ -1,0 +1,3 @@
+#!/bin/bash
+
+$HOME/repos/spanel/devscripts/build-dist --dest=$HOME/tmp "$@"
