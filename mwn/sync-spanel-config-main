@@ -5,7 +5,7 @@ cd $HOME/repo/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 
-/c/sbin/spanel-multissh $@               --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' common/                     '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
-/c/sbin/spanel-multissh $@ --type shared --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-type/sharedhost/        '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
-/c/sbin/spanel-multissh $@ --type vps    --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-type/vpshost/           '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
-/c/sbin/spanel-multissh $@               --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-server/'[[SERVERID]]'/  '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+/c/sbin/spanel-multissh $@ --background               --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' common/                     '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+/c/sbin/spanel-multissh $@ --background --type shared --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-type/sharedhost/        '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+/c/sbin/spanel-multissh $@ --background --type vps    --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-type/vpshost/           '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
+/c/sbin/spanel-multissh $@ --background               --nouse-ip --user root -- 'rsync::' -rlptD -Pvz --exclude '*~' per-server/'[[SERVERID]]'/  '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/
