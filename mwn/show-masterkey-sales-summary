@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# sekalian panggil ini dulu ah
-set-invoice-sale-date
-
-ssh mwnwhmcs@xenon 'cd sites/masterkey.masterweb.net/www/bin && perl -I../lib/perl -MMasterkey::AdminArea -e'\''\'"''"' Masterkey::AdminArea::login(); $Masterkey::AdminArea::mech->get("$Masterkey::Config::conf->{CONFIG_ADMIN_URL}/fa-sales-journal.php?output_format=txtsummary1"); print $Masterkey::AdminArea::mech->content'\''\' | \
+ssh mwnwhmcs@xenon 'DEBUG=1 ~/wwwbin/set-invoice-sale-date; cd sites/masterkey.masterweb.net/www/bin && perl -I../lib/perl -MMasterkey::AdminArea -e'\''\'"''"' Masterkey::AdminArea::login(); $Masterkey::AdminArea::mech->get("$Masterkey::Config::conf->{CONFIG_ADMIN_URL}/fa-sales-journal.php?output_format=txtsummary1"); print $Masterkey::AdminArea::mech->content'\''\' | \
   perl -MNumber::Format -MDateTime -MDateTime::BusinessHours -ne'
     BEGIN {
         $now = DateTime->now;
