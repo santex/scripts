@@ -42,7 +42,7 @@ use App::Options (
         botname => { type => 'string', required => 1, description => 'bot name(s), separate with comma for multiple names' },
         delay => { type => 'int', required => 1, default => 30, },
         post_delay => { type => 'int', required => 1, default => 4, },
-        search_delay => { type => 'int', required => 1, default => 4, },
+        search_delay => { type => 'int', required => 1, default => 6, },
         db_path => { type => 'string', required => 1, default => "$ENV{HOME}/phpbb2-infobot.db", },
 
         run_spelling_nazi => { type=>'boolean', default=>1 },
@@ -363,19 +363,24 @@ sub forum_search {
     my %args = @_;
     $log->debug("Searching for $args{keywords} ...");
     # by default search one-day worth of posts (well, only 1st page)
-    $Mech->get(join "",
-               "$App::options{base_url}/search.php?mode=results",
-               "&search_keywords=", uri_escape($args{keywords}),
-               "&search_terms=all&search_forum=-1&search_time=1&search_cat=-1&sort_by=0",
-               "&show_results=posts&return_chars=".($args{chars} // 200));
-    sleep $App::options{search_delay};
+    my $url = join "",
+        "$App::options{base_url}/search.php?mode=results",
+        "&search_keywords=", uri_escape($args{keywords}),
+        "&search_terms=all&search_forum=-1&search_time=1&search_cat=-1&sort_by=0",
+        "&show_results=posts&return_chars=".($args{chars} // 200);
+    $log->trace("MECH: get $url ...");
+    $Mech->get($url);
     my $ct = $Mech->content;
+    $log->trace("MECH: content length=".length($ct));
     do {
         $log->error("Search speed blocked, try increasing search_delay");
         return [500, "Speed blocked, try increasing search_delay"];
     } if $ct =~ /You cannot make another search so soon after your last/;
-    return [200, "No result", []]
-        if $ct =~ />No topics or posts met your search criteria</;
+    do {
+        $log->debug("No result");
+        return [200, "No result", []];
+    } if $ct =~ />No topics or posts met your search criteria</;
+
     $ct =~ s/.+>Search found (\d+) match(?:es)?<//s or do {
         $log->debug("ct=$ct");
         $log->error("Can't parse search result page, skipping");
@@ -417,18 +422,19 @@ sub forum_search {
         };
     }
     $log->debug("Found ".scalar(@res)." result(s)");
+    sleep $App::options{search_delay};
     [200, "OK", \@res];
 }
 
 sub spelling_nazi {
     return unless $App::options{mispelled_words};
+    $log->trace("Running spelling nazi ...");
 
     state $words;
     if (!$words) {
         $words = { split /\s*(?:,|=>)\s*/, lc($App::options{mispelled_words}) };
     }
-    state $search_words;
-    if (!$search_words) { $search_words = [keys %$words] }
+    my $search_words = [keys %$words];
     state $search_re;
     if (!$search_re) {
         $search_re = join("|", map {quotemeta} @$search_words);
@@ -440,10 +446,17 @@ sub spelling_nazi {
         my @batch = splice @$search_words, 0,
             min($App::options{mispelled_batch}, scalar(@$search_words));
         my $res = forum_search(keywords=>join(" ", @batch), chars=>1000);
-        next unless $res->[0] == 200;
+        do {
+            #$log->
+            next;
+        } unless $res->[0] == 200;
         for my $r (@{ $res->[2] }) {
             # don't self-critize
-            next if $r->{username} eq $App::options{username};
+            do {
+                $log->debug("Wrong-speller (topic ID $r->{topic_id}) is me, skipping ...");
+                next;
+            } if $r->{username} eq $App::options{username};
+            $log->debug("Nitpicking wrong-speller `$r->{username}` (topic ID $r->{topic_id}) ...");
             my @c;
             for my $s ($r->{subject}, $r->{message}) {
                 my @s = $s =~ /($search_re)/ig;
