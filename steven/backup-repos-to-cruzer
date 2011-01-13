@@ -13,4 +13,4 @@ fi
 
 if [[ ! "$DEST" ]]; then echo "FATAL: Can't find backup media cruzer"; exit 1; fi
 
-backup-repos --src=$HOME/repo --dest=$DEST/repo "$@"
+backup-repos --src=$HOME/repos --dest=$DEST/repos "$@"
