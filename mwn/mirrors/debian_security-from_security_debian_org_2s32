@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use FindBin '$Bin';
+use lib $Bin;
+BEGIN { require 'common.pl'; }
+
+$TO='/backup/archive/mirrors/debian-security';
+$EXCLUDES = [excludes_debian_arch_not_i386()];
+
+$PROTO='ftp'; $HOST='ftp2.de.debian.org'; $DIR='/debian-security'; $RATE_LIMIT=0;
+
+MirrorDebian();

@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use FindBin '$Bin';
+use lib $Bin;
+BEGIN { require 'common.pl'; }
+
+$TO='/backup/archive/mirrors/debian-multimedia';
+$EXCLUDES = [excludes_debian_arch_not_i386()];
+
+$PROTO='ftp'; $HOST='debian.netcologne.de'; $DIR='/debian-multimedia.org'; $RATE_LIMIT=30;
+
+MirrorDebian();
