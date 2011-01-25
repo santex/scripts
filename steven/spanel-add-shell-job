@@ -1,0 +1,10 @@
+#!/bin/bash
+perl -I/c/lib/perl{/cpan,} -MString::ShellQuote -MSpanel::Utils -E'
+  die "Usage: '$0' <shell command> ...\n" unless @ARGV == 1;
+  schedule_job_instance(
+    duetime=>time(), class=>"no-class", command_type=>"shell",
+    #command=>join(" ", map{shell_quote($_)} @ARGV),
+    command=>$ARGV[0],
+    ref=>q('$0'),
+    note=>undef);
+' "$@"

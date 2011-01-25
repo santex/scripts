@@ -1,0 +1,2 @@
+#!/bin/bash
+perl -I/c/lib/perl{/cpan,} -MData::Dump -MSpanel::Utils -E'dd find_job_instance()'
