@@ -44,7 +44,7 @@ sub set_dates {
     $min_date = $d if $d lt $min_date;
 }
 
-my $cmd = "git log --numstat --date=short ".
+my $cmd = "git log --numstat -M -C --date=short ".
     "$App::options{from_commit}..$App::options{to_commit}";
 my $skip_re; $skip_re = defined($App::options{skip_files_re}) ?
     qr/$App::options{skip_files_re}/ : undef;
