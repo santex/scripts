@@ -1,0 +1,4 @@
+#!/usr/bin/perl -n
+s/\s*#.*//;
+next unless /\S/;
+print;

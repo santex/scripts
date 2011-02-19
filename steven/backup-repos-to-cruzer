@@ -13,4 +13,4 @@ fi
 
 if [[ ! "$DEST" ]]; then echo "FATAL: Can't find backup media cruzer"; exit 1; fi
 
-backup-repos --src=$HOME/repos --dest=$DEST/repos "$@"
+gitbunch backup "$@" $HOME/repos $DEST/repos
