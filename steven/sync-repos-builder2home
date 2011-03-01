@@ -1,2 +1,2 @@
 #!/bin/bash
-sync-repos --src=$HOME/hb/repos --dest=$HOME/repos --delete --lock=0 --log_level=INFO "$@"
+VERBOSE=1 gitbunch sync --source ~/hb/repos --target ~/repos --delete_branch "$@"
