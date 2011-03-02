@@ -1,0 +1,8 @@
+#!/bin/bash
+
+perl -lne's/\s*#.*//; next unless /\S/; print' ~/proj/spanel/doc/cpan.lst >/tmp/cpan.lst
+for ssh in $sshspaneldev_build_squeeze_i386u $sshspaneldev_build_squeeze_amd64u; do
+  scp /tmp/cpan.lst $ssh:
+done
+
+echo "Done, all you have to do now is run 'cpanm -n < cpan.lst' on the build VM"
