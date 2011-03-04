@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use File::Find;
+
+finddepth sub {
+    return if $_ eq '.' || $_ eq '..';
+    lstat $_;
+    return if (-l _) || !(-d _);
+    opendir my($dh), $_;
+    my @d = grep {$_ ne '.' && $_ ne '..'}readdir $dh;
+    return if @d;
+    print "$File::Find::dir/$_\n";
+    rmdir $_;
+}, ".";
