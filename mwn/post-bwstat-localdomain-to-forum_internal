@@ -5,17 +5,18 @@ use strict;
 use Log::Log4perl qw(:easy);
 use POSIX;
 use YAML::XS;
+use Log::Any::App;
 use File::Slurp;
 use autodie;
+use String::ShellQuote;
 use App::Options (
     option => {
         tag => { type => 'string', required => 0, default => '' },
         year => { type => 'int', required => 0 },
         mon => { type => 'int', required => 0 },
+        phpbb2_post_path => { type => 'string', required => 0, default => 'phpbb2-post' },
     },
 );
-
-Log::Log4perl->easy_init($DEBUG);
 
 my @now = localtime;
 my $year = POSIX::strftime("%Y", @now);
@@ -42,7 +43,7 @@ for my $u (<*>) {
     }
 }
 
-open F, "| phpbb2-post --log_level=DEBUG --profile=sharing_movie --topic_id=14092 -";
+open F, "| ".shell_quote($App::options{phpbb2_post_path})." --profile=sharing_movie --topic_id=14092 -";
 print F "Subject: Statistik bandwidth *.localdomain utk periode $period\n\n";
 print F "Statistik bandwidth *.localdomain utk periode [b] $period [/b]\n\n";
 
