@@ -43,7 +43,7 @@ for my $u (<*>) {
     }
 }
 
-open F, "| ".shell_quote($App::options{phpbb2_post_path})." --profile=sharing_movie --topic_id=14092 -";
+open F, "| ".shell_quote($App::options{phpbb2_post_path})." --profile=sharing_movie --bbcode=1 --topic_id=14092 -";
 print F "Subject: Statistik bandwidth *.localdomain utk periode $period\n\n";
 print F "Statistik bandwidth *.localdomain utk periode [b] $period [/b]\n\n";
 
