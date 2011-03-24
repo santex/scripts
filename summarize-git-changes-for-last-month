@@ -29,7 +29,8 @@ my ($to_commit) = `$cmd` =~ /^commit (\w+)/m;
 $to_commit or die "Can't get to_commit";
 $log->info("Last commit before ".$now->year."-".$now->month."-01 00:00:00 is $to_commit");
 
-print "Summary of activity in $App::options{software} project for ".$lastmo->year."-".$lastmo->month.": ";
+print "Summary of activity in $App::options{software} project for ".
+    sprintf("%04d-%02d", $lastmo->year, $lastmo->month).": ";
 
 my $args = "";
 $args .= " --software=".shell_quote($App::options{software});
