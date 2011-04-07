@@ -6,4 +6,4 @@
 #    files=("$*")
 #fi
 #cmd-rand-args mplayer ${files[@]}
-cmd-rand-args mplayer *
+cmd-rand-args mplayer */*
