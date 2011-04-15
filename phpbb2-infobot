@@ -48,6 +48,8 @@ use App::Options (
         run_spelling_nazi => { type=>'boolean', default=>1 },
         mispelled_words => { type => 'string', required => 1, description => 'mispelled words that wants to be reminded, in this format: bad=>good, anotheur=>another, ...' },
         mispelled_batch => { type => 'string', required => 1, description => 'how many words should be searched at once', default=>20 },
+
+        sigs_file => { type=>'string' },
     },
 );
 
@@ -315,6 +317,16 @@ sub init_db {
                ctime BIGINT NOT NULL)");
 }
 
+sub add_sig {
+    my $resp_ref = shift;
+    return unless $App::options{sigs_file};
+    my @sigs = read_file($App::options{sigs_file}, err_mode=>'quiet');
+    return unless @sigs;
+    my $sig  = pick(@sigs);
+    return unless $sig;
+    $$resp_ref .= "\n\n______________________\n$sig";
+}
+
 sub respond_command {
     my (@cmds) = @_;
     return unless @cmds;
@@ -344,6 +356,7 @@ sub respond_command {
             }
             do { $log->fatal("Command not handled: $cmd->{raw_command}"); die } unless $handled;
         }
+        add_sig(\$overall_resp);
         forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
                    bbcode=>1,
                    message => $overall_resp);
