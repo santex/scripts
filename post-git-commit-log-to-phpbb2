@@ -80,7 +80,7 @@ for (@revs) {
         next;
     }
     $log->info("Posting rev $_ to phpBB2 forum ...");
-    system "( echo 'Subject: $repo_name commit message (branch $branch, id $_)'; ".
+    system "( echo 'Subject: commit $repo_name ($branch:$_)'; ".
         "echo; echo -n '[code]'; ".
         "git log -1 -p $_; echo '[/code]' ) | ".
         "'$phpbb2_post_path' --profile=$App::options{phpbb2_post_profile} --bbcode=1 -";
