@@ -74,12 +74,14 @@ for (@revs0) {
 $log->infof("Number of commits to post: %d", scalar(@revs));
 
 my $fail = 0;
+my $i = 0;
 for (@revs) {
+    $i++;
     if ($App::options{dry_run}) {
-        $log->info("DRYRUN: Posting rev $_ to phpBB2 forum ...");
+        $log->infof("DRYRUN: ($i/%d) Posting rev $_ to phpBB2 forum ...", scalar(@revs));
         next;
     }
-    $log->info("Posting rev $_ to phpBB2 forum ...");
+    $log->infof("($i/%d) Posting rev $_ to phpBB2 forum ...", scalar(@revs));
     system "( echo 'Subject: commit $repo_name ($branch:$_)'; ".
         "echo; echo -n '[code]'; ".
         "git log -1 -p $_; echo '[/code]' ) | ".
