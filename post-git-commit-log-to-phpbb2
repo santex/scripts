@@ -65,7 +65,7 @@ for (@revs0) {
         next;
     }
     if ($memory{$_->[0]}) {
-        $log->debug("Skipping commit $_->[0] because it's already posted ");
+        $log->debug("Skipping commit $_->[0] because it's already posted");
         next;
     }
     push @revs, $_->[0];
