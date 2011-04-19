@@ -1,58 +1,49 @@
 #!/usr/bin/perl -w
 
 use 5.010;
+use autodie;
 use strict;
 use App::Options (
     option => {
-        counter_path => { type => 'string', required => 1,},
-        counter => {
-            type => 'string', required => 0,
-            description => 'As an alternative to --counter_path, you can also '.
-                'specify last commit ID posted directly via --counter',
-        },
+        memory_path => { type => 'string' },
+        max_look_behind => { type => 'integer', default => 500 },
         phpbb2_post_path => { type => 'string' },
-        phpbb2_post_profile => { type => 'string', required => 1, },
+        phpbb2_post_profile => { type => 'string', required => 1 },
         author_re => {
             type => 'string', required => 0,
             description => 'Only post commits with author matching this regex',
         },
-        dry_run => { type => 'boolean', required => 0, default => 0, },
+        dry_run => { type => 'boolean', required => 0, default => 0 },
     },
 );
-use File::Slurp;
+use Cwd qw(getcwd);
+use File::Slurp::Shortcuts qw(slurp_cq);
 use File::Which;
+use GDBM_File;
 use Log::Any::App '$log';
 
 my $output;
-
 $output = `git branch`;
 my ($branch) = $output =~ /^\* (.+)/m
     or die "Can't find out current branch (can't grok output of `git branch`)";
-my $multi_branch = $output =~ /^\  (.+)/m ? 1:0;
+
+# check args
+
+my $repo_name = getcwd; $repo_name =~ s!.*/!!;
+my $prog_name = $0; $prog_name =~ s!.*/!!;
+
+my $memory_path = $App::options{memory_path} //
+    "$ENV{HOME}/.app/$prog_name.memory.$repo_name.$branch.db";
+$log->debug("memory_path = $memory_path");
+my %memory;
+tie %memory, 'GDBM_File', $memory_path, &GDBM_WRCREAT, 0640;
 
 my $phpbb2_post_path = $App::options{phpbb2_post_path} // which("phpbb2-post");
 die "Can't find phpbb2-post" unless $phpbb2_post_path;
 die "Can't execute phpbb2-post in $phpbb2_post_path"
     unless -x $phpbb2_post_path;
 
-my $counter;
-my $counter_file;
-if ($App::options{counter}) {
-    $counter = $App::options{counter};
-} else {
-    my @files;
-    if ($multi_branch) {
-        @files = ("$App::options{counter_path}.branch=$branch");
-    } else {
-        @files = ($App::options{counter_path});
-    }
-    for (@files) {
-        $counter = read_file($_, err_mode => 'quiet');
-        do { chomp($counter); $counter_file = $_; last } if $counter;
-    }
-    die "Can't read counter file (or counter not initialized) in these ".
-      "locations: ".join(", ", @files) unless $counter;
-}
+my $max_look_behind = $App::options{max_look_behind} + 0;
 
 my $author_re;
 if ($App::options{author_re}) {
@@ -60,16 +51,22 @@ if ($App::options{author_re}) {
     die "Invalid regex: $App::options{author_re}: $@" if $@;
 }
 
+# get ids to commit
+
 my @revs0;
 my @revs;
-$output = `git log $counter..HEAD --reverse`;
-die "Failed doing 'git log $counter..HEAD': $!" if $?;
+$output = `git log --abbrev=40 --reverse -$max_look_behind`;
+die "Failed doing 'git log: $!" if $?;
 push @revs0, [$1, $2] while $output =~ /^commit ([0-9a-f]+)\nAuthor: (.+)/mg;
-$log->infof("Number of commits between $counter .. HEAD: %d", scalar(@revs0));
 for (@revs0) {
     if ($author_re && $_->[1] !~ $author_re) {
         $log->debug("Skipping commit $_->[0] because author ($_->[1]) ".
                     "doesn't match author_re ($author_re)");
+        next;
+    }
+    if ($memory{$_->[0]}) {
+        $log->debug("Skipping commit $_->[0] because it's already posted ");
+        next;
     }
     push @revs, $_->[0];
 }
@@ -83,7 +80,7 @@ for (@revs) {
         next;
     }
     $log->info("Posting rev $_ to phpBB2 forum ...");
-    system "( echo 'Subject: commit message".($multi_branch ? " (branch $branch)" : "")."'; ".
+    system "( echo 'Subject: $repo_name commit message (branch $branch, id $_)'; ".
         "echo; echo -n '[code]'; ".
         "git log -1 -p $_; echo '[/code]' ) | ".
         "'$phpbb2_post_path' --profile=$App::options{phpbb2_post_profile} --bbcode=1 -";
@@ -92,9 +89,9 @@ for (@revs) {
         $fail++;
         last;
     } else {
-        if ($counter_file) {
-            $log->debug("Updating counter file to $_ ...");
-            write_file($counter_file, $_);
-        }
+        $log->debug("Updating memory ...");
+        $memory{$_} = time;
     }
 }
+
+# XXX only remember n commits in memory
