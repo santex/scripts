@@ -50,6 +50,14 @@ use App::Options (
         mispelled_batch => { type => 'string', required => 1, description => 'how many words should be searched at once', default=>20 },
 
         sigs_file => { type=>'string' },
+
+        # after 1-2 days, this script has stability problems. the weird thing
+        # is, search for new posts will give no result. only after the script is
+        # restarted, new post will be found again (problem with what? mechanize?
+        # phpbb2 itself (the session handling)? anyway, the easiest workaround
+        # for now is to exit after a predefined period and let
+        # run-phpbb2-infobot script restart this script.
+        suicide_after => { type=>'int', default => 86400 },
     },
 );
 
@@ -291,11 +299,25 @@ $log->info("Starting infobot $App::options{botname} ...");
 
 init_db();
 login();
-while (1) {
-    find_new_commands();
-    respond_command(unreplied_commands());
-    spelling_nazi();
-    sleep $App::options{delay};
+run();
+
+###
+
+sub run {
+    while (1) {
+        find_new_commands();
+        respond_command(unreplied_commands());
+        spelling_nazi();
+        sleep $App::options{delay};
+
+        my $run_time = time()-$^T;
+        if ($App::options{suicide_after} &&
+                $run_time >= $App::options{suicide_after}) {
+            $log->infof("Exiting (has run for %d secs, told to exit after ".
+                            "running for %d secs",
+                        $run_time, $App::options{suicide_after});
+        }
+    }
 }
 
 sub init_db {
