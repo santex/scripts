@@ -314,8 +314,9 @@ sub run {
         if ($App::options{suicide_after} &&
                 $run_time >= $App::options{suicide_after}) {
             $log->infof("Exiting (has run for %d secs, told to exit after ".
-                            "running for %d secs",
+                            "running for %d secs)",
                         $run_time, $App::options{suicide_after});
+            last;
         }
     }
 }
