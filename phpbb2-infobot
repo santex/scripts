@@ -141,30 +141,35 @@ my @Responses = (
      name => 'SEARCH IMAGE',
      handler => sub {
          my (%args) = @_;
+         my $n = $args{match}[1] // 1;
+         $n = 10 if $n > 10;
          my $res;
-         eval {
-             $res = REST::Google::Search::Images->new(
-                 q => $args{match}[2],
-                 #min_size => 25,
-                 #max_size => 150,
-                 #limit => 10,
-             );
-         };
-         if ($@) { return "lagi gak bisa ngakses gugel imejes nih kayaknya han ..." }
-         if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ..." }
-         my @im = shuffle @{ $res->responseData->results };
-         if (!@im) { return "gugel imejes gak punya gambar itu tuh han ..." }
-         for (@im) { $_ = $_->{url} }
-         @im = grep { !/[%?]/ } @im; # phpbb2 sucks!
-         if (!@im) { return "gak nemu imejes yang layak tayang di phpbb2 nih han ..." }
-         $log->debugf("\@im = %s", \@im);
-         my $n = $args{match}[1] || 1;
-         splice @im, $n;
-         if (@im) {
-             return join("", map {"[img]".$_."[/img]\n\n"} @im);
-         } else {
-             return "gak dapet say :(";
+         my @im;
+         my $has_raw_result;
+         while (1) {
+             eval {
+                 $res = REST::Google::Search::Images->new(
+                     q => $args{match}[2],
+                     #min_size => 25,
+                     #max_size => 150,
+                     #limit => 10,
+                 );
+             };
+             if ($@) { return "lagi gak bisa ngakses gugel imejes nih kayaknya han ..." }
+             if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ..." }
+             my @pg_im = shuffle @{ $res->responseData->results };
+             if (!@pg_im) { last }
+             $has_raw_result++;
+             @pg_im = grep { !/[%?]/ } @im; # phpbb2 sucks!
+             for (@pg_im) {
+                 push @im, $_->{url};
+                 last if @im >= $n;
+             }
          }
+         if (!$has_raw_result) { return "gugel imejes gak punya gambar itu tuh han ..." }
+         if (!@im) { return "gak dapet say :(" }
+         $log->debugf("\@im = %s", \@im);
+         return join("", map {"[img]".$_."[/img]\n\n"} @im);
      }},
 
     {pat => qr/^(\S+)\s*(\+\+|--)\s*(?:\((.*)\))?$/i,
