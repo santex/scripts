@@ -146,6 +146,7 @@ my @Responses = (
          my $res;
          my @im;
          my $has_raw_result;
+       SEARCH:
          while (1) {
              eval {
                  $res = REST::Google::Search::Images->new(
@@ -163,7 +164,7 @@ my @Responses = (
              @pg_im = grep { !/[%?]/ } @im; # phpbb2 sucks!
              for (@pg_im) {
                  push @im, $_->{url};
-                 last if @im >= $n;
+                 last SEARCH if @im >= $n;
              }
          }
          if (!$has_raw_result) { return "gugel imejes gak punya gambar itu tuh han ..." }
