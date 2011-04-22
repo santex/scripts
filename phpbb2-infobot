@@ -164,6 +164,7 @@ my @Responses = (
              };
              if ($@) { $log->warn("eval error: %s", $@); return "lagi gak bisa ngakses gugel imejes nih kayaknya han ..." }
              if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ..." }
+             sleep 2; # to avoid hitting google too often
              @pg_im = @{ $res->responseData->results };
              if (!@pg_im) { last }
              $has_raw_result++;
