@@ -146,9 +146,9 @@ my @Responses = (
          my $res;
          my @im;
          my $has_raw_result;
-       SEARCH:
          my $i = 0;
          my @pg_im;
+       SEARCH:
          while (1) {
              eval {
                  my $start = $i*@pg_im+1;
