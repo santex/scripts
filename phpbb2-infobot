@@ -147,18 +147,24 @@ my @Responses = (
          my @im;
          my $has_raw_result;
        SEARCH:
+         my $i = 0;
+         my @pg_im;
          while (1) {
              eval {
+                 my $start = $i*@pg_im+1;
+                 $log->debugf("collected %d images, searching google (start=%d)...", scalar(@im), $start);
                  $res = REST::Google::Search::Images->new(
                      q => $args{match}[2],
                      #min_size => 25,
                      #max_size => 150,
                      #limit => 10,
+                     start => ,
                  );
+                 $i++;
              };
              if ($@) { return "lagi gak bisa ngakses gugel imejes nih kayaknya han ..." }
              if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ..." }
-             my @pg_im = shuffle @{ $res->responseData->results };
+             @pg_im = shuffle @{ $res->responseData->results };
              if (!@pg_im) { last }
              $has_raw_result++;
              @pg_im = grep { !/[%?]/ } @im; # phpbb2 sucks!
