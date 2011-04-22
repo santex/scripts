@@ -162,12 +162,12 @@ my @Responses = (
                  );
                  $i++;
              };
-             if ($@) { return "lagi gak bisa ngakses gugel imejes nih kayaknya han ..." }
+             if ($@) { $log->warn("eval error: %s", $@); return "lagi gak bisa ngakses gugel imejes nih kayaknya han ..." }
              if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ..." }
-             @pg_im = shuffle @{ $res->responseData->results };
+             @pg_im = @{ $res->responseData->results };
              if (!@pg_im) { last }
              $has_raw_result++;
-             @pg_im = grep { !/[%?]/ } @im; # phpbb2 sucks!
+             @pg_im = grep { !/[%?]/ } @pg_im; # phpbb2 sucks!
              for (@pg_im) {
                  push @im, $_->{url};
                  last SEARCH if @im >= $n;
@@ -176,7 +176,7 @@ my @Responses = (
          if (!$has_raw_result) { return "gugel imejes gak punya gambar itu tuh han ..." }
          if (!@im) { return "gak dapet say :(" }
          $log->debugf("\@im = %s", \@im);
-         return join("", map {"[img]".$_."[/img]\n\n"} @im);
+         return join("", map {"[img]".$_."[/img]\n\n"} shuffle @im);
      }},
 
     {pat => qr/^(\S+)\s*(\+\+|--)\s*(?:\((.*)\))?$/i,
