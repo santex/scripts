@@ -63,6 +63,17 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.dsr-loki
+.dsr.xvid-sys
+.dsr.xvid-omicron
+-vfua
+-loki
+.dvdrip.xvid-fqm
+.xvid-redemption
+.tvrip.xvid-fqm
+.xvid-tbs
+.dsr.xvid-crimson
+.dsr.xvid-crntv
 .HDTV.XviD-CHGRP
 .dvdscr.xvid-sprinter
 .HDTV.Xvid-L0L
