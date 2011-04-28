@@ -58,11 +58,14 @@ IMAX.
 HDTV.
 [Documentaire]
 dich-
+aaf-
 EOF
 
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.webrip.p2pbitch
+.PDTV.Xvid-FK2
 .dsr-loki
 .dsr.xvid-sys
 .dsr.xvid-omicron
