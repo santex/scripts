@@ -59,10 +59,12 @@ for my $s (sort {$sites{$b} <=> $sites{$a}} keys %sites) {
 }
 
 $log->trace("content = [[[$content]]]");
-my $pipe = "| ".shell_quote($App::options{phpbb2_post_path})." --profile=sharing_movie --bbcode=1 --topic_id=14092 -";
-$log->trace("Opening pipe: $pipe");
-open my($fh), $pipe;
-print $fh $content;
-close $fh;
+unless ($ENV{DRY_RUN}) {
+    my $pipe = "| ".shell_quote($App::options{phpbb2_post_path})." --profile=sharing_movie --bbcode=1 --topic_id=14092 -";
+    $log->trace("Opening pipe: $pipe");
+    open my($fh), $pipe;
+    print $fh $content;
+    close $fh;
+}
 
 
