@@ -166,8 +166,9 @@ my @Responses = (
                  );
                  $i++;
              };
-             if ($@) { $log->warn("eval error: %s", $@); return "lagi gak bisa ngakses gugel imejes nih kayaknya han ..." }
-             if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ..." }
+             my $add_info = @im ? " (setelah terkumpul ".scalar(@im)." imej)" : "";
+             if ($@) { $log->warn("eval error: %s", $@); return "lagi gak bisa ngakses gugel imejes nih kayaknya han...$add_info" }
+             if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ...$add_info" }
              sleep 2; # to avoid hitting google too often
              @pg_im = @{ $res->responseData->results };
              if (!@pg_im) { last }
