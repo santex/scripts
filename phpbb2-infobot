@@ -24,6 +24,7 @@ use WWW::Mechanize;
 use Digest::MD5 qw(md5_hex);
 
 our $VERSION = '0.100429a';
+our $quit = 0;
 
 use App::Options (
     option => {
@@ -135,6 +136,13 @@ my @Responses = (
           ) . "\n\nkidding :)\n\n" .
               sprintf("Real status: Uptime: %.1f jam, Versi skrip: %s, Host: %s, User: %s, PID: %d, Database path: %s",
                       (time - $^T) / 3600, $VERSION, ($ENV{HOSTNAME} || "?"), $ENV{USER}, $$, $App::options{db_path});
+     }},
+
+    {pat => qr/^(exit|quit)?$/,
+     name => 'QUIT',
+     handler => sub {
+         $quit = 1;
+         "exiting ...";
      }},
 
     {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(?:(\d+)(!)?\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
@@ -334,6 +342,10 @@ sub run {
             $log->infof("Exiting (has run for %d secs, told to exit after ".
                             "running for %d secs)",
                         $run_time, $App::options{suicide_after});
+            last;
+        }
+        if ($quit) {
+            $log->infof("Exiting because instructed to ...");
             last;
         }
     }
