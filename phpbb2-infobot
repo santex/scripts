@@ -137,12 +137,16 @@ my @Responses = (
                       (time - $^T) / 3600, $VERSION, ($ENV{HOSTNAME} || "?"), $ENV{USER}, $$, $App::options{db_path});
      }},
 
-    {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(\d+\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
+    {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(?:(\d+)(!)?\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
      name => 'SEARCH IMAGE',
      handler => sub {
          my (%args) = @_;
          my $n = $args{match}[1] // 1;
-         $n = 10 if $n > 10;
+         if ($args{match}[2]) {
+             $n = 100 if $n > 100;
+         } else {
+             $n = 10 if $n > 10;
+         }
          my $res;
          my @im;
          my $has_raw_result;
@@ -154,7 +158,7 @@ my @Responses = (
                  my $start = $i*@pg_im+1;
                  $log->debugf("collected %d images, searching google (start=%d)...", scalar(@im), $start);
                  $res = REST::Google::Search::Images->new(
-                     q => $args{match}[2],
+                     q => $args{match}[3],
                      #min_size => 25,
                      #max_size => 150,
                      #limit => 10,
