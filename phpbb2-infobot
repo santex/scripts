@@ -157,6 +157,7 @@ my @Responses = (
              $n = 10 if $n > 10;
          }
          my $res;
+         my $err;
          my @im;
          my $has_raw_result;
          my $i = 0;
@@ -176,8 +177,8 @@ my @Responses = (
                  $i++;
              };
              my $add_info = @im ? " (setelah terkumpul ".scalar(@im)." imej)" : "";
-             if ($@) { $log->warn("eval error: %s", $@); return "lagi gak bisa ngakses gugel imejes nih kayaknya han...$add_info" }
-             if ($res->responseStatus != 200) { return "gugel imejes return status http ".$res->responseStatus." han ...$add_info" }
+             if ($@) { $log->warn("eval error: %s", $@); $err = "gak bisa ngakses gugel imejes nih kayaknya han...$add_info"; last SEARCH }
+             if ($res->responseStatus != 200) { $err = "gugel imejes return status http ".$res->responseStatus." han ...$add_info"; last SEARCH }
              sleep 2; # to avoid hitting google too often
              @pg_im = @{ $res->responseData->results };
              if (!@pg_im) { last }
@@ -189,9 +190,11 @@ my @Responses = (
              }
          }
          if (!$has_raw_result) { return "gugel imejes gak punya gambar itu tuh han ..." }
-         if (!@im) { return "gak dapet say :(" }
+         if (!@im) { return $err ? $err : "gak dapet say :(" }
          $log->debugf("\@im = %s", \@im);
-         return join("", map {"[img]".$_."[/img]\n\n"} shuffle @im);
+         return
+             join("", map {"[img]".$_."[/img]\n\n"} shuffle @im).
+                 ($err ? "btw, $err" : "");
      }},
 
     {pat => qr/^(\S+)\s*(\+\+|--)\s*(?:\((.*)\))?$/i,
