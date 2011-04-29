@@ -183,9 +183,9 @@ my @Responses = (
              @pg_im = @{ $res->responseData->results };
              if (!@pg_im) { last }
              $has_raw_result++;
-             @pg_im = grep { !/[%?]/ } @pg_im; # phpbb2 sucks!
+             @pg_im = grep { !/[%?]/ } map { $_->{url} } @pg_im; # phpbb2 sucks!
              for (@pg_im) {
-                 push @im, $_->{url};
+                 push @im, $_;
                  last SEARCH if @im >= $n;
              }
          }
