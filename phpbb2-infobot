@@ -129,6 +129,7 @@ my @Responses = (
      name => 'STATUS',
      handler => sub {
          pick("single",
+              "single and looking",
               "masih jomlo nih",
               "janda beranak satu",
               "baru putus",
