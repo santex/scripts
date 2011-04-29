@@ -330,6 +330,7 @@ run();
 ###
 
 sub run {
+  RUN:
     while (1) {
         find_new_commands();
         respond_command(unreplied_commands());
@@ -342,11 +343,11 @@ sub run {
             $log->infof("Exiting (has run for %d secs, told to exit after ".
                             "running for %d secs)",
                         $run_time, $App::options{suicide_after});
-            last;
+            last RUN;
         }
         if ($quit) {
             $log->infof("Exiting because instructed to ...");
-            last;
+            last RUN;
         }
     }
 }
