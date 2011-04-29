@@ -335,6 +335,12 @@ sub run {
         find_new_commands();
         respond_command(unreplied_commands());
         spelling_nazi();
+
+        if ($quit) {
+            $log->infof("Exiting because instructed to ...");
+            return;
+        }
+
         sleep $App::options{delay};
 
         my $run_time = time()-$^T;
@@ -343,11 +349,7 @@ sub run {
             $log->infof("Exiting (has run for %d secs, told to exit after ".
                             "running for %d secs)",
                         $run_time, $App::options{suicide_after});
-            last RUN;
-        }
-        if ($quit) {
-            $log->infof("Exiting because instructed to ...");
-            last RUN;
+            return;
         }
     }
 }
