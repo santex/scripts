@@ -467,6 +467,7 @@ sub forum_search {
         next if $Db->selectrow_array("SELECT post_id FROM viewed_posts WHERE post_id=$post_id");
         $Mech->get("$App::options{base_url}/viewtopic.php?p=$post_id");
         $Mech->content =~ /<a class="maintitle" href="viewtopic.php\?t=(\d+)&/ or do {
+            $log->tracef("response from mech: %s", $Mech->content);
             $log->error("Can't get topic ID for post #$post_id, skipped");
             next;
         };
