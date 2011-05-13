@@ -1,0 +1,6 @@
+#!/bin/bash
+nice -n19 \
+  rsync -az --del -e "ssh -i /home/s1/.ssh/id_dsa -o StrictHostKeyChecking=no" --exclude '/*/hist*' \
+  root@gold.localdomain:/backup/gold.local/ \
+  /backup/remote-backups/gold \
+  2>&1
