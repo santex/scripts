@@ -1,0 +1,3 @@
+#!/bin/bash
+# XXX if private, to ~/proj/pr/.private/
+cp -av "$1" ~/proj/prp/
