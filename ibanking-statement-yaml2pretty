@@ -9,7 +9,10 @@ use YAML::Syck;
 
 my $yaml = join "", <>;
 my $data = Load($yaml);
-print format_pretty($data);
+print format_pretty(
+    $data,
+    {table_column_orders=>[[qw/date seq description amount/]]}
+);
 
 
 
