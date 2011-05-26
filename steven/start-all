@@ -1,4 +1,5 @@
 #!/bin/bash
+konsole&
 opera&
 kopete&
 chrome&
