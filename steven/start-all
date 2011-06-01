@@ -1,6 +1,6 @@
 #!/bin/bash
-konsole&
 opera&
+konsole&
 kopete&
 chrome&
 google-chrome&
