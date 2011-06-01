@@ -8,6 +8,7 @@ use POSIX;
 
 my %logs; # key="username-YYYY-MM-DD", val=>$ip
 
+#for my $f ("zcat /var/log/squid/access*z |") {
 for my $f (map { "/var/log/squid/$_" } "access.log", "access.log.1") {
     open my ($fh), $f or do { warn "Can't open $f: $!"; next };
     while (<$fh>) {
