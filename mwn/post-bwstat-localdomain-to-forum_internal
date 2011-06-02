@@ -18,6 +18,8 @@ use App::Options (
     },
 );
 
+die "Please run me as root!\n" if $>;
+
 my @now = localtime;
 my $year = POSIX::strftime("%Y", @now);
 my $mon = POSIX::strftime("%m", @now);
@@ -46,6 +48,8 @@ for my $u (<*>) {
 
 my $content = "Subject: Statistik bandwidth *.localdomain utk periode $period\n\n";
 $content .= "Statistik bandwidth *.localdomain utk periode [b] $period [/b]\n\n";
+
+$> = $<;
 
 my $rank = 1;
 for my $s (sort {$sites{$b} <=> $sites{$a}} keys %sites) {
