@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# sama seperti sync-spanel-config, tapi hanya
+# /etc/spanel/plans.yaml-nya aja, kita harus membedakan antara yang
+# vps (plans-vps.yaml) dan shared hosting (plans-shared.yaml)
+
+cd $HOME/repo/mwn/spanel-configs
+
+# owner jangan dipreserve :)
+
+/c/sbin/spanel-multissh $@ --background --type shared --nouse-ip --user root -- \
+  'rsync::' -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
+  per-type/sharedhost/plans.yaml \
+  '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/plans.yaml
+/c/sbin/spanel-multissh $@ --background --type vps    --nouse-ip --user root -- \
+  'rsync::' -rlptD -Pvz --del --exclude '.svn' --exclude '*~' \
+  per-type/vpshost/plans.yaml \
+  '[[USER]]@[[IP_OR_HOSTNAME]]':/etc/spanel/plans.yaml

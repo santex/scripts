@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+# 2006-03-09
+
+$SHELL = "/bin/sh";
+
+die "Usage: repeat-command N command ...\n" unless @ARGV >= 2;
+$N = shift @ARGV;
+die "Usage: N must be a number\n" unless $N =~ /^\d+$/;
+
+@args = ($SHELL, "-c", @ARGV);
+for (1..$N) {
+  #print "system(): ", join(" ", @args), "\n";
+  system @args;
+}

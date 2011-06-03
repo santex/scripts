@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+
+use strict;
+$|++;
+
+my $command = "";
+my $in_command = 0;
+my $verbose = 0;
+
+for (@ARGV) {
+  if (!$in_command) {
+    if (/^-\w*h/) { usage(); exit 0 }
+    if (/^-\w*v/) { $verbose++ }
+    if (/^[^-]/) { $command = escapeshellarg($_); $in_command++ }
+  } else {
+    $command .= ($command ? " " : "") . escapeshellarg($_);
+  }
+}
+
+do { usage(); exit 1 } unless $command;
+
+my $i = 0;
+while (<STDIN>) {
+  if (/^From /) {
+    close CMD if $i;
+    $i++;
+    print "INFO: Executing $command [$i]\n" if $verbose;
+    open CMD, "| $command" or die "$0: FATAL: Can't open command: $! ($?)\n";
+  } else {
+    print CMD $_ if $i;
+  }
+}
+close CMD if $i;
+
+###
+
+sub escapeshellarg {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}
+
+sub usage {
+  print <<_;
+Description:
+  Takes an mbox from STDIN and feed each message to command.
+Usage:
+  $0 [-v] command...
+  $0 [-h]
+Options:
+  -v  Be verbose
+  -h  Show help
+_
+}

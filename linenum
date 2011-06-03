@@ -1,0 +1,3 @@
+#!/usr/bin/perl -n
+print /\S/ ? sprintf("%4d|", $.) : "    |";
+print;

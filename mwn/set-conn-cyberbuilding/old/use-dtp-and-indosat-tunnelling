@@ -1,0 +1,43 @@
+#!/usr/bin/perl -Tw
+
+# last updated: 2005-08-18
+
+use FindBin qw($Bin);
+use lib "$Bin";
+BEGIN { ($Bin) = $Bin =~ /(.+)/; require "$Bin/common.pl"; }
+
+print <<_;
+
+Skrip ini akan mengeset route IIX ke DTP, tapi route internasional akan
+dikirim ke server12 di Indosat (via tunnelling). Gunakan dalam kondisi
+normal (uplink DTP hidup, server12 hidup, koneksi milik Indosat hidup).
+Koneksi IIX akan cepat karena menggunakan DTP, dan internasional akan cukup
+cepat juga karena menggunakan bandwidth Indosat.
+
+Tekan ENTER untuk lanjut atau Ctrl-C untuk keluar.
+
+_
+
+$_ = <STDIN> unless @ARGV;
+
+clean_env();
+
+turn_on_eth0();
+
+delete_all_nonlocal_routes();
+
+turn_off_all_tundevs();
+turn_on_tundevindosat();
+
+print "+ Setting 2nd priority default gw to DTP (202.43.165.21)...\n";
+mysystem "route add default gw 202.43.165.21 metric 1";
+
+print "+ Adding IIX routes to DTP...\n";
+mysystem "add-iix-routes-to-dtp.sh 2>/dev/null";
+
+if (`route -n` !~ /^0\.0\.0\.0\s+192\.168\.3\.0/m) {
+  print "+ Setting 1st priority default gw to tunnelling address (192.168.3.1)...\n";
+  mysystem "route add default gw 192.168.3.1 metric 0 dev tundevindosat";
+}
+
+print "+ Done. NOTE: Jika koneksi internasional belum jalan juga, coba restart tunnelling dari sisi server12.\n";

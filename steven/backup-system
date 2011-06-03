@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# berhubung spanel gak diinstal, jadi pake ini dulu
+
+if test -e /backup/NOT_MOUNTED; then echo "/backup partition not mounted, exiting"; exit 1; fi
+
+#set -x
+
+exe=rsybak
+rsync_opts='[--exclude, Cache, --exclude, cache, --exclude, var, --exclude, tmp, --exclude, temp]'
+p=builder.local
+
+#---
+
+if test -e /backup/mnt/NOT_MOUNTED; then
+  echo "/backup/mnt partition not mounted, skipping"
+else
+  $exe --extra_rsync_opts "$rsync_opts" /mnt /backup/mnt/$p
+fi
+
+if test -e /backup/mnt2/NOT_MOUNTED; then
+  echo "/backup/mnt2 partition not mounted, skipping"
+else
+  $exe --extra_rsync_opts "$rsync_opts" /mnt2 /backup/mnt2/$p
+fi
+
+for u in archive s1 s1t t1 t2 t3 t4; do
+  $exe --extra_rsync_opts "$rsync_opts" /u/$u /backup/$p/backup-u-$u
+done
+
+$exe --extra_rsync_opts="$rsync_opts" /etc /backup/$p/backup-etc
+
+$exe --extra_rsync_opts="$rsync_opts" /var/spool/cron /backup/$p/backup-var-spool-cron
+

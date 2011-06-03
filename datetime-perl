@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+use Date::Manip;
+use DateTime;
+use DateTime::Format::DateManip;
+use Term::ReadLine;
+
+$ENV{TZ} = "+0700";
+
+sub d($)   { DateTime::Format::DateManip->parse_datetime( ParseDate($_[0]) ) }
+sub dur    { DateTime::Duration->new(@_) }
+
+print <<'_';
+Examples:
+* d("today") - d("2008-05-01")  # delta in months, days, minutes, ...
+* (d("today") - d("2008-05-01"))->delta_days  # delta in days
+* $d = d("today") + dur(days=>100) # 100 days from today
+* $d->set(year=>2010) # change year
+* d("yesterday") # d() accepts Date::Manip-parsable date string
+
+See DateTime, DateTime::Duration, DateManip for more details. Press ^D
+to exit.
+
+_
+
+my $term = new Term::ReadLine 'datetime';
+my $prompt = "> ";
+my $OUT = $term->OUT || \*STDOUT;
+
+while ( defined ($_ = $term->readline($prompt)) ) {
+    eval "sub x { $_ }; \$_RESULT = x();";
+    if ($@) {
+        warn "Compile error: $@\n";
+    } else {
+        my $res = $_RESULT;
+        if (ref($res) eq 'DateTime::Duration') {
+            $res = join " ", map { $res->{$_} ? "$res->{$_} $_" : "" } qw(months days minutes seconds);
+        }
+        print $OUT $res, "\n";
+    }
+    $term->addhistory($_) if /\S/;
+}
+
+__END__

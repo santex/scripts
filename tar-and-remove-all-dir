@@ -1,0 +1,26 @@
+#!/usr/bin/perl -l
+
+# 2004-08-13 - tar all dirs into DIRNAME.tar and remove the dirs.
+
+my @ents;
+if (@ARGV) {
+    @ents = @ARGV;
+} else {
+    @ents = (<*>);
+}
+
+for (grep {-d} @ents) {
+  if (-f "$_.tar") {
+    print "WARNING: $_.tar exists, skipped";
+  }
+  $esc = esc($_);
+  $cmd = "tar cf $esc.tar $esc && rm -r $esc";
+  print $cmd;
+  system $cmd;
+}
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

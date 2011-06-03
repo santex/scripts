@@ -1,0 +1,6 @@
+#!/usr/bin/perl -pi~ -0777
+
+# ambil content
+m{^(.+<br><br><br>\n)}mi and $_ = $1;
+
+$_ = qq|<meta http-equiv="Content-Type" content="text/html; charset=gb2312">\n$_|;

@@ -1,0 +1,7 @@
+#!/usr/bin/perl -0 -n
+
+# 040229, to be run in .qmail. exit 1 if mail contains suspicious
+# attachment, 0 if not.
+
+exit 1 if m#^Content-Type: [^;]+;\s*name="?.+\.(exe|pif|com|scr|bat|zip)"?#mis;
+exit 0;

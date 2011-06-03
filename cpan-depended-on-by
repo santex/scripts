@@ -1,0 +1,43 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use Getopt::Long;
+use LWP::Simple;
+use URI::Escape;
+
+my $author;
+my $search;
+GetOptions(
+    'author=s' => \$author,
+    'search=s' => \$search,
+);
+
+unless ($author xor $search) {
+    die "Usage: $0 --author=CPANID OR --search=STR\n".
+        "Example: $0 --author SHARYANTO\n".
+        "         $0 --search Data::Schema\n";
+}
+
+my $resp;
+my @dists;
+
+if ($author) {
+    print "# dists by $author\n";
+    $resp = get "http://search.cpan.org/~$author/";
+    push @dists, $1 while $resp =~ m!href="/src/\w+/([^/]+)/!g;
+} else {
+    print "# dists searched by $search\n";
+    $resp = get "http://search.cpan.org/search?query=".uri_escape($search).
+        "&mode=all";
+    $resp =~ m!href="/~\w+/([^/]+)/"! or die "Can't find any dists\n";
+    push @dists, $1;
+}
+
+for my $dist (@dists) {
+    print "$dist:\n";
+    $resp = get("http://deps.cpantesters.org/depended-on-by.pl?dist=$dist");
+    while ($resp =~ m!<li>(.+)!g) {
+        print "  $1\n";
+    }
+}

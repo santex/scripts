@@ -1,0 +1,9 @@
+#!/bin/bash
+#declare files
+#if [[ $# == 0 ]]; then
+#    files=("*")
+#else
+#    files=("$*")
+#fi
+#cmd-rand-args mplayer ${files[@]}
+cmd-rand-args mplayer */*

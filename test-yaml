@@ -1,0 +1,7 @@
+#!/usr/bin/ruby
+require 'yaml'
+ARGV.each {|f|
+  YAML::load(File::open(f))
+  puts "#{f}: success"
+}
+

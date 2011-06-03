@@ -1,0 +1,15 @@
+#!/usr/bin/perl -l
+
+$|++;
+for $module (@ARGV) {
+
+	eval qq{require $module;};
+	if ($@) {
+		$err = $@;
+	} else {
+		($file = $module) =~ s#::#/#g;
+		$file .= ".pm";
+		print $INC{$file};
+	}
+
+}

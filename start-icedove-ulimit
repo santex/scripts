@@ -1,0 +1,3 @@
+#!/bin/bash
+ulimit -v 750000 -m 750000
+icedove

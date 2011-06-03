@@ -1,0 +1,118 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Cwd;
+use File::Slurp;
+use Log::Log4perl qw(:easy);
+use WWW::Mechanize;
+use App::Options (
+    option => {
+        username => { type => 'string', required => 1, },
+        password => { type => 'string', required => 1, },
+        #delay => { type => 'int', required => 0, default => 4, },
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+        days => { type => 'int', required => 0, default => 31 },
+        begin_date => { type => 'string', required => 0 },
+        end_date => { type => 'string', required => 0 },
+    },
+);
+
+if ( $App::options{log_level} eq 'FATAL' ) {
+    Log::Log4perl->easy_init($FATAL);
+}
+elsif ( $App::options{log_level} eq 'ERROR' ) {
+    Log::Log4perl->easy_init($ERROR);
+}
+elsif ( $App::options{log_level} eq 'WARN' ) {
+    Log::Log4perl->easy_init($WARN);
+}
+elsif ( $App::options{log_level} eq 'INFO' ) {
+    Log::Log4perl->easy_init($INFO);
+}
+else { Log::Log4perl->easy_init($DEBUG) }
+
+my %report_types = (
+                    "registrations" => 0,
+                    "renewals" => 1,
+                    "transfers" => 2,
+                    "private-label" => 3,
+                    "sub-accounts" => 4,
+                    "accounting" => 5,
+                    "expiring-names" => 6,
+                    "auction-history" => 7,
+                    "auction-payment-pending" => 8,
+                    "transactions" => "A",
+                    "view orders" => "B",
+                    "periodic-billing" => "C",
+                    "namejet" => "D",
+                );
+
+# cek argumen
+unless (@ARGV) {
+    print <<_;
+Usage: $0 [options] [--days N or --start_date] reporttype ...
+
+Available reports: ${\(join ", ", keys %report_types)}
+_
+
+    exit 1;
+}
+
+for (@ARGV) {
+    LOGDIE "Invalid reporttype `$_'" unless exists $report_types{$_};
+}
+
+my $begin_date;
+my $end_date;
+my $days = $App::options{days}+0;
+my ($y1, $m1, $d1);
+my ($y2, $m2, $d2);
+if ($days) {
+    ($y1, $m1, $d1) = (localtime(time-$days*86400))[5,4,3]; $m1++; $y1 += 1900;
+    ($y2, $m2, $d2) = (localtime(time-    1*86400))[5,4,3]; $m2++; $y2 += 1900;
+} elsif ($App::options{begin_date} && $App::options{end_date}) {
+    ($m1, $d1, $y1) = $App::options{begin_date} =~ m!(\d+)/(\d+)/(\d+)! or LOGDIE "Invalid begin_date";
+    ($m2, $d2, $y2) = $App::options{end_date}   =~ m!(\d+)/(\d+)/(\d+)! or LOGDIE "Invalid end_date";
+}
+
+my $mech = new WWW::Mechanize;
+
+DEBUG "Logging in as $App::options{username} ...";
+$mech->get("http://www.enom.com/Login.asp");
+$mech->submit_form(
+    form_number => 1,
+    fields      => {
+        loginid => $App::options{username},
+        password => $App::options{password},
+    },
+    button => 'login',
+);
+
+$mech->get("http://www.enom.com/myaccount/Default.asp?displaymenu=ok&");
+
+$mech->content =~ m!<a href="/Logout\.asp">log-out</a>! or do {
+    DEBUG "Full output of response: ".$mech->content;
+    LOGDIE "Can't login";
+};
+
+for my $report_type (@ARGV) {
+    DEBUG "Retrieving $report_type for the period $m1/$d1/$y1 - $m2/$d2/$y2 ...";
+    $mech->get("http://www.enom.com/myaccount/newreports.asp");
+    $mech->submit_form(
+                       form_number => 1,
+                       fields      => {
+                                       ReportType => $report_types{$report_type},
+                                       BeginDate => "$m1/$d1/$y1",
+                                       EndDate => "$m2/$d2/$y2",
+                                   },
+                       button => 'downloadcsv',
+                   );
+    my $i = 0;
+    my $filename;
+    while (1) {
+        $filename = sprintf "%s.%04d%02d%02d-%04d%02d%02d%s.csv", $report_type, $y1, $m1, $d1, $y2, $m2, $d2, ($i ? ".$i" : "");
+        last unless -f $filename;
+        $i++;
+    }
+    write_file($filename, $mech->content);
+}

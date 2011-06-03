@@ -1,0 +1,8 @@
+#!/bin/bash
+cd $HOME/repo || ( echo "Can't cd to ~/repo"; exit 1 )
+for p in perl-*; do
+  echo "Pushing $p ..."
+  cd $HOME/repo/$p
+  git push
+  git push --tags
+done

@@ -1,0 +1,150 @@
+#!/usr/bin/perl -w
+
+# 2010-04-04. a game like smingo. i like word games.
+
+use autodie;
+use strict;
+use App::Options (
+    option => {
+        minlength => { type => 'int', required => 1, default => 5, },
+        maxlength => { type => 'int', required => 1, default => 5, },
+        maxguesses => { type => 'int', required => 0, },
+        ignorecapwords => { type => 'boolean', required => 1, default => 1, },
+        dict => { type => 'string', required => 1, },
+        numwords => { type => 'int', required => 1, default => 10, },
+    },
+);
+
+my $numcorrect = 0;
+my $score = 0;
+my @words;
+
+read_dict();
+for (1..$App::options{numwords}) {
+    ask_word($_);
+}
+show_total_score();
+
+###
+
+sub read_dict {
+    local *F;
+    open F, $App::options{dict};
+    while (<F>) {
+        chomp;
+        next if /[^A-Za-z]/;
+        next if /[A-Z]/ && $App::options{ignorecapwords};
+        push @words, lc;
+    }
+}
+
+sub pick_word {
+    my $w;
+    my $tries = 0;
+    while (1) {
+        $w = $words[rand @words];
+        last if $tries++ > 100 ||
+            length($w) >= $App::options{minlength} &&
+                length($w) <= $App::options{maxlength};
+    }
+    $w;
+}
+
+sub is_word {
+    my ($w) = @_;
+    $w = lc($w);
+    for (@words) {
+        return 1 if $w eq $_;
+    }
+    0;
+}
+
+sub ask_word {
+    my ($i) = @_;
+    my $w = pick_word();
+    my $gw;
+    my $maxguesses = $App::options{maxguesses} || length($w);
+    my $j = 0;
+    my $correct;
+    my $guessed = substr($w, 0, 1) . ("*" x (length($w)-1));
+    print "\nWord $i:\n";
+    while ($j <= $maxguesses) {
+        $j++;
+        $gw = $guessed;
+        if ($j > 1) {
+            print $j <= $maxguesses ? "Your guess (".($j-1)."/$maxguesses)? " : "Your last guess? ";
+            chomp($gw = <STDIN>);
+            unless (is_word($gw)) {
+                show_diff($w, $guessed);
+                print "Sorry, not a word! ";
+                $j--;
+                next;
+            }
+            unless (length($gw) eq length($w)) {
+                show_diff($w, $guessed);
+                print "Sorry, not a ".length($w)."-letter word! ";
+                $j--;
+                next;
+            }
+            if (lc($gw) eq $w) {
+                print "Correct!\n";
+                $numcorrect++;
+                $correct++;
+                $score += (length($w)-$j+2)*100/length($w);
+                last;
+            }
+        }
+        my $guessed2 = show_diff($w, $gw);
+        $guessed = $guessed2 if num_chars($guessed, '*') > num_chars($guessed2, '*');
+    }
+    unless ($correct) {
+        print "Chances used up. The correct word is: $w\n";
+    }
+}
+
+sub num_chars {
+    my ($s, $char) = @_;
+    my $orig = $s;
+    $s =~ s/\Q$char//ig;
+    length($orig) - length($s);
+}
+
+sub show_diff {
+    my ($w, $gw) = @_;
+    my $guessed = "";
+    #print "diff: $w vs $gw\n";
+    $gw = lc($gw);
+    my $w2 = $w;
+
+    # huruf apa yang masih belum bener (buat nunjukin salah posisi)
+    for my $i (0..(length($w)-1)) {
+        my $l = substr($w, $i, 1);
+        $w2 =~ s/\Q$l// if length($gw) > $i
+            && substr($gw, $i, 1) eq $l;
+    }
+
+    for my $i (0..(length($w)-1)) {
+        my $l  = substr($w, $i, 1);
+        my $gl = length($gw) > $i ? substr($gw, $i, 1) : "";
+        if ($l eq $gl) {
+            print "$l ";
+            $guessed .= $l;
+        } elsif (length($gl) && $w2 =~ s/\Q$gl//) {
+            print "$gl*";
+            $guessed .= "*";
+        } else {
+            print "_ ";
+            $guessed .= "*";
+        }
+        print " ";
+    }
+    #print "\n";
+    $guessed;
+}
+
+sub show_total_score {
+    print "\n";
+    printf "Number of words guessed correctly: %d/%d\n",
+        $numcorrect, $App::options{numwords};
+    printf "Total score: %d\n", $score;
+}

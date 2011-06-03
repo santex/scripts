@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+@ARGV or die "Usage: $0 <version>";
+
+my $ver = $ARGV[0];
+$ver =~ s/^v//;
+
+system "dzil test && dzil release && git commit -am 'v$ver' && git tag 'v$ver'";

@@ -1,0 +1,74 @@
+#!/usr/bin/perl
+
+# feed it lines containing URLs in each, and it will extract search query logs
+
+use URI::Escape;
+use strict;
+
+sub unesc {
+  local $_ = shift;
+  $_ = uri_unescape($_);
+  s/\+/ /g;
+  $_;
+}
+
+while (<>) {
+  my ($url) = m#(https?://.+)#i or next;
+  my ($host, $rest) = $url =~ m!https?://([^/]+)(.*)!i or next;
+  my ($site, $query);
+  my $x;
+  
+  if ($host =~ /google/i) {
+    $rest =~ m!/(images|search|videosearch|news|maps|blogsearch|books|groups)!i or next;
+    $x = $1;
+    $site =
+        $x =~ /images/ ? "google images" :
+        $x =~ /videosearch/ ? "google video" :
+        $x =~ /maps/ ? "google maps" :
+        $x =~ /news/ ? "google video" :
+        $x =~ /blogsearch/ ? "google blogs" :
+        $x =~ /groups/ ? "google groups" :
+        "google";
+    $rest =~ /q=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  } elsif ($host =~ /isohunt\.com/i) {
+    $site = "isohunt";
+    $rest =~ m!/torrents\.php! or next;
+    $rest =~ /ihq=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  } elsif ($host =~ /mininova\.org/i) {
+    $site = "mininova";
+    $rest =~ m!/search/([^/]+)/! or next;
+    $query = unesc($1);
+  } elsif ($host =~ /filedonkey\.com/i) {
+    $site = "filedonkey";
+    $rest =~ m!/search\.html! or next;
+    $rest =~ /order=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  } elsif ($host =~ /filehash\.com/i) {
+    $site = "filehash";
+    $rest =~ m!/search/([^/]+)/! or next;
+    $query = unesc($1);
+  } elsif ($host =~ /smartorrent/i) {
+    $site = "smartorrent";
+    $rest =~ m!term=(.+?)(?:&|\z)! or next;
+    $query = unesc($1);
+  # 2008-10-16 - sekarang gw mulai sering pake btjunkie & TPB, abis isohunt gak lengkap sih
+  } elsif ($host =~ /thepiratebay/i) {
+    $site = "thepiratebay";
+    $rest =~ m!/search/(.+?)/! or next;
+    $query = unesc($1);
+  } elsif ($host =~ /btjunkie/i) {
+    $site = "btjunkie";
+    $rest =~ /q=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  # 2008-10-16
+  } elsif ($host =~ /baidu/i) {
+    $site = "baidu";
+    $rest =~ /(?:wd|word)=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  }
+  
+  next unless $site;
+  printf "%-15s %s\n", $site, uri_unescape($query);
+}

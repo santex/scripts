@@ -1,0 +1,6 @@
+#!/usr/bin/perl
+
+# 030805 - filter control and high characters
+
+$|++;
+while (<>) { s/[\x00-\x08\x0b\x0c\x0e-\x1f\x80-\xff]/./g; print }

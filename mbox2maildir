@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+# for more "correct" Maildir creation, including multilevel folders, proper
+# message filenames naming, etc, see
+# http://people.spoiled.org/jha/mb2md.html
+
+$progname = $0; $progname =~ s#.+/(.+)#$1#;
+@ARGV >= 2 or die "Usage: $progname <maildir> <mboxfile> [<morembox> ...]\n";
+$maildir = shift @ARGV;
+@mbox = @ARGV;
+
+# create maildir
+-d $maildir or mkdir $maildir,0700 or
+    die "Fatal: Directory $maildir doesn't exist and can't be created: $!\n";
+-d "$maildir/tmp" or mkdir "$maildir/tmp",0700 or
+    die "Fatal: Unable to make $maildir/tmp/ subdirectory: $!\n";
+-d "$maildir/new" or mkdir "$maildir/new",0700 or
+    die "Fatal: Unable to make $maildir/new/ subdirectory: $!\n";
+-d "$maildir/cur" or mkdir "$maildir/cur",0700 or
+    die "Fatal: Unable to make $maildir/cur/ subdirectory: $!\n";
+
+# read mboxes
+$i = time;
+for $mbox (@mbox) {
+    open MBOX, $mbox or die "Fatal: Unable to open $mbox: $!\n";
+    while(<MBOX>) {
+        if (/^From /) {
+            do { $fn = "$maildir/new/$i.$$.mbox"; $i++; } while -e $fn;
+            open OUT, ">$fn" or
+                die "Fatal: unable to create new message: $!\n";
+            next;
+        }
+        s/^>From /From /;
+        print OUT;
+    }
+}

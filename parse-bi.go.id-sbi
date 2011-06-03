@@ -1,0 +1,11 @@
+#!/usr/bin/perl -0777
+
+# http://www.bi.go.id/web/id/Moneter/Suku+Bunga/Suku+Bunga+SBI/
+
+@r = ();
+while (<>) {
+    while (m!>([0-9.,]+ %)<.+?>Dikeluarkan Tanggal : (\d+)/(\d+)/(\d+)!g) {
+        push @r, "$4-$2-$3\t$1\n";
+    }
+}
+print join "", reverse @r;

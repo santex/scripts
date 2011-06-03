@@ -1,0 +1,142 @@
+#!/usr/bin/php
+<?php
+
+require_once 'Console/GetoptPlus.php';
+
+$SCRIPT = 'phprename';
+$VERSION = '0.23';
+
+function process_item($file) {
+  global $opts;
+  global $_n;
+  $_old = $file;
+
+  # jalankan kode php
+  $TESTING = 0;
+  eval($opts['e']);
+  $_new = $file;
+
+  if (realpath($_old) == realpath($_new)) return;
+
+  $_cwd = getcwd();
+  if (!isset($opts['o'])) {
+    $_i = 1;
+    while (true) {
+      if (file_exists($_new) || isset($_n["$_cwd/$_new"])) {
+        $_new = "$file.$_i"; $_i++;
+      } else {
+        break;
+      }
+    }
+    $_n["$_cwd/$_new"] = true;
+  }
+  if (isset($opts['v'])) echo "INFO: $_old -> $_new\n";
+  if (!isset($opts['d'])) {
+    if (!@rename($_old, $_new)) {
+      echo "ERROR: gagal mengganti nama $_old -> $_new\n";
+    }
+  }
+}
+
+function process_items($items) {
+  global $opts;
+
+  foreach ($items as $item) {
+    if (@is_dir($item)) {
+      if (isset($opts['f'])) continue;
+      if (isset($opts['r'])) {
+        $cwd = getcwd();
+        if (chdir($item)) {
+          if (isset($opts['v'])) echo "INFO: chdir `$cwd/$item' ...\n";
+          $dh = opendir('.');
+          $d = array();
+          while (($f = readdir($dh)) !== FALSE) {
+            if ($f != '.' && $f != '..') $d[] = $f;
+          }
+          closedir($dh);
+          process_items($d);
+          if (!chdir($cwd)) die("FATAL: Gagal kembali ke `$cwd'.\n");
+        } else {
+          echo "WARN: Tidak bisa ke `$cwd/$item', dilewat\n";
+        }
+      }
+    }
+    process_item($item);
+  }
+}
+
+try {
+  $config = array(
+    'header' => array('Mengganti nama file dengan kode PHP.',
+      'Kode PHP akan diberi $file dan dipersilakan untuk',
+      'mengubah $file untuk mengganti nama file.'),
+    'usage' => array('[opsi] <file> ...', '--help'),
+      'options' => array(
+        array('short' => 'e',
+          'type' => 'mandatory',
+          'desc' => array('kode', 'Eval. Kode PHP.')),
+        array('short' => 'o',
+          'type' => 'noarg',
+          'desc' => array(
+            'Overwrite. Timpa file yang sudah ada. Defaultnya, '.$SCRIPT,
+            'menambahkan akhiran .1, .2, dst agar tidak menimpa file',
+            'yang sudah ada.')),
+        array('short' => 'v',
+          'type' => 'noarg',
+          'desc' => array(
+            'Verbose. Tampilkan nama file yang sedang diganti.')),
+        array('short' => 't',
+          'type' => 'noarg',
+          'desc' => array(
+            'Test. Hanya uji kode PHP tanpa menjalankannya.')),
+        array('short' => 'd',
+          'type' => 'noarg',
+          'desc' => array(
+            'Dry-run. Jalankan kode PHP, tapi jangan betul-betul',
+            'mengganti namanya.')),
+        array('short' => 'r',
+          'type' => 'noarg',
+          'desc' => array(
+            'Rekursif.')),
+        array('short' => 'f',
+          'type' => 'noarg',
+          'desc' => array(
+            'File saja, jangan acuhkan direktori.')),
+        array('short' => 'V',
+          'type' => 'noarg',
+          'desc' => array(
+            'Tampilkan versi lalu keluar.'))));
+  
+  $options = Console_Getoptplus::getoptplus($config);
+}
+catch(Console_GetoptPlus_Exception $e) {
+  $error = array($e->getCode(), $e->getMessage());
+  die("FATAL: Kesalahan opsi ($error[0]): $error[1].\n");
+}
+
+$opts = array();
+foreach ($options[0] as $o) { $opts[$o[0]] = $o[1] ? $o[1] : 1; }
+$args = $options[1];
+
+if (isset($opts['V'])) { echo "$SCRIPT versi $VERSION\n"; exit(0); }
+if (!isset($opts['e'])) die("FATAL: Kode (-e) tidak disebutkan, gunakan -h untuk bantuan.\n");
+if (isset($opts['d'])) $opts['v'] = 1;
+
+# uji kode PHP
+$file = "DUMMY";
+$TESTING = 1;
+if (eval($opts['e']) === FALSE) die("FATAL: Kode (-e) tidak benar, tolong dicek lagi.\n");
+
+if (preg_match('/win/', PHP_OS)) {
+  $items = array();
+  foreach ($args as $a) {
+    if (preg_match('/[*?{}\[\]]/', $a)) $items[] = glob($a); else $items[] = $a;
+  }
+} else {
+  $items = $args;
+}
+
+$_n = array();
+process_items($items);
+
+?>

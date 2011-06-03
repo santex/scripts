@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+use MIME::Base64;
+
+while (<>) {
+  chomp;
+  print decode_base64($_),"\n";
+}

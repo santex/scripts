@@ -1,0 +1,302 @@
+#!/usr/bin/perl
+
+# first version created: 2006-12-25 tengah malam (sekitar 1 jam)
+
+# requirements: mplayer, imagemagick/graphicsmagick, netpbm (for jpegtopnm), File::Type, Image::Size
+
+# todo:
+# * bug: width is now not calculated exactly
+# * timestamp options (font, color, size, placement on left/right & top/bottom)
+
+use warnings;
+use strict;
+use Getopt::Long;
+use Log::Log4perl qw(:easy);
+use Cwd qw(getcwd abs_path);
+use File::Temp qw(tempdir);
+use File::Spec;
+use File::Type;
+use Image::Size;
+use POSIX qw(floor ceil);
+
+# --- globals
+
+my $VERSION = 0.071;
+
+my %Opt = (
+           log_level => 'info',
+           #work_dir => '/tmp',
+           output => undef,
+           frames => -1,
+           overwrite => 0,
+           width => 1024,
+           rows => 4,
+           cols => 4,
+           every => undef,
+           guess_length => -1,
+           skip_if_exists => 0,
+           force => 0,
+           quality => 50,
+           timestamp => 1,
+          );
+my %Default_Opt = %Opt;
+
+# --- subs
+
+sub mysystem {
+  DEBUG "system(): ".join(" ",@_);
+  system @_;
+}
+
+sub myqx {
+  DEBUG "qx(): $_[0]";
+  qx($_[0]);
+}
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}
+
+# --- main
+
+GetOptions(
+           'log-level=s' => \$Opt{log_level},
+           'version' => sub { $Opt{version} = 1 },
+           'debug' => sub { $Opt{log_level} = 'debug' },
+           'verbose' => sub { $Opt{log_level} = 'info' },
+           'help' => \$Opt{help},
+           #'work-dir=s' => \$Opt{work_dir},
+           'output=s' => \$Opt{output},
+           'overwrite' => sub { $Opt{overwrite} = 1 },
+           'frames=i' => \$Opt{frames},
+           'width=i' => \$Opt{width},
+           'rows=i' => \$Opt{rows},
+           'cols=i' => \$Opt{cols},
+           'every=i' => \$Opt{every},
+           'guess-length=i' => \$Opt{guess_length},
+           'skip-if-exists' => sub { $Opt{skip_if_exists} = 1 },
+           'force' => sub { $Opt{force} = 1 },
+           'quality=i' => \$Opt{quality},
+           'timestamp!' => \$Opt{timestamp},
+          );
+
+if ($Opt{version}) {
+  print "$0 version $VERSION\n";
+  exit 0;
+}
+
+if ($Opt{help} || !@ARGV) {
+  print <<EOF;
+$0 [options] [moviefile]
+
+Options:
+ --log-level=L  Set verbosity level (fatal/error/warn/info/debug).
+                Default is verbose.
+ --debug        Set verbosity level to debug.
+ --verbose      Set verbosity level to verbose.
+
+ --output=O     Set output filename (default: <moviename>.jpg)
+ --overwrite    Overwrite output if exists.
+ --width        Width of output, in pixels (default: $Default_Opt{width}).
+ --rows=N       Number of colums (default: $Default_Opt{rows}).
+ --cols=N       Number of rows (default: $Default_Opt{cols}).
+ --every=S      Instead of --rows, you can specify --every instead, specified in seconds.
+ --frames=N     Number of frames to take when doing captures, -1=auto (default: $Default_Opt{frames}).
+ --guess-length=G
+                If -1 then auto, if 1 then forced (default: $Default_Opt{guess_length}).
+ --skip-if-exists
+                Skip processing the movie if thumbnail file already exists
+ --force
+                Try to generate thumbnail even if mime type is not video
+ --quality      JPEG compression quality (default: $Default_Opt{quality}).
+ --notimestamp  Don't print timestamp.
+EOF
+  exit 0;
+}
+
+my $log_level;
+if    ($Opt{log_level} eq 'fatal') { $log_level = $FATAL }
+elsif ($Opt{log_level} eq 'error') { $log_level = $ERROR }
+elsif ($Opt{log_level} eq 'warn' ) { $log_level = $WARN  }
+elsif ($Opt{log_level} eq 'info' ) { $log_level = $INFO  }
+elsif ($Opt{log_level} eq 'debug') { $log_level = $DEBUG }
+else  { die "FATAL: Unknown log level: $Opt{log_level}. Use one of: fatal, error, warn, info, debug'\n" }
+Log::Log4perl->easy_init($log_level);
+
+my $ft = new File::Type;
+
+my $cwd = getcwd;
+MOVIE: for my $movie (@ARGV) {
+  INFO "Processing movie file: `$movie' ...";
+
+  # figure out the movie's dir
+  chdir $cwd;
+
+  unless (-f $movie) {
+    ERROR "Movie file does not exist, skipping ...";
+    next MOVIE;
+  }
+  if (!$Opt{force}) {
+    my $mime = $ft->mime_type($movie);
+    unless ($mime =~ m{^(video/|application/octet-stream)}) {
+      INFO "File is not movie ($mime), skipping ...";
+      next MOVIE;
+    }
+  }
+
+  my $abs_movie = abs_path($movie);
+  my ($movie_vol, $movie_dir, $movie_filename) = File::Spec->splitpath($abs_movie);
+
+  my $movie_esc = esc($abs_movie);
+
+  # pick output filename
+  my @outputs;
+  push @outputs, $Opt{output} if defined $Opt{output};
+  push @outputs, "$movie.jpg";
+  push @outputs, $movie; $outputs[-1] =~ s/\.\w+$//; $outputs[-1] .= ".jpg";
+  for (@outputs) {
+    if ($Opt{skip_if_exists} && (-e $_)) {
+      INFO "$_ already exists, skipping this movie ...";
+      next MOVIE;
+    }
+  }
+  my $i = 0;
+  my $output = $outputs[0];
+  while (!$Opt{overwrite} && (-e $output)) {
+    if ($Opt{skip_if_exists}) {
+      INFO "$output already exists, skipping this movie ...";
+      next MOVIE;
+    }
+    $i++;
+    DEBUG "$output already exists, picking another name ...";
+    $output = "$outputs[0].$i";
+  }
+  my $abs_output = abs_path($output);
+  my $output_esc = esc($abs_output);
+
+  my $out;
+
+  my $work_dir = tempdir(CLEANUP => ($log_level == $DEBUG ? 0 : 1));
+  DEBUG "work_dir is $work_dir";
+  chdir $work_dir;
+
+  # figure out movie's format, length & dimension
+  $out = myqx("mplayer -nosound -vo jpeg -ss 99999 -frames 5 $movie_esc 2>&1");
+  #DEBUG "command output is: [$out]";
+  unlink <*.jpg>;
+
+  $out =~ m{^VIDEO:.+?\s+(\d+)x(\d+)\s+}m or do { ERROR "Can't figure out movie's dimension, skipping this movie ..."; next MOVIE };
+  my ($moviewidth, $movieheight) = ($1, $2);
+  INFO "Movie dimension is ${moviewidth}x${movieheight}";
+
+  my $format = "";
+  $out =~ m{^(\S.+?) file format detected}m and $format = $1;
+  INFO "Movie format is $format";
+
+  my $frames;
+  # some sensible defaults: some avi could use f=1 but some not, so 5 to be safe.
+  # real needs larger.
+  if ($Opt{frames} == -1) {
+    $frames = 5;
+    if ($format =~ /mpeg|asf/i) { $frames = 5 }
+    elsif ($format =~ /real/i) { $frames = 20 }
+  } else {
+    $frames = $Opt{frames};
+  }
+
+  my $m=0; $m=1 while $out =~ m{[\012\015]V:\s*(\d+(?:\.\d+)?)\s+}g;
+  $m or do { ERROR "Can't figure out movie's length, skipping this movie"; next MOVIE };
+  my $length = $1;
+
+  my $guess_length = 0;
+  if ($Opt{guess_length} == 1) { $guess_length = 1 }
+  elsif ($Opt{guess_length} == -1 && $format =~ /asf|mpeg/i) { $guess_length = 1 }
+
+  if ($length > 0 && !$guess_length) {
+    INFO "Movie length is $length seconds";
+  } else {
+    DEBUG "Movie length is zero or length guessing is enforced, trying binary seeking method ...";
+    my $num_steps = 20; # max number of steps
+    my $step_size = 7200;
+    my $pos = 0;
+    my $direction = +1;
+    my $prev_direction = $direction;
+    my $res;
+    for (1..$num_steps) {
+      DEBUG "Binary seeking, step=$_/$num_steps, pos=$pos, direction=$direction, step_size=$step_size";
+      if ($direction > 0) { $pos += $step_size } else { $pos -= $step_size }
+      $pos = 0.1 if $pos <= 0;
+      $out = myqx("mplayer -nosound -vo jpeg -ss $pos -frames $frames $movie_esc 2>&1");
+      my $m=0; $m=1 while $out =~ m{[\012\015]V:\s*(\d+(?:\.\d+)?)\s+}g;
+      $m or do { ERROR "Can't figure out movie's length, skipping this movie ..."; next MOVIE };
+      #DEBUG "command output is: [$out]";
+      $res = $1;
+      do { $length = $res } if $res > 0;
+      DEBUG "Result of binary seeking: res=$res";
+      $prev_direction = $direction;
+      if ($res > 0) { $direction = 1 } else { $direction = -1 }
+      $step_size = $step_size / 2 unless (($_==1 && !$res) || $prev_direction==$direction);
+      last if $res && $step_size <= 1.0;
+    }
+    INFO "Movie length is $length seconds (from binary seeking method)";
+  }
+
+  unless ($length > 0 && $moviewidth > 0 && $movieheight > 0) {
+    ERROR "Movie does not have positive length/dimension, skipping ...";
+    next MOVIE;
+  }
+
+  # extract screenshots
+  my $n;
+  if ($Opt{every}) {
+      $n = $length / $Opt{every};
+      $Opt{rows} = ceil($n / $Opt{cols});
+      DEBUG "Calculating n = length / every = $length / $Opt{every} = $n, rows = $Opt{rows}";
+  }
+  $n = $Opt{rows}*$Opt{cols};
+  my ($imgx, $imgy);
+  INFO "Taking $n screenshots ...";
+  SCREENSHOT: for my $i (1..$n) {
+    my $pos = sprintf("%.1f", $length * $i/($n+1));
+    DEBUG "Generating screenshot ($i/$n, pos $pos secs) ...";
+    $out = myqx("mplayer -nosound -vo jpeg -ss $pos -frames $frames $movie_esc 2>&1");
+    my $jpg = (<0*.jpg>)[-1];
+    $jpg or do { ERROR "Can't get screenshot ($i/$n, pos $pos secs), skipping ..."; next SCREENSHOT };
+    my $tname = sprintf("s%05d.jpg", $i);
+    rename $jpg, $tname;
+    unlink <0*.jpg>;
+    if ($Opt{timestamp}) {
+        my $ts = sec2hms($pos);
+        unless (defined $imgx) {
+            ($imgx, $imgy) = imgsize $tname;
+        }
+        my $pt = floor($imgx/19);
+        DEBUG "Annotating timestamp $ts (${pt}pt) ...";
+        mysystem "convert -annotate +10+30 $ts -pointsize $pt -fill yellow -weight bold $tname ts-$tname"; # -weight gak ngefek? dan undocumented
+        rename "ts-$tname", $tname;
+    }
+  }
+
+  # assemble thumbnails
+  INFO "Generating thumbnails ...";
+  # perkirakan berapa lebar thumbnail. asumsi jarak antar thumbnail=8px
+  my $thumbwidth  = sprintf("%d",$Opt{width}/$Opt{cols} - 8); $thumbwidth = 10 if $thumbwidth < 10;
+  my $thumbheight = sprintf("%d", $thumbwidth * ($movieheight / $moviewidth));
+  mysystem "montage -tile $Opt{cols}x$Opt{rows} -geometry ${thumbwidth}x${thumbheight}+2+2 s*.jpg jpeg:$output_esc";
+
+  # compress jpeg. dari 1MB bisa jadi 150k jika q=50, output dari ImageMagick gak optimized
+  INFO "Compressing JPEG ...";
+  mysystem "mv $output_esc $output_esc.tmp && ( jpegtopnm $output_esc.tmp | cjpeg -optimize -quality $Opt{quality} > $output_esc ) && rm -f $output_esc.tmp";
+}
+
+sub sec2hms {
+    my ($secs) = @_;
+    my $h = floor($secs/3600);
+    $secs -= $h*3600;
+    my $m = floor($secs/60);
+    $secs -= $m*60;
+    my $s = floor($secs);
+    sprintf "%02d:%02d:%02d", $h, $m, $s;
+}

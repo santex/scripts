@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+my $VERSION = 20070526;
+
+for (@ARGV) {
+  my $old = $_;
+
+  s/^[\w-]+_bbs\.cnxp\.com_\.[\w-]+\.//;
+
+  if ($old ne $_) {
+    print "$old -> $_\n";
+    if (-e $_) {
+      warn "ERROR: $_ already exists, skipped\n";
+    } else {
+      rename $old, $_ or warn "ERROR: Can't rename $old -> $_: $!\n";
+    }
+  }
+}

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# ganti ke yang lebih sesuai, mendekati ukuran harddisk
+NUM_GIGS=200
+
+function cleanup {
+  echo "Cleaning up ..."
+  rm -f 100MB 1GB 1GB.[0-9] 1GB.[0-9]*[0-9]
+}
+
+trap cleanup EXIT
+
+iter=0
+while true; do
+
+  iter=$[$iter+1]
+  echo "Iteration $iter"
+
+  echo "Writing 100MB of random data ..."
+  dd if=/dev/urandom of=100MB bs=100k count=1024
+
+  echo "Creating 1GB ..."
+  cat 100MB 100MB 100MB 100MB 100MB  \
+      100MB 100MB 100MB 100MB 100MB > 1GB
+
+  i=1
+  while [[ i -lt NUM_GIGS ]]; do
+    i=$[$i+1]
+    echo "Creating 1GB.$i ..."
+    cp 1GB 1GB.$i
+  done
+
+  cleanup
+done

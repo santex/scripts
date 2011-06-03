@@ -1,0 +1,9 @@
+#!/usr/bin/ruby
+
+require 'yaml'
+
+$/ = nil
+$_ = gets
+
+YAML::load($_)
+exit 0

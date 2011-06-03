@@ -1,0 +1,10 @@
+#!/bin/sh
+
+#rsync --del -e "ssh -c arcfour" -az --exclude '*~' \
+#  $HOME/repo/spanel{,-phpmyadmin,-phppgadmin,-squirrelmail,-roundcube} \
+#  steven@hosting.localdomain:/u/steven/public/git/
+
+# spanel-squirrelmail dan spanel-roundcube belon
+rsync --del -e "ssh -c arcfour" -az --exclude '*~' \
+  $HOME/repo/spanel{,-phpmyadmin,-phppgadmin} \
+  steven@hosting.localdomain:/u/steven/public/git/

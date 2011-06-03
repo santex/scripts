@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+# 040303
+
+die "Usage: $0 <line-start> <line-end or -1> <file>\n" if @ARGV < 2;
+
+$line_start = shift @ARGV;
+$line_end = shift @ARGV;
+
+while (<>) {
+  next if $. < $line_start;
+  last if $line_end != -1 && $. > $line_end;
+  print;
+}

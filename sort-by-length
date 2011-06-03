@@ -1,0 +1,2 @@
+#!/usr/bin/perl -n
+print sort { length($a) <=> length($b) } <>;

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /opt/firefox-3.0/firefox

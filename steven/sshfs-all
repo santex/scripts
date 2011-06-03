@@ -1,0 +1,5 @@
+#!/bin/bash
+sshfs steven@gold:/             /media/gold
+sshfs steven@hosting:/          /media/bismuthb
+sshfs s10010@23.masterweb.net:/ /media/server23
+sshfs steven@xenon:/            /media/xenon

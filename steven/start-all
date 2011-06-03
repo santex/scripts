@@ -1,0 +1,8 @@
+#!/bin/bash
+opera&
+konsole&
+kopete&
+chrome&
+google-chrome&
+thunderbird&
+. set-zh; stardict&

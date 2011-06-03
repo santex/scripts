@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+
+# 030206
+
+# bbrp scale factor yang umum:
+# - 1.042709376 (25/23.976): PAL -> NTSC/FILM
+# - 0.8341675008 (25/29.97): PAL -> NTSC
+#
+# scale dulu, baru shift (kalau perlu)
+
+$secs_re = qr/[+-]?\d+(?:\.\d*)?/;
+$hms_re = qr/\d\d?:\d\d?:\d\d?(?:,\d\d\d)?/;
+$hms_re_catch = qr/(\d\d?):(\d\d?):(\d\d?)(?:,(\d\d\d))?/;
+sub hms2secs { local $_=shift; /^$hms_re_catch$/ or return; $1*3600+$2*60+$3+$4*0.001 }
+sub secs2hms { local $_=shift; /^$secs_re$/ or return "00:00:00,000"; my $ms=1000*($_-int($_)); $_=int($_); my $s=$_%60; $_-=$s; $_/=60; my $m=$_%60; $_-=$m; $_/=60; sprintf "%02d:%02d:%02d,%03d",$_,$m,$s,$ms }
+
+###
+
+$|++;
+die "Usage: $0 factor FILE\nFactor of 2.0 equals to twice longer.\n" unless @ARGV >= 1;
+$_ = shift @ARGV;
+if (/^\d+(\.\d*)?$/) {
+	$f = $_;
+} else {
+	die "FATAL: Invalid factor `$_'\n";
+}
+
+$para = "";
+while (1) {
+	$_ = <>;
+	if (/\S/) {
+		s/\015//g;
+		$para .= $_;
+	} elsif ($para =~ /\S/) {
+		($no, $hms1, $hms2, $text) = $para =~ /(\d+)\n($hms_re) ---?> ($hms_re)\n(.+)/s or
+			die "FATAL: Invalid entry in line $.: $para\n";
+		print $no, "\n", 
+			secs2hms(hms2secs($hms1)*$f), " --> ", secs2hms(hms2secs($hms2)*$f), "\n",
+			$text, "\n";
+		$para = "";
+	} else {
+		$para = "";	
+	}
+	last unless $_;
+}

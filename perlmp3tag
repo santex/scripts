@@ -1,0 +1,156 @@
+#!/usr/bin/perl
+
+# changelog
+#
+# * 0.1 (2007-07-05) copy-paste from perlrename
+
+use warnings;
+use strict;
+use File::Find;
+use Cwd;
+use MP3::Tag;
+
+my $VERSION = "0.01";
+my $PROG    = "perlmp3tag";
+
+use Getopt::Std;
+my %_opts;
+getopts( 'de:fhrtvV', \%_opts );
+
+if ( $_opts{V} ) { print "$PROG version $VERSION\n"; exit 0 }
+if ( $_opts{h} ) {
+    print <<USAGE; exit 0 }
+NAME
+
+ $PROG - Set MP3 tags using Perl code.
+
+SYNOPSIS
+
+ $PROG <-e 'code'> file ...
+
+DESCRIPTION
+
+ Similar to `perlrename' script, this program lets you set MP3 tags in
+ batch. Current tag values will be provided in these variables:
+ \$TITLE, \$TRACK, \$ARTIST, \$ALBUM, \$COMMENT, \$YEAR,
+ \$GENRE. Filename is given in \$FILE. If any of those variables are
+ changed, the new tag information will be written to files (unless -d
+ is specified).
+
+ -e  Specify code to rename file (\$_), e.g. 's/\.old\$/\.bak/'
+ -v  Verbose
+ -t  Only test compile code, do not run it on the arguments
+ -d  Dry-run (implies -v)
+ -h  Show this help
+ -V  Print version and exit
+ -r  Recursive
+
+USAGE
+
+die "FATAL: Code (-e) not specified, use -h for help\n" unless $_opts{e};
+$_opts{v} = 1 if $_opts{d};
+
+no strict;
+$_ = "DUMMY";
+eval $_opts{e};
+use strict;
+die "FATAL: Code (-e) does not compile: $@\n" if $@;
+exit 0                                        if $_opts{t};
+
+my @_items = ();
+
+if ( $^O =~ /win32/i ) {
+    for (@ARGV) {
+        if   (/[*?]/) { push @_items, glob $_ }
+        else          { push @_items, $_ }
+    }
+}
+else {
+    push @_items, @ARGV;
+}
+
+my %_n = ();
+process_items(@_items);
+
+sub process_items {
+    my @items = @_;
+    for my $item (@items) {
+        if ( -d $item ) {
+            if ( $_opts{r} ) {
+                my $cwd = getcwd();
+                if ( chdir $item ) {
+                    print "INFO: chdir `$cwd/$item' ...\n" if $_opts{v};
+                    local *D;
+                    opendir D, ".";
+                    my @d = grep { $_ ne '.' && $_ ne '..' } readdir D;
+                    closedir D;
+                    process_items(@d);
+                    chdir $cwd or die "FATAL: Can't go back to `$cwd': $!\n";
+                }
+                else {
+                    warn "WARN: Can't chdir to `$cwd/$item', skipped\n";
+                }
+            }
+        }
+        else {
+            process_file($item);
+        }
+    }
+}
+
+sub process_file {
+    my ($_filename) = @_;
+
+    print "INFO: Processing file `$_filename' ...\n" if $_opts{v};
+
+    my $_mp3 = MP3::Tag->new($_filename) or do {
+        warn "ERROR: Can't get tag for `$_filename', skipped\n";
+        return;
+    };
+
+    my $FILE = $_filename;
+    my ($TITLE, $TRACK, $ARTIST, $ALBUM, $COMMENT, $YEAR, $GENRE) = $_mp3->autoinfo();
+    my ($OLDTITLE, $OLDTRACK, $OLDARTIST, $OLDALBUM, $OLDCOMMENT, $OLDYEAR, $OLDGENRE) =
+        ($TITLE, $TRACK, $ARTIST, $ALBUM, $COMMENT, $YEAR, $GENRE);
+
+    no strict;
+    eval $_opts{e};
+    use strict;
+
+    my @_fc = (
+               [TITLE => $OLDTITLE => $TITLE],
+               [TRACK => $OLDTRACK => $TRACK],
+               [ARTIST => $OLDARTIST => $ARTIST],
+               [ALBUM => $OLDALBUM => $ALBUM],
+               [COMMENT => $OLDCOMMENT => $COMMENT],
+               [YEAR => $OLDYEAR => $YEAR],
+               [GENRE => $OLDGENRE => $GENRE]
+           );
+
+    return unless grep { $_->[1] ne $_->[2] } @_fc;
+
+    if ($_opts{v}) {
+        print "INFO: Changed tag in file `$_filename': ".join(", ", map {"$_->[0]: `$_->[1]' -> `$_->[2]'"} grep {$_->[1] ne $_->[2]} @_fc)."\n";
+    }
+
+    unless ( $_opts{d} ) {
+        # write new tag information
+        if (exists $_mp3->{ID3v1}) {
+            print "INFO: Writing ID3v1 tag to file `$_filename' ...\n";
+            my $_v1 = $_mp3->{ID3v1};
+            $_v1->all($TITLE, $ARTIST, $ALBUM, $YEAR, $COMMENT, $TRACK, $GENRE);
+            $_v1->write_tag or warn "ERROR: Failed writing ID3v1 tag to file `$_filename'\n";
+        }
+        print "INFO: Writing ID3v2 tag to file `$_filename' ...\n";
+        $_mp3->new_tag("ID3v2") unless exists $_mp3->{ID3v2};
+        my $_v2 = $_mp3->{ID3v2};
+        $_v2->title($TITLE);
+        $_v2->track($TRACK);
+        $_v2->artist($ARTIST);
+        $_v2->album($ALBUM);
+        $_v2->comment($COMMENT);
+        $_v2->year($YEAR);
+        $_v2->genre($GENRE);
+        $_v2->write_tag or warn "ERROR: Failed writing ID3v2 tag to file `$_filename'\n";
+    }
+}

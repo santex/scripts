@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+
+# TODO: some letters in find letters MUST be found, maybe using
+# notation: --find-letters abcDE where D,E must be found and a,b,c are
+# optional?
+
+use warnings;
+use strict;
+use Getopt::Long;
+
+my %Opt = (
+           find_letters => '',
+           avoid_letters => '',
+           found_minimum => 0,
+           length => '2-7',
+          );
+
+# --- subs
+
+# --- main
+
+GetOptions(
+           'find-letters=s' => \$Opt{find_letters},
+           'found-minimum=s' => \$Opt{found_minimum},
+           'avoid-letters=s' => \$Opt{avoid_letters},
+           'length=s' => \$Opt{length},
+          );
+if ($Opt{help}) {
+  print <<EOF;
+$0 [options]
+
+Feed the script a list of words, one line each, and it will print only
+those matching the criteria. First written to cheat at Scrabble heheh.
+
+Options:
+ --find-letters=S
+
+  Find words that contain all the letters in S.  e.g. --find-letters
+  AABI will find words that have two A's, 1 B, and 1 I in it.
+
+ --avoid-letters=S
+
+  Find words that do not contain any of the letters in S,
+  e.g. --avoid-letters AEIO will find words that only have U as the
+  vocal.
+
+ --found-minimum=N
+
+  Do not require all letters in --find-letters to be found. Just
+  require N letters.
+
+ --length=L
+
+  Specify the length or range of length, e.g.  --length 7 or --length
+  2-7. Default is 2-7.
+
+EOF
+  exit 0;
+}
+
+my ($minl, $maxl);
+if ($Opt{length} =~ /^(\d+)$/) {
+  $minl = $1; $maxl = $1;
+} elsif ($Opt{length} =~ /^(\d+)-(\d+)$/) {
+  $minl = $1; $maxl = $2;
+} else {
+  die "FATAL: Invalid length specification\n";
+}
+
+my $avoid = $Opt{avoid_letters}; $avoid =~ s/[^A-Za-z0-9]+//g;
+$avoid = qr/[ $avoid ]/i;
+
+if (!$Opt{found_minimum}) { $Opt{found_minimum} = length($Opt{find_letters}) }
+
+while (<>) {
+  chomp;
+
+  next unless length($_) >= $minl && length($_) <= $maxl;
+
+  next if length($Opt{avoid_letters}) && $_ =~ $avoid;
+
+  my $lets = $Opt{find_letters}; $lets =~ s/[^A-Za-z0-9]+//g;
+  for my $l (split //, $_) {
+    if (my ($m) = $l =~ /([ $lets ])/i) {
+      $l =~ s/$m//i; $lets =~ s/$m//i;
+    }
+  }
+  next if length($lets) > (length($Opt{find_letters}) - $Opt{found_minimum});
+
+  print "$_\n";
+}

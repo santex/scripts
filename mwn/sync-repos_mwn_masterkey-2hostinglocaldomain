@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rsync --del -e "ssh -c arcfour" -az --exclude '*~' \
+  $HOME/repo/mwn-masterkey \
+  steven@hosting.localdomain:/u/steven/public/git/

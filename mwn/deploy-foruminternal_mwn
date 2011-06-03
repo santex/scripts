@@ -1,0 +1,8 @@
+#!/bin/sh
+
+rsync --del -e ssh -Pavz $* \
+  --exclude '*~' --exclude '.git' \
+  --exclude '/config.php' \
+  --exclude '/images/avatars/' \
+  $HOME/repos/mwn-foruminternal/ \
+  mwn@forum.mwn.localdomain:sites/forum.mwn.localdomain/ssl/

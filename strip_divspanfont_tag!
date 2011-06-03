@@ -1,0 +1,5 @@
+#!/usr/bin/perl -0777 -pi~
+
+# note, crude regex style... beware...
+
+s#</?(basefont|font|div|span).*?>##sig;

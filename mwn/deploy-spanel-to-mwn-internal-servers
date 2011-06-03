@@ -1,0 +1,3 @@
+#!/bin/bash
+time deploy-spanel --all --has mwn --has intranet --lack NOT-YET "$@"
+

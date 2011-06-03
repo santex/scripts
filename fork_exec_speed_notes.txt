@@ -1,0 +1,12 @@
+# fork+exec overhead
+fork + child exit right away = 153.85/sec
+fork + exec /bin/true = 144.93/sec
+fork + exec /usr/sbin/cgiwrap = 137.93/sec
+fork + exec empty bash shell script = 87.72/sec
+fork + exec empty perl script = 45.87/sec
+fork + exec empty php4 -q script (no dynamic module; short php.ini) = 27.32/sec
+fork + exec empty setuid perl script (#!/usr/bin/suidperl) = 26.92/sec
+fork + exec empty php4 -q script (load mysql.so; short php.ini) = 22.75/sec
+fork + exec empty setuid perl script (#!/usr/bin/perl) = 19.16/sec
+fork + exec empty python script = 16.82/sec
+fork + exec empty ruby script = 5.49/sec

@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+# jalankan skrip ini di direktori yg berisi movie files, image files,
+# dan imdb.url berisi URL ke IMDB movie page.
+
+use strict;
+use URI::Escape;
+use HTML::Entities;
+use Cwd;
+use Log::Log4perl qw(:easy);
+use App::Options (
+  option => {
+    overwrite => {
+      description => "overwrite index.html if already exists",
+      type => "boolean",
+      default => 0,
+    },
+    website_url => {
+      description => "download movie URL",
+      type => "string",
+      default => "http://steven.hosting.localdomain/download/video/movies",
+    },
+    log_level => {
+      description => "log level",
+      type => "string",
+      required => 1,
+      default => "info",
+    },
+  }
+);
+
+my $log_level;
+my $l = $App::options{log_level};
+if    ($l eq 'fatal') { $log_level = $FATAL }
+elsif ($l eq 'error') { $log_level = $ERROR }
+elsif ($l eq 'warn' ) { $log_level = $WARN  }
+elsif ($l eq 'info' ) { $log_level = $INFO  }
+elsif ($l eq 'debug') { $log_level = $DEBUG }
+else  { die "FATAL: Unknown log level: $l. Use one of: fatal, error, warn, info, debug'\n" }
+Log::Log4perl->easy_init($log_level);
+
+my $imdb_url = "";
+if (-f "imdb.url") {
+  open F, "imdb.url"; $imdb_url = <F>; chomp($imdb_url);
+}
+
+my $imdb_page = "";
+if (open F, "imdb.html") { $imdb_page = join "", <F> }
+
+my $dirname = getcwd; $dirname =~ s!.+/!!;
+my ($title) = $imdb_page =~ m!<title>(.+?)</title>!; $title ||= $dirname;
+print "$dirname\n\n";
+print sprintf "[b]%s[/b]\n\n",
+  encode_entities($title);
+
+my @all_files   = grep { -f } <*>;
+my @image_files = grep { /\.(jpe?g|gif|png)$/i } @all_files;
+my @movie_files = grep { /\.(mpe?g|avi|rmvb|rm|divx|xvid)$/i } @all_files;
+my @subtt_files = grep { /\.(srt|sub)$/i } @all_files;
+
+print sprintf "[b]IMDB page[/b]: %s %s",
+  $imdb_url,
+  ((-f "imdb.html") ? sprintf("(local cache: %s/%s/imdb.html)", $App::options{website_url}, uri_escape($dirname)) : "");
+print "\n\n";
+
+my ($g) = $imdb_page =~ m!<h5>Genre:</h5>\s*(.+?)</div!s; $g ||= "";
+my @g; while ($g =~ m!>(.+?)</a>!g) { my $s = $1; push @g, $s unless $s =~ /\(?more\)?/ }
+if (@g) {
+  print sprintf "[b]Genre[/b]: %s\n\n",
+    (join ", ", @g);
+}
+
+my ($rating, $num_votes) = $imdb_page =~ m!^<b>([0-9.]+/[0-9.]+)</b>.+?([0-9,]+ votes?)!m;
+if ($rating) {
+  print sprintf "[b]Rating[/b]: %s (%s)\n\n",
+    $rating, $num_votes;
+}
+
+my ($plot) = $imdb_page =~ m!<h5>Plot (?:Outline|Summary):</h5>\s*(.+?)<(?:/div|a\s)!s;
+DEBUG "Plot = $plot";
+if ($plot) {
+  print sprintf "[b]Plot outline[/b]: %s\n\n",
+    $plot;
+}
+
+print "[b]Images:[/b]\n\n";
+for (@image_files) {
+  print sprintf "[img]%s/%s/%s[/img]\n",
+    $App::options{website_url},
+    uri_escape($dirname),
+    uri_escape($_);
+}
+print "\n\n";
+
+print "[b]Video files[/b]:\n\n";
+for (@movie_files) {
+  print sprintf "* %s/%s/%s\n",
+    $App::options{website_url},
+    uri_escape($dirname),
+    uri_escape($_);
+}
+print "\n";
+
+print "[b]Subtitles[/b]:\n\n";
+for (@subtt_files) {
+  print sprintf "* %s/%s/%s\n",
+    $App::options{website_url},
+    uri_escape($dirname),
+    uri_escape($_);
+}
+print "\n";
+
+print "[b]All files[/b]:\n\n";
+for (@all_files) {
+  print sprintf "* %s/%s/%s\n",
+    $App::options{website_url},
+    uri_escape($dirname),
+    uri_escape($_);
+}
+print "\n";
+
+print "$App::options{website_url}\n";
+

@@ -1,0 +1,138 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+# created: 2004-01-21
+our $VERSION = "2010-11-04";
+
+use FindBin;
+use lib "$FindBin::Bin/../lib/perl";
+use Email::Sender::Simple qw(sendmail);
+use Email::Sender::Transport::SMTP qw();
+use Email::Simple;
+use IO::Socket::INET;
+use Getopt::Long;
+use File::Slurp;
+
+my $subject = "(no subject)";
+my $message_file = undef;
+my $message = "This is the default message.\n";
+my $from = undef;
+my $host = "localhost";
+my $port = 25;
+my $repeat_message = 1;
+my $username;
+my $password;
+my @extra_headers;
+my $n = 1;
+my @to = ();
+my $raw_session = undef;
+my $raw_session_file = undef;
+my $help = 0;
+
+GetOptions(
+  "subject=s"          => \$subject,
+  "from=s"             => \$from,
+  "message=s"          => \$message,
+  "header=s"           => \@extra_headers,
+  "repeat-message=i"   => \$repeat_message, # a quick way to send a large body, by duplicating message N times
+  "message-file=s"     => \$message_file,
+  "smtp=s"             => \$host,
+  "host=s"             => \$host,
+  "port=i"             => \$port,
+  "username=s"         => \$username,
+  "password=s"         => \$password,
+  'to=s'               => \@to,
+  'n=i'                => \$n,
+  'raw-session=s'      => \$raw_session,
+  'raw-session-file=s' => \$raw_session_file,
+  'help'               => \$help,
+);
+
+if ($help) {
+print <<_;
+$0 - send email via SMTP (using Email::Sender or raw socket)
+
+Options:
+  --subject=SUBJECT    [req]
+  --from=SENDER        [req] Set envelope sender as well as From header
+ (--to=RECIPIENT)+     [req] Specify one or more recipients
+ (--header=STR)+       [opt] Extra header, can be specified multiple times, e.g.
+                       --header 'X-Mailer: foo' --header 'X-ID: 123'
+  --message=STRING     [req, unless --message-file is specified]
+                       Email body to send.
+  --message-file=F     [opt]
+  --repeat-message=N   You can send a large body by repeating the message N
+                       times. Default is 1 (no repeat).
+
+  --host=HOST          [opt] Default is localhost.
+  --port=P             [opt] Default is 25.
+  --username=U         [opt] For SMTP authentication
+  --password=P         [opt] For SMTP authentication
+  --n=N                [opt] Send N times (separate SMTP session), default is 1.
+
+  --raw-session=STR    [opt] Send STR as-is to SMTP server session.
+  --raw-session-file=F [opt] Send content of F as-is to SMTP server session.
+_
+exit 0;
+}
+
+die "Please specify one or more recipients (--to)" unless @to;
+die "Please specify sender (--from)" unless $from;
+
+my $email;
+if ($raw_session || $raw_session_file) {
+    if ($raw_session_file) {
+        $raw_session = read_file $raw_session_file;
+    }
+} else {
+    my @headers = (
+        From    => $from,
+        Subject => $subject,
+    );
+
+    for (@extra_headers) {
+        /^(\S+):\s*(.+)/ or die "Invalid header: $_";
+        push @headers, $1 => $2;
+    }
+
+    push @headers, To => $_ for @to;
+
+    if ($message_file) {
+        $message = read_file $message_file;
+    } else {
+        $message = $message x $repeat_message;
+    }
+
+    $email = Email::Simple->create(
+        header => \@headers,
+        body  => $message,
+    );
+}
+
+for my $i (1..$n) {
+    print "Sending mail ($i)\n";
+    if (defined($raw_session)) {
+        my $sock = IO::Socket::INET->new(
+            PeerAddr => $host,
+            PeerPort => $port,
+            Proto    => 'tcp',
+        ) or die "FATAL: Can't open socket to $host:$port\n";
+        #$banner = <$sock>;
+        $sock->printflush($raw_session);
+        $sock->printflush("\n") unless $raw_session =~ /\n\z/;
+        $sock->printflush(".\n") unless $raw_session =~ /\.\n\z/;
+        while (my $resp = <$sock>) { print $resp }
+        $sock->close;
+    } else {
+        sendmail(
+            $email,
+            { from => $from,
+              transport => Email::Sender::Transport::SMTP->new({
+                  host => $host, port => $port,
+                  sasl_username => $username,
+                  sasl_password => $password,
+              })
+          });
+    }
+}

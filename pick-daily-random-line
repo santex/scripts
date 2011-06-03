@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+use Digest::CRC qw(crc16);
+use File::Slurp;
+
+# di tiap komputer beda, tapi dalam hari yg sama keluarnya sama.
+($y, $m, $d) = (localtime)[3,4,5]; $m++; $y+=1900;
+srand( crc16(read_file("/etc/hostname")) + ($y*366+$m*31+$d) );
+
+rand($.) < 1 && ($line = $_) while <>;
+print $line;

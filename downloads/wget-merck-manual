@@ -1,0 +1,3 @@
+#!/bin/sh
+time wget -e robots=off -r -l0 -H -D .merck.com,.akamai.net -np -k -c -t0 \
+  www.merck.com/mrkshared/mmanual/sections.jsp

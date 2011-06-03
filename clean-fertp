@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use File::Find;
+
+my $dir;
+die "FATAL: Usage: $0 [namadir], e.g. $0 .\n" unless $dir = $ARGV[0];
+
+my $sub1 = sub { $_[0] =~ /ExeString|APPLET NAME=KJ/ ? "" : $_[0] };
+
+$/ = undef;
+finddepth sub {
+    return if $_ eq '.' || $_ eq '..';
+    return unless -f;
+    print "Checking $File::Find::dir/$_ ...";
+    do { print " skipped\n"; return } unless /\.(s?html?|php[34]?|phtml|inc)$/i;
+    open F, $_ or do { warn ": WARN: Can't open file, skipped\n"; return; };
+    my $content;
+    my $origcontent;
+    $content = $origcontent = <F>;
+    for ($content) {
+    	s!^\s*//\w{15}\015?\012.+javascript.+function [A-F][0-9A-F]{20}.+document\.write.+!!mg;
+    }
+    if ($content ne $origcontent) {
+    	print ": infected, cleaning... ";
+    	open F, ">$_" or do { warn "WARN: Can't open file, skipped\n"; return; };
+    	print F $content;
+    	close F or do { warn "WARN: Can't write file, skipped\n"; return; };
+    	print "cleaned.\n";
+    } else {
+    	print ": clean.\n";
+    }
+}, $dir;

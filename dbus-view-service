@@ -1,0 +1,15 @@
+#!/bin/bash
+SERVICE=$1
+if [ "$SERVICE" == "" ]; then
+  echo "==List of services=="
+  qdbus
+  exit
+fi
+
+echo "==Objects of service $SERVICE=="
+qdbus $SERVICE
+
+for o in `qdbus $SERVICE`;do
+  echo "===Methods for object $o==="
+  qdbus $SERVICE $o
+done

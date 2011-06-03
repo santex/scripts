@@ -1,0 +1,43 @@
+#!/usr/bin/perl -w
+
+use 5.010;
+use strict;
+use warnings;
+
+use App::Options (
+    option => {
+        show    => { required => 0, type => "string", },
+        verbose => { required => 0, type => "bool", default => 0, },
+        debug   => { required => 0, type => "bool", default => 0, },
+        dry_run => { required => 0, type => "bool", default => 0 }
+    },
+
+);
+
+$App::options{verbose}++ if $App::options{dry_run};
+
+for (@ARGV) {
+    /(.*?)[ _.-]*S(\d\d?)E(\d\d)[ _.-]*(.*)\.(\w+)$/i or
+    /^(.*?)[ _.-]*(\d\d?)\s*x?\s*(\d\d)[ _.-]*(.*)\.(\w+)$/i or
+    /(.*?)[ _.-]*SE?(\d\d?)[ _.-]*E(\d\d)[ _.-]*(.*)\.(\w+)$/i or
+      do {
+        warn "File `$_' doesn't contain episode number or extension, skipped\n";
+        next;
+    };
+    my ($show, $season, $epnum, $title, $ext) = ($1, $2, $3, $4, $5);
+    print "DEBUG: show=[$show], season=[$season], epnum=[$epnum], title=[$title], ext=[$ext]\n" if $App::options{debug};
+    $show = $App::options{show} if $App::options{show};
+    $show //= "unknown show";
+    $show = fmt($show) if $show;
+    $title = fmt($title) if $title;
+    my $fn = sprintf "%s - %02d%02d%s.%s", $show, $season, $epnum, ($title ? " - $title" : ""), lc($ext);
+    print "$_ -> $fn\n" if $App::options{verbose};
+    rename $_, $fn unless $App::options{dry_run};
+}
+
+sub fmt {
+    my $s = lc shift;
+    return $s if $s =~ /\s/;
+    $s =~ s/[_.]/ /g;
+    $s;
+}

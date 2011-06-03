@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# perlu dipostprocess karena nama file masih mengandung query parameter dan
+# utf8 chars.
+
+# blah.php?foo=bar&baz=quux -> blah.php_foo=bar_baz=quux
+perlrename -e's/[?&]/_/g' *
+
+# ganti juga link2nya
+perl -pi -e'BEGIN {sub f {local $_=shift;s/&/_/g;s/_amp;/_/g;$_}}
+  s/(href="?[a-z0-9-]+.php)[?_]([^"><]+)("?)/$1."_".f($2).$3/eg' *htm* *php*
+
+# ganti utf di nama file jadi deretan ascii hex codes. tahap ini gak boleh 2x
+perlrename -e's!q=(.+)!"q=".join("", map {sprintf("%02x",ord $_)} split //, $1)!e;' search.php_q\=*
+
+# demikian juga link2nya. tahap ini gak boleh 2x
+perl -pi -e's!(search\.php_q=)([^"<>]+)!$1 . join("", map {sprintf("%02x",ord $_)} split //, $2)!eg' *php* *htm*

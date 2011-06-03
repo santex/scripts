@@ -1,0 +1,3 @@
+#!/bin/bash
+dev=/dev/mapper/udisks-luks-uuid-077e73ce-818b-48a0-8a91-b1544c18f6fb-uid1000
+sudo umount $dev && sudo cryptsetup remove $dev

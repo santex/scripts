@@ -1,0 +1,13 @@
+#!/usr/bin/perl -w -pi~
+
+# XXX TODO: user-configurable first line indent, subsequent line
+# indent, line after para
+
+use strict;
+use Text::Wrap;
+
+BEGIN {
+    $Text::Wrap::columns = 80;
+}
+
+$_ = wrap('', '', $_) . "\n";

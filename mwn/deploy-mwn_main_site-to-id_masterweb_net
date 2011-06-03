@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# s23 dah gak dipake, sekarang semua ke inet. suka problem koneksi iix sih telkom bbrp mgg lalu - 2009-08-07
+# tapi tetap di-sync, soalnya dhiar ke sini melulu
+rsync --exclude '.git' --exclude '*.psd' --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --delete \
+-e ssh -Pavz $* $HOME/repos/mwn-site/ mwn@23.masterweb.net:/s/id.masterwebnet.com/www/
+
+rsync --exclude '.git' --exclude '*.psd' --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --delete \
+-e ssh -Pavz $* $HOME/repos/mwn-site/ mwnmirror@xenon:/s/id.masterwebnet.com/www/
+

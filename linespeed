@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+use Time::HiRes qw(gettimeofday tv_interval);
+
+# 000414:
+# usage: 
+#   tail -f access_log | linespeed
+#     (buat ngukur berapa request/sec. hit saat ini :)
+
+
+# tiap 10 baris
+$nbaris = 10;
+
+
+
+$t0 = [gettimeofday];
+$i = 0;
+$total = 0;
+$msg = '';
+while(<>){
+	$i++; $total++;
+	if ($i >= $nbaris) {
+		$i = 0;
+		syswrite STDOUT, "\b" x length($msg), length($msg);
+		$interval = tv_interval ($t0, [gettimeofday]);
+		for ($interval) { $_ = 0 if $_ <1e-3 }
+		$msg = sprintf("%.2fsec(s) %d %.2f/sec", $interval, $total, $interval ? $total/$interval : 0 );
+		syswrite STDOUT, $msg, length($msg);
+		syswrite STDOUT, "\033[K", 3;
+	}
+}

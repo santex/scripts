@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd /u/steven/public/git/spanel && ( summarize-spanel-git-changes-for-last-month | phpbb2-post --profile=commit_spanel - )
+

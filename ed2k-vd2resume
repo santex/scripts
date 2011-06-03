@@ -1,0 +1,27 @@
+#!/usr/bin/perl
+
+# 031119
+
+# feed this script the output of mldonket's "vd" command and a number X
+# between 0-100, and it will output "resume Y" lines where Y is the number
+# of a download item which has been completed more than X%.
+
+# 040119 - add priority 100 X
+
+if (@ARGV != 1) {
+  print "Usage: $0 X < output-of-vd, where X is a number between 0 & 100.\n";
+  exit 1;
+}
+
+$minpercentage = shift @ARGV;
+
+@resumes = ();
+
+while (<>) {
+  /^\[Donkey\s+(\d+)\s*\]\s+(.+)\s+(\d+\.\d+)\s+(\d+)\s+(\d+)\s+(\d+|-):(\d+|-)\s+(Queued|Paused|-)\s+\d+\s*$/ or next;
+  push @resumes, $1 if $3 >= $minpercentage;
+}
+
+print map {"resume $_\n"} @resumes;
+print "\n";
+print map {"priority 100 $_\n"} @resumes;

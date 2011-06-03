@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Time::HiRes qw(usleep gettimeofday tv_interval);
+
+my $total_time = 0;
+my $n = 0;
+
+print <<_;
+Simple Reflex Game
+
+Instruction: "Press ENTER!" instructions will then
+be shown at random times. Each time, press ENTER as fast as
+possible. Type q + ENTER when you want to quit. Your score will be
+shown at the end.
+
+Press ENTER when ready to play.
+
+_
+
+my $x = <STDIN>;
+
+while (1) {
+    usleep((2.5 + 5*rand()) * 1_000_000);
+    print "Press ENTER!";
+    my $t0 = [gettimeofday];
+    $x = <STDIN>;
+    last if $x =~ /^q(uit)?$/i;
+    my $elapsed = tv_interval($t0, [gettimeofday]);
+    my $comment = $elapsed <= 0.200 ? "amazing!" :
+        $elapsed <= 0.250 ? "very good." :
+        $elapsed <= 0.300 ? "good." :
+        $elapsed <= 0.400 ? "try again." :
+        "did you fall asleep?";
+    printf "%.3f second(s). %s\n", $elapsed, $comment;
+    $total_time += $elapsed;
+    $n++;
+}
+
+if ($n) {
+    printf "Average score: %.3f out of %d\n", $total_time / $n, $n;
+}
+
+__END__

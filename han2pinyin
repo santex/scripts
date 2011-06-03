@@ -1,0 +1,5 @@
+#!/usr/bin/perl
+use Lingua::Han::PinYin;
+$h = Lingua::Han::PinYin->new;
+
+while (<>) { print $h->han2pinyin($_) }

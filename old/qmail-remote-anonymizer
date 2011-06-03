@@ -1,0 +1,94 @@
+#!/usr/bin/perl
+$qmail_remote = "/usr/bin/qmail-remote.orig";
+$in_body = 0;
+
+use Date::Manip; # ugh, this module is so heavy...
+$ENV{TZ} = "+0700";
+
+open L, ">>/tmp/qmail-remote.log"; # or die;
+open Q, "|$qmail_remote ".join(" ",@ARGV) or die $!;
+
+@identities = (
+  [qr/davegaramond\@icqmail\.com/i, 
+    {UA => "X-Mailer: Mozilla 4.79 [en] (Windows NT 5.0; U)\012",
+     TZ => "-0700",},
+  ],
+  [qr/steven haryanto/i,
+    {UA => "User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.1) Gecko/20020826\012",
+     TZ => "+0700",},
+  ],
+  [qr/support\@masterwebnet\.com/i,
+    {UA => "X-Mailer: MIME::Lite 1.2  (F2.6; T1.001; A1.47; B2.12; Q2.03)\012",
+     TZ => "+0700",},
+  ],
+  [qr/billing\@masterwebnet\.com/i,
+    {UA => "X-Mailer: Microsoft Outlook Express 6.00.2600.0000\012",
+     TZ => "+0700",},
+  ],
+  [qr/management\@mwmag\.com/i,
+    {UA => "X-Mailer: Microsoft Outlook Express 6.00.2600.0000\012",
+     TZ => "+0700",},
+  ],
+  [qr//, 
+    {UA => "X-Mailer: QUALCOMM Windows Eudora Version 5.1.1\012",
+     TZ => "+0700",},
+  ],
+);
+
+$in_body = 0;
+@headers = ();
+while (<STDIN>) {
+  if ($in_body) {
+    print L $_;
+    print Q $_;
+  } else {
+    if (/^$/) {
+      $in_body++;
+      
+      # get date and from
+      $date = "";
+      $from = "";
+      for (@headers) {
+        if (/^(?:From|Sender):\s*(.+)/si) {
+          $from = $1;
+        } elsif (/^(?:Date|X-Original-Date):\s*(.+)/si) {
+          $date = ParseDate($1);
+        }
+      }
+      
+      # choose identity
+      $ua = "";
+      $tz = "";
+      for (@identities) {
+        if ($from =~ /$_->[0]/) {
+          $ua = $_->[1]{UA};
+          $tz = $_->[1]{TZ};
+          $date = Date_ConvTZ($date, "", $tz);
+          last;
+        }
+      }
+      
+      # replace headers
+      for (@headers) {
+        if (/^(x-mailer|user-agent): /i) {
+          $_ = $ua;
+        } elsif (/^(Date|X-Original-Date): /i) {
+        #  $_ = "$1: ".UnixDate($date, "%a, %d %b %Y %H:%M:%S $tz\012");
+        }
+      }
+      
+      # remove headers
+      @headers = grep {not /^received: /i} @headers;
+      print Q @headers;
+      print L @headers;
+      print Q $_;
+      print L $_;
+      next;
+    } elsif (/^\s/) {
+      $headers[-1] .= $_;
+    } else {
+      push @headers, $_;
+    }
+  }
+}
+print <Q>;

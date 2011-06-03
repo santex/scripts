@@ -1,0 +1,73 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use File::Find;
+use HTML::Entities;
+use URI::Escape;
+use Log::Log4perl qw(:easy);
+use Getopt::Long;
+
+# --- globals
+
+my %Opt = (
+           log_level => 'info',
+           show => 25,
+           output => 'html',
+           dir => ".",
+           html_prefix => "",
+           exclude => [],
+          );
+my %Optspec = (
+               "log-level=s" => \$Opt{log_level},
+               "show=i" => \$Opt{show},
+               "output=s" => \$Opt{output},
+               "dir=s" => \$Opt{dir},
+               "html-prefix=s" => \$Opt{html_prefix},
+               'exclude=s' => $Opt{exclude},
+              );
+my %Ctimes = ();
+
+# --- subs
+
+sub period {
+  my $n = shift;
+  sprintf "%.0f hari lalu", $n;
+}
+
+sub in_($$) {
+  my $needle = shift;
+  my $array = shift;
+
+  for (@$array) {
+    if (!defined($needle)) {
+      return 1 if !defined($_);
+      next;
+    } else {
+      next if !defined($_);
+    }
+    return 1 if ($needle eq $_);
+  }
+  return 0;
+}
+
+# --- main
+
+GetOptions(%Optspec);
+
+find sub {
+  return unless -f;
+  return if in_($_, $Opt{exclude});
+  $Ctimes{"$File::Find::dir/$_"} = (-C $_);
+}, $Opt{dir};
+
+my @f = sort{ $Ctimes{$a}<=>$Ctimes{$b} } keys %Ctimes;
+
+if ($Opt{output} eq 'html') {
+  print "<ol>\n";
+  for my $f (@f[0..($Opt{show}-1)]) {
+    my $uri = $Opt{html_prefix} . ($Opt{html_prefix} =~ m!/$! ? "":"/") . $f;
+    print "<li><a href=\"",uri_escape($uri,"^A-Za-z0-9\-_.!~*'()/"),"\">",encode_entities($f),"</a> - ",period($Ctimes{$f}),"\n";
+  }
+  print "</ol>\n";
+}

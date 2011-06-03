@@ -1,0 +1,55 @@
+#!/usr/bin/perl -w
+
+use strict;
+use autodie;
+use File::Slurp;
+
+my $CACHE_PATH = "/var/cache/.check-raid-status";
+my $MAX_CACHE_AGE = 12*3600;
+my @errors;
+
+chdir "/dev/md" or die "There's no RAID device on this system, or cant cd to /dev/md/";
+for my $dev (<*>) {
+    open F, "mdadm --detail /dev/md/$dev |";
+    while (<F>) {
+        if (/\s*State\s*:\s*(.+)/ && $1 ne 'clean' && $1 ne 'active') {
+            push @errors, "State of /dev/md/$dev is not clean/active ($1)";
+        }
+        elsif (/\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S.+\S)\s+(\S+)/) {
+            my ($num, $major, $minor, $raiddevno, $state, $raiddev) = ($1, $2, $3, $4, $5, $6);
+            if ($state ne 'active sync') {
+                push @errors, "Device #$num ($raiddev) of /dev/md/$dev".
+                    " is not in active sync state ($state)";
+            }
+        }
+    }
+}
+
+my $content = join "", map { "* $_\n" } @errors;
+my $cache_age = ((-M $CACHE_PATH) || 0)*24*3600;
+my $cache_content = read_file($CACHE_PATH, err_mode=>"quiet") || "";
+
+my $status_changed = ($content =~ /\S/ xor $cache_content =~ /\S/);
+
+my $msg = "";
+
+if (($status_changed && $content =~ /\S/) ||
+    ($cache_age > $MAX_CACHE_AGE && $content =~ /\S/)) {
+    $msg .= "[b][color=red]RAID STATUS WARNING, PLEASE CHECK IMMEDIATELY!!![/color][/b]\n\n";
+    $msg .= "This is $0 and here's my recent check result:\n\n";
+    $msg .= $content;
+} elsif ($status_changed && $content !~ /\S/) {
+    $msg .= "[b][color=green]RAID STATUS BACK TO NORMAL[/color][/b]\n\n";
+}
+
+exit 0 unless $msg;
+
+if ($ENV{DRYRUN}) {
+    print $msg;
+} else {
+    open F, "| phpbb2-post -";
+    print F $msg;
+    close F;
+    write_file($CACHE_PATH, $content);
+}
+

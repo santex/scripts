@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+use App::Options (
+  option => {
+    local_path => {
+      description => "a directory that stores CVE in YYYY/NUM.txt or all.txt",
+      default => "/u/archive/public/fdoc/c/cve",
+      required => 1,
+    },
+  }
+);
+
+die "Usage: $0 <cve-name>, e.g. 2006-4521\n" unless @ARGV==1;
+($year, $name) = $ARGV[0] =~ /(?:CVE-)?(\d+)-(\d+)/ or die "Invalid name\n";
+
+my $found = 0;
+if (-f "$App::options{local_path}/$year/$name.txt") {
+  $found++;
+  open F, "$App::options{local_path}/$year/$name.txt";
+  print <F>;
+  close F;
+} elsif (-f "$App::options{local_path}/all.txt") {
+  local $/ = "======================================================";
+  open F, "$App::options{local_path}/all.txt";
+  while (<F>) {
+    if (/^Name: CVE-$year-$name/m) {
+      $found++;
+      s/^\n+//; s/^=+$//m; s/\n+\z//;
+      print;
+      print "\n";
+      last;
+    }
+  }
+  close F;
+} else {
+  system "lynx -dump 'http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$year-$name'";
+  $found++ if $? == 0;
+}
+
+print "ERROR: Not found\n" unless $found;

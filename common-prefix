@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+die "Usage: $0 <string> ...\n" unless @ARGV;
+
+for ($i=0; $i<length($ARGV[0]); $i++) {
+    last if grep { substr($_, $i, 1) ne substr($ARGV[0], $i, 1) } @ARGV[1..$#ARGV];
+}
+
+print substr($ARGV[0], 0, $i), "\n";

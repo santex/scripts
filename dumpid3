@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use MP3::Tag;
+
+@files = ();
+
+if ($^O =~ /win32/i) {
+  for (@ARGV) {
+    if (/[*?]/) { push @files, glob $_ } else { push @files, $_ }
+  }
+} else {
+  push @files, @ARGV;
+}
+
+FILE: for my $f (@files) {
+  $mp3 = MP3::Tag->new($f) or do {
+    warn "WARN: $f: Can't read tag, skipped\n";
+    next;
+  };
+  ( $title,  $track,  $artist,  $album,  $comment,  $year,  $genre) = $mp3->autoinfo();
+
+  print "$f:\n";
+  print "  title:$title\n";
+  print "  track:$track\n";
+  print "  artist:$artist\n";
+  print "  album:$album\n";
+  print "  year:$year\n";
+  print "  genre:$genre\n";
+  print "  comment:$comment\n";
+  print "\n";
+}
+

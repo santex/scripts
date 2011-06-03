@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+
+use strict;
+use URI::Escape;
+#use HTML::Entities;
+use Cwd;
+use Log::Log4perl qw(:easy);
+use App::Options (
+    option => {
+
+        #overwrite => {
+        #  description => "overwrite index.html if already exists",
+        #  type => "boolean",
+        #  default => 0,
+        #},
+        #website_url => {
+        #  description => "download video URL",
+        #  type => "string",
+        #  default => "http://steven.hosting.localdomain/download/video",
+        #},
+        log_level => {
+            description => "log level",
+            type        => "string",
+            required    => 1,
+            default     => "info",
+        },
+        with_title => {
+            description => "whether to put title or not for each image",
+            type        => "boolean",
+            required    => 0,
+            default     => 0,
+        },
+        bgcolor => {
+            description => "page's background color, e.g. white or #123456",
+            type        => "string",
+            required    => 0,
+            default     => undef,
+        },
+        # --version dioverride oleh App::Options utk menampilkan versi modul2x perl, sucks
+        program_version => {
+            description => "show version and exit",
+            type        => "boolean",
+            required    => 0,
+            default     => 0,
+        },
+    }
+);
+
+our $VERSION = 0.01;
+our $PROGRAM_NAME = "make-html-from-images";
+
+my $log_level;
+my $l = $App::options{log_level};
+if    ( $l eq 'fatal' ) { $log_level = $FATAL }
+elsif ( $l eq 'error' ) { $log_level = $ERROR }
+elsif ( $l eq 'warn' )  { $log_level = $WARN }
+elsif ( $l eq 'info' )  { $log_level = $INFO }
+elsif ( $l eq 'debug' ) { $log_level = $DEBUG }
+else {
+    die
+        "FATAL: Unknown log level: $l. Use one of: fatal, error, warn, info, debug'\n";
+}
+Log::Log4perl->easy_init($log_level);
+
+if ($App::options{program_version}) {
+    print "$PROGRAM_NAME version $VERSION\n";
+    exit 0;
+}
+
+print "<html><body ".(defined($App::options{bgcolor}) ? "bgcolor=\"$App::options{bgcolor}\"" : "") ."><div align=center>\n";
+print "<!-- generated automatically with $PROGRAM_NAME version $VERSION on ", scalar(localtime), " -->\n";
+for my $img (@ARGV) {
+    print "<p><img src=\"".uri_escape($img)."\" /></p>\n";
+}
+print "</div></body></html>\n";

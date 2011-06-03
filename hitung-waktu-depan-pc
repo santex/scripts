@@ -1,0 +1,42 @@
+#!/usr/bin/perl -ln
+
+BEGIN {
+  use POSIX qw(floor);
+}
+
+goto SKIP if /^#/;
+goto SKIP unless /\S/;
+
+goto SKIP if /= \d\d:\d\d$/;
+
+$period = 0; # in minutes
+
+/^\d{4}-\d{2}-\d{2}: (.+)/ or die "FATAL: Syntax error on line $.: $_\n";
+
+$s = $1;
+$s =~ s/\(#.*?\)//g;
+
+@s = split /[ ,;.]+/, $s;
+for (@s) {
+  if ($_ eq '') {
+    next;
+  } elsif (my ($h1,$m1,$h2,$m2) = /^(\d\d):(\d\d)-(\d\d):(\d\d)$/) {
+    $h2 += 24 if $h2 < $h1;
+    do { $m2+=60; $h2-- } if $m2 < $m1;
+    $period += ($h2-$h1)*60 + ($m2-$m1);
+  } elsif (/^\+(\d\d):(\d\d)$/) {
+    $period += $1*60 + $2;
+  } elsif (/^\(?-(\d\d):(\d\d)\)?$/) {
+    $period -= $1*60 + $2;
+  } else {
+    die "FATAL: Invalid time period specification in line $.: \"$_\"\n";
+  }
+}
+
+$hours = floor($period/60);
+$minutes = $period - $hours*60;
+printf "%s = %02d:%02d\n", $_, $hours, $minutes;
+next;
+
+SKIP:
+print;

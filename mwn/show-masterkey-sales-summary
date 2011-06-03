@@ -1,0 +1,35 @@
+#!/bin/bash
+
+ssh mwnwhmcs@xenon 'DEBUG=1 ~/wwwbin/set-invoice-sale-date; cd sites/masterkey.masterweb.net/www/bin && perl -I../lib/perl -MMasterkey::AdminArea -e'\''\'"''"' Masterkey::AdminArea::login(); $Masterkey::AdminArea::mech->get("$Masterkey::Config::conf->{CONFIG_ADMIN_URL}/fa-sales-journal.php?output_format=txtsummary1"); print $Masterkey::AdminArea::mech->content'\''\' | \
+  perl -MNumber::Format -MDateTime -MDateTime::BusinessHours -ne'
+    BEGIN {
+        $now = DateTime->now;
+        $eom = $now->clone; $eom->set_day(1); $eom->add(months=>1); $eom->subtract(days=>1);
+        $som = $now->clone; $som->set_day(1);
+        $fmt = Number::Format->new;
+    }
+    if (my ($rp, $sen) = /^\s+Total PENDAPATAN\s+IDR\s+([0-9.]+),(\d\d) C/) {
+        $rp =~ s/\D//g;
+        $rp += $sen/100.0;
+        print;
+
+        # calendar days
+        #printf "    --> Perkiraan hingga akhir bulan: %s (sisa hari=%d)\n",
+        #    $fmt->format_number($rp * $eom->day/$now->day), ($eom->day-$now->day);
+
+        # business days
+        $bd_this_mon = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$eom)->getdays + 1;
+        $bd_so_far   = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$now)->getdays + 1;
+        if ($bd_so_far) {
+            printf "    --> Perkiraan hingga akhir bulan: %s (total hari kerja=%d, hingga hari ini=%d, sisa=%d)\n",
+                $fmt->format_number($rp * $bd_this_mon/$bd_so_far), $bd_this_mon, $bd_so_far, ($bd_this_mon - $bd_so_far);
+        }
+
+    } else {
+        print;
+    }
+    '
+
+# XXX seharusnya berdasarkan hari kerja agar lebih akurat: (total jum hari kerja
+# sen-jum ) / (jumlah hari kerja sen-jum yang sudah dilewati hingga hari ini)
+

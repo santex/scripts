@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+# 031017
+
+use File::Find;
+
+finddepth sub {
+    do { print "$File::Find::dir/$_\n"; unlink $_ } if -f and (-s _)==0;
+}, ".";

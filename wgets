@@ -1,0 +1,3 @@
+#!/usr/bin/perl
+sub escape { local $_=shift; s/'/'"'"'/g; "'$_'" }
+system "wget -O- -S ".join(" ",map{escape $_} @ARGV)." 2>&1 | less";

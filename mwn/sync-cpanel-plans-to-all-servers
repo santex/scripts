@@ -1,0 +1,6 @@
+#!/bin/sh
+SRC=/home/steven/proj/mwn/cpanel-configs/packages
+for s in `/c/sbin/find-servers --cpanel`;do
+  echo "#$s"
+  rsync -e ssh -avz $SRC root@$s.masterweb.net:/var/cpanel/
+done

@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use FindBin '$Bin';
+use lib $Bin;
+BEGIN { require 'common.pl'; }
+
+$TO='/u/archive/public/mirrors';
+$EXCLUDES=['*.tmp'];
+
+$PROTO='rsync+ssh'; $USER='archive'; $HOST='28.masterwebnet.com'; $DIR='mirrors'; $RATE_LIMIT=100;
+
+Mirror();

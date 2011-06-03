@@ -1,0 +1,810 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+my $VERSION = 20070526;
+
+my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+[fk]
+[tvb]
+[qxtsr]
+[★di⑥ganyuanchuang★][xinjiapo]
+[★di⑥ganyuanchuang★]
+[di6ganchupin]
+[btwuji-www.btwuji.com].
+dissent-
+_www.ccebook.cn_
+_ccebook.cn_
+[ccebook.cn]
+[SCI]
+(youyouniaoyingshiluntan-www.uubird.com)
+_youyouniaoyingshiluntan-www.uubird.com_
+_youyouniaoyingshiluntan-
+shengchengjiayuan[www.dream2008.cn]@
+[scg-cmct]www.dream2008.cn
+www.dream2008.cn@
+www.uubird.com-youyouniaoyingshiluntan-
+[dianyingtiantangwww.dygod.cn]
+[www.ppnow.com]
+[#aznmp3]
+ysdg-xvid-
+[www.arableland.com]
+^mininova.org^'
+ -[mininova.org]-
+-[mininova.org]-
+=mininova.org=
+^mininova.org^
+b-mininova.org-d
+-mininova.org-_
+_-mininova.org-_
+-~mininova.org~-
++-mininova.org-+
+_mininova.org_-
+[isoHunt]
+_bbs.cnxp.com_._.
+_bbs.cnxp.com_._r.
+_www.cnxp.com_._.
+imts-
+www.torrent-galaxy.to_
+[#aznmp3]
+www.torrent.to...
+www.d-p-t.dl.am...
+[LonE]_
+[LonE]
+XXX artinya various artists - VA -
+XXX artinya various artists - VA-
+IMAX.
+HDTV.
+[Documentaire]
+dich-
+aaf-
+EOF
+
+$re_prefix = qr/(?:$re_prefix)/i;
+
+my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.720p.hdtv.x264-ctu
+.720p.hdtv.x264-immerse
+.webrip.p2pbitch
+.PDTV.Xvid-FK2
+.dsr-loki
+.dsr.xvid-sys
+.dsr.xvid-omicron
+-vfua
+-loki
+.dvdrip.xvid-fqm
+.xvid-redemption
+.tvrip.xvid-fqm
+.xvid-tbs
+.dsr.xvid-crimson
+.dsr.xvid-crntv
+.HDTV.XviD-CHGRP
+.dvdscr.xvid-sprinter
+.HDTV.Xvid-L0L
+.HDTV.XviD-ASAP
+.HDTV.XviD-SAP
+-DivxTotal.CoM
+.HDTV.XviD--0TV
+.HDTV.XViDHiQT
+.HDTV.XviD-NoTV.[VTV]
+.PROPER.HDTV.XviD-NoTV.[VTV]
+.HDTV.XViD-DOT.[VTV]
+.HDTV.XviD-2HD.[VTV]
+.PROPER.DVDRip.XviD-VoMiT
+.(PDTV).BiTSrg
+  DVDRip (SiRiUs sHaRe)
+_DivX
+ [CuPpY]
+.vXv
+.hdtv.xvid-yt
+.XviD.AC3.MVGroup.org
+-Kole
+.WS-PDTV.XviD.Ekolb
+.HDTV.XviD-TekOne
+.PDTV.XviD-MG
+.WS.DSR.XviD-SYS
+.XviD.AC3{www.desibbrg.com}
+ WS-PDTV
+.SWESUB.DVDRip.XViD-GRiSEN
+.HDTV.XviD-aAF
+.DSRip.XviD-aAF
+.XviD-aAF
+-PHRENiC
+.dvdrip.xvid-reward
+.HDTV.XviD-SYS
+.DVD.XviD-SAiNTS
+.dsr.xvid-shotv
+.WS.PDTV.XviD-FQM
+.pdtv.xvid-aaf
+.pdtv.xvid-ingot
+.thebox.hannibal
+.pdtv.ws.xvid-pk
+.x264.AAC
+.PDTV.XviD-2HD
+.HDTV.XviD-XII.[VTV]
+.HDTV.Xvid-XII
+ - www.file24ever.com
+.DVDRip.XviD-SAiNTS
+ - hdtv xvid-xor
+.DVDRiP.XviD-iNTiMiD
+.XviD.MP3.MVGroup.Forum
+.--DVDrip.XViD.MP3.608x336
+ [H.264-AAC]
+.DVDRip.XviD-FiCO
+-DivX-Yo
+[btxiazailianmengluntan][www.btbts.com]
+[www.btbts.com]
+.XviD.[sharethefiles.com]
+ xvid [sharethefiles com]
+[quanji]
+[yueyuzimu]
+[fkyazhizu]
+.yueyuzimu.d-vb.evo
+.yueyuzimu
+.d-vb.evo
+[guoyuzhongzi][dvd-rmvb]
+[guoyuzhongzi]
+[dvd-rmvb]
+.WS.PDTV.XviD-XII
+.WS
+.HDTV.XviD-FEVER.[VTV]
+.HDTV.XviD-FEVER
+.dvd-rmvb.rex
+.DVDRip.XviD-MAK
+.REPACK.WS.PDTV.XviD-XII
+.HDTV.XviD-FQM.[VTV]
+ - hdtv xvid-dot
+ - hdtv xvid-notv
+ - hdtv xvid-0tv
+ - hdtv xvid-2hd
+[dvd-rmvb]
+[yingyuzhongzi]
+[zhongwenzimu]
+[eng]dvdrip.dino
+ ws eng dvdrip (darktiger)
+.dvdrip.xvid.[movie-torrentz]
+.[divx_dvdrip]
+-HDTV
+ (dvd rip)
+.StreamCap.DivX-QG
+.DVDRip.XviD-ItzikGur
+.DVDRip(Xvid_Mp3)
+ {www.desibbrg.com} ~ Da Xclusives
+.DVDRip.XviD.Pengo-Team
+.XviD.Pengo-Team
+.HDTV.XviD-VAiN
+.720p.hdtv.x264-pix
+.720p.hdtv.x264-hv
+.ws.xvid-conspiracycentral
+.640x464
+_DIVX.640x526.MP3
+.PDTV.XviD-DiSSENT
+.720p.hdtv.x264
+ DivX-Clone
+.ws.pdtv.xvid-sometv
+.ws.pdtv.xvid-waters
+.720p-dhd
+.PDTV.XviD-SiSO
+.ws.pdtv.xvid-ftp
+.hdtv.xvid-TSL
+.HDTV.XviD-TVA
+ DVDRIP VOSTFR
+ [doc arte fr] [science] [TV]
+ [japan4player]
+_[japan4player]
+.HDTV.720p.AC3.x264-CGI
+ DivX-MP3
+.ws.pdtv-fov
+ [by Yokky]
+.DVB.DivX6.MP3
+.pdtv.NiX
+.TVRip.SoS)
+.PDTV.XviD-REViSiON
+.XviD.AC3.MVGroup.Forum
+-xvid-ws-ognir
+-WS.MP3.XviD-Ognir
+.mp3.ws.ConCen-xvid-ognir
+.HDTV.SoS)
+ Mpg 4
+.DVB.XviD.MP3.MVGroup.Forum
+.HDTV.XviD-TERRA
+.ws.mp3.xvid-ognir
+.(Ognir-ConCen).mp3.ws
+-ognir-xvid-ws
+.ws.mp3.xvid-ognir
+.DivX.MP3.anurag
+.720p.HDTV.AC3-SoS)
+ (XviD).mp3.ws.xvid-ognir
+_(SOS)
+ [DVDXVID]
+_XviD~Ekolb
+.PDTV.XviD.SWESUB-APB
+.DVDRip.XviD_ENG.PT-BR
+-TVRip-d0x)
+.(DivX6.1)(HQ)
+.pdtv.xvid-aerial
+.x264.720p.AC3.MVGroup.Forum
+.720p
+.DVB.XviD.MP3.mvgroup.org
+.DVBC
+.DVB.x264.aac.MVGroup.org
+.DVBC.XviD.MP3.MVGroup.org
+.DivX.mp3.VHS.Hanke
+.WS.PDTV.XviD-PVR
+.TVrip.640x480.xvid.mp3-snach
+.WnA
+.dvdrip.xvid-nosegment
+_tlaloc_tvrip
+.hdtv.ac3.xvid-2hd
+.pdtv.xvid-sys
+-divx-makk
+_Xvid_tatt2s.com
+.WS.PDTV.XviD.MP3.MVGroup.org
+.[XviD]
+_HDTV_XviD~Ekolb
+ [DVDRiP] [XViD] by WingTip
+ DivX
+[WS.PDTV(XviD)]
+.READNFO
+(2008.tvrip.sos)
+(2008.720p.hdtv.ac3-sos)
+RARE  ##
+.LIMITED.DOCU
+ (2005-TVRip-d0x)
+ (2006-TVRip-d0x)
+[anime]
+dvdrip[jap]
+-missripz
+[www.zonatorrent.com]
+.[www.mixermusic.net]
+_www.file24ever.com
+ [www.file24ever.com]
+.HDTV.XviD-MiNT
+.DivX_tvrip
+.XviD-CATV
+.dsr.xvid-octi
+.[Tom-Joad]
+.Ez-BuckTV.[tvu.org.ru]
+.english
+.english.Ez-ShareTV.[tvu.org.ru]
+ (DVD) Medieval
+ DVDrip XVID-Medieval (Osloskop Net)
+ DVDrip XVID-TVep
+ English TVep DVD
+.english.Tom-Joad.[tvu.org.ru]
+ English Medieval DVD
+ (DVD) English Medieval
+ (DVD) TVep
+.XviD.AC3
+.DVB.x264.AAC
+.Xvid.mp3
+.720p.hdtv.x264-gothic
+.x264-gothic
+.(www.lokotorrents.com)
+.www.lokotorrents.com
+.jiuzhouke
+.HDTV.XviD-LOL.[VTV]
+.HDTV.XviD-E7
+.HDTV.XviD-2HD
+.DVDRip.XviD-SiNK
+ - tvrip
+ - dvdrip
+.DVDrip[ShareTV]
+.dvdrip.xvid-vfua
+.HDTV.XViD-YesTV
+.HDTV.XViD-DOT
+.HDTV.XviD-0TV
+ [NiteShdw]
+.HDTV.XviD-XOR-resynced
+.pdtv.xvid-tcm
+.hdtv.xvid.notv
+.hdtv.xvid-sorny
+.HDTV.xViD-Caph
+.DVDRip.XviD.AC3.Rus-INTERFILM
+-notv_mrtwig.net
+ [www.p2p-world.dl.am]
+-MVP By Monsterjo
+ - [www.torrentnews.net]
+.XViD.BeaGLe
+ VHSRip kvcd Jamgood
+-TCM.[eztv]
+ (syoung333) [www.wtata.com Reseed]
+ [www.wtata.com Reseed]
+.HDTV.XviD-UMD
+.WS.PDTV.XviD-GOTHiC
+ {C_P}
+.pdtv-lol.[VTV].ipod
+.XviD.NLSUBBED-Elixion
+.[VideoSeed.com].(iPod)
+.PDTV.XviD-LOL
+ [rl]
+_-_irc.tveps.net
+ [Qc]
+.FRENCH.DVDSCR.XVID.www.easy-torrent.com
+.FRENCH.DVDRiP.XViD-Xi-Shared_By_SNOWTIGERS
+.jvt40
+.www.easy-torrent.com
+.FRENCH.DVDRiP.XViD-whtfrv
+ HLS LiMiTED DVDRiP KvCD Hockney
+.FRENCH.DVDRip.XviD-ZANBiC_ALLTEAM
+.FReNCH DVDRiP XViD-PeRDu
+.FRENCH.RETAIL.DVDRip.XviD-LOST-ALLTEAM
+.DVDRIP.FRENCH.Cinefeel
+.FRENCH.DVDRiP.XviD-ZANBiC
+.FRENCH.DVDRiP.subs.EN.SPA.PT
+[www.makingoff.org]
+.FRENCH.DVDRiP.XviD-JUSTiCETiME
+.FRENCH
+.FRENCH.DVDRiP.XviD-RETAiL.CinefeeL
+.FRENCH.DVDSCR.XviD-MP
+.HDTV.XviD-otb
+.HDTV.XviD-DocTV
+.HDTV.XviD-DivX
+.HDTV.Xvi
+.HR-HDTV.XviD.AC3.5.1-UMD
+.HR-HDTV.XviD.AC3.5.1-CTU
+.720p.HDTV.XviD.AC3.5.1-SD-6
+.HR-HDTV.XviD.AC3.5.1-NBS
+.HDTV.XviD.AC3.5.1-SD-6
+.HR-HDTV.XviD.AC3.2.0-CTU
+.HR-HDTV.XviD.AC3.2.0
+.HDTV.SVCD-SD-6
+.HDTV.XviD-VFUA
+.HDTV
+.DVDRip.Xvid-YSDG
+.DVDSCR
+.HDTV.XviD-UMD
+.HDTV.XviD-NoTV
+.PDTV.XVID-FUtV
+.dsr-loki._VTV_
+.HDTV.XviD-UMD
+ (Dvd) English Fov
+-Rv9
+ (Dvd) English
+ [audiobook]
+_(PAL_VCD)
+ - English
+ by Criminal
+.hdtv.xvid.notv.[VTV]
+[justinb]
+.HDTV.XviD.PROPER-hV
+.DSR.XviD-NoTV
+.hdtv.xvid-hv.[VTV]
+.HDTV.XviD-hV
+.HDTV.XviD-KYR
+.HDTV.XviD-NoTV
+.[DVD-Rip].[DvD-RiPPeRS].[WwW.HQToRrEnTs.CoM]
+ =mininova.org=
+ -_mininova.org_-
+ b-mininova.org-d
+ _-mininova.org-_
+ +[mininova.org]+
+-Demonoid.com
+.Demonoid.com
+ [dinothunderblack]
+.HDTV.XVid-rmc
+-Xvid_WS
+.DivX-AC3
+.DVDRip.xVID-xHONG
+ ConRes
+ [Ripped by kira18]
+.DVDRip.XviD-imbt
+_-_lpdm
+-PMS
+.DVDRip.XviD-iMBT
+.DVDRip.XviD-WRD
+.dvdrip.xvid-espise
+ [justinb]
+.DVDVRip.XviD-PROMiSE
+-aXXo
+DvDrip.AC3[Eng]-aXXo
+.DivX.AC3.MVG.Forum
+.PDTV.XviD-DEFiNiTE
+.Drug.Xvid.AC3
+.DivX.AC3
+_Xvid_WS
+ ^mininova.org^
+ [DVDRip][CVCD][www.LimiteVCD.com]
+.PROPER.LiMiTED.DVDRip.XviD-iMMORTALs_[www.NewTorrents.info]
+DvDrip[Eng]-aXXo
+.dsr.xvid-tcm
+.(TV).english
+._TV_.english.CTU._www.tvu.org.ru_
+-h8me
+-DivX-CTCA-
+ Sat-Rip XviD (Fr) Rip Et Shared By $Death-Team$
+ HDTV XviD-XOR
+ PDTV XViD-DeFaCto
+.FRENCH.TS.REPACK.1CD.L_STE_M
+[packed by -Hounddog-]
+.BBL.LotB
+.SUBBED
+[464A3869]
+.FRENCH.TS-XViD.Share_L_STE_M
+.iNT.DVDRip.XviD-HigHoT.CD1
+.STV
+.dualaudio-bObleJet
+-crn
+_vertigo173_
+.xvid.mp3.festering.leper
+ for www.torrents-and-more.to
+_PerfectBound_
+ [RamVideosTimka]
+#.SUB100
+_OneRip_FR_--www.frs.fr.tc--
+ --www.frs.fr.tc--
+_OneRip_FR_
+_vhsRip_FR_
+_dvdRip_FR_
+.DSR.XviD-UMD
+_dvdRip_FR_--www.frs.fr.tc--
+_tvRip_FR_
+.MEDiEVAL.[www.the-realworld.de]
+ HDTV XviD-LOL
+ DVDRip XviD-SAPHiRE
+ DVDRip XviD-MEDiEVAL
+.DVDRip.XviD-MEDiEVAL
+.[www.tensiontorrent.com]
+.DVB
+.REAL
+.(DVD).MEDiEVAL.[www.the-realworld.de]
+ (murry)
+.shared.by.[www.torrent.to]_DyNaMiTe
+-HOODLUM
+.DVD.XviD-TOPAZ
+ DVDRip KVCD by Brady
+[TNTRip-XviD]
+.DVDRip.XviD-FiNaLe
+_XviD_vertigo173_
+.DVDRip.XviD
+.HDTV.XviD-LOL
+ (#themuppetarchive)
+ [Dazz]
+_www.pctrecords.com_
+.DVDRip.XivD-GiSO
+.XviD
+.DVD.XviD-TOPAZ
+.DivX6.AC3
+.DVDRiP.XViD-MC
+ - [ezpzdvdz]
+.NBS._www.tvu.org.ru_
+.NBS.[www.tvu.org.ru]
+.FQM.[www.tvu.org.ru]
+.TvD._www.tvu.org.ru_
+_DvDrip_Eng_-aXXo
+.WS.PDTV.XviD
+.DVDRip.XviD-DiAMOND_ByMecho
+.DivX.mp3
+_-_MP4_DVD-Rip_by_rowenda
+_SVCD_2006_www_bitmp3_com_
+ [pdtv-lego]
+._TV_.english.XOR._www.tvu.org.ru_
+._TV_.english.LOL._www.tvu.org.ru_
+.(TV).english.CTU.[www.tvu.org.ru]
+.(TV).english.XOR.[www.tvu.org.ru]
+.(TV).english.LOL.[www.tvu.org.ru]
+[www bitmp3 com]
+._TV_.english.FQM._www.tvu.org.ru_
+ Xvid Dvb-Rip St4r8u6S
+ Xvid Dvb-Rip St4r8u6S Eselkult Tk
+ Xvid Dvb-Rip Fortinbras
+_xvid-dblue_
+-CDM-DE-2006-uC
+.DVDRiP.XViD
+.DVDRip.XViD-COBRA
+.DivX511-AC3
+.dvdrip_
+.XviD-SWiFT
+_DVDRiP_-_Flint_-
+.DVDRip.XviD-FRAGMENT
+.DVDRip.XviD-PROMiSE
+ RSVCD
+.HDTV_XviD-FoV
+.VCD-FUCT
+[www.torrent-base.dl.am]
+.AC3.Dubbed.XViD.for.[www.torrent-base.dl.am]
+.dvbrip.divx510.by3001_
+.Ripped_by_Lunarmaria_Hawke
+.DVDRip.XviD_ALLTEAM
+.dvbrip.divx503..by3001_
+.dvbrip.divx503.by3001_
+._dvbrip.divx503.german.by3001_
+._dvbrip.divx503.by3001_
+._german.dvbrip.divx.510.by3001_
+.HDTV.XviD.PROPER-CRiMSON
+.HDTV.XviD-CRiMSON
+.ws.pdtv.xvid.repack-river
+-HHI
+.SATRip.XviD-CoP.by[www.ultimate-bit-board.dl.am]
+ - www.trackertomia.com
+ [torrent.to]
+ - shared by Buccaneer [torrent.to]
+-www.reloaded-pharao.dl.am
+.DVD.SCREENER.XviD-OMiCRON
+.HDTV.XviD-FiTTY
+ [dummy]
+ DVDRip KVCD by Dev
+-SVCD
+.DVDSCREENER.MVCD.seeded.by.DP
+ DVDRip kvcd - Hockney
+ XviD.DVDRip.PiLFER
+[DVDrip]
+_[Te@m-Discount]
+_Rip_Ratomoerto
+ [TE@M-DISCOUNT] [DVD-RIP]
+[DVD-RIP]
+.DVDRip.DiVX-DPC
+_DVDSCR_XViD-23-GGT
+ DVDRIP
+.DVDRip.XviD-ACF
+ (DivX)
+.tvrip
+.DivX5.AC3
+.xvid-mp3
+.XviD.AC3
+.hdtv-fqm
+.REAL
+.REPACK
+ [DivX]
+ (dvdivx)
+.hdtv-tcm
+ DVDRip kvcd by Hockney
+ DivX - ZXQL
+.[www.descargasweb.net]
+.[bt]
+.dsr.xvid-orenji
+.HDTV.XViD-XPC
+.HDTV.WS.XViD-XPC
+.pdtv-lol
+.pdtv-lol.[bt]
+.hdtv-lol.[BT]
+.(tvrip).BiTSrg
+.hdtv.xvid-tcm.[bt]
+.REPACK
+.hdtv.xvid-fqm.[bt]
+.pdtv.xvid-stfu.[bt]
+.trg
+ -TS-
+.nwo
+.eBook-LiB
+.Proper.DVDRip.XviD-GWL
+.DSR.XviD-OMiCORN
+._www.tvunderground.org.ru_
+.PDTV.XviD-XOR
+...seedet.by.Socrates
+ XivD WS ENG AC3 5.1 DD
+_-_irc.tveps.net
+ - irc.tveps.net
+- LimiteMusic.com
+[SkidVid]
+-mbr
+-cnn
+-doh
+-mod
+ - Www.Bizzydownload.Tk
+-LosEnviados.Net
+-bfhmp3
+_DVDRIP_FRENCH_Rip_Ratomoerto [Te@m-Discount]
+ -
+ [Te@m-Discount]
+.PDTV.XviD-APB
+.HDTV.XviD.PROPER-LOL
+{C_P}
+ BiEN-DVDSCR KVCD by Dev (A TUS RELEASE)
+ [found via www.FileDonkey.com]
+.DVDRip.XviD.Mp3.TRKTN
+ (wtata.com)
+[RAW]
+ [TNT Village]
+.DVDRiP
+(A TUS RELEASE)
+ PTBR
+ =[Yahaa.org]=
+.[WmC]
+-[FLAC]
+ - [Flac]
+ [Flac lossless]
+ (FLAC)
+ - @APE
+@APE
+ [auchdasnoch]
+-MTM
+ - www.torrentazos.com By FEFE2003
+.DVDRip.XViD-CroakerBC
+-XviD
+.DVDRip.XviD-QiX
+.DVDRip.German.English
+ [Exclu] [TE@M-DISCOUNT][DVD.RIP]
+ - Dvd Scr - By Sh@nGo
+.TS.Re-Enc.French.Xvid-FFA.By.FTT
+.dvdrip[PhoenixBoard.org]
+.DVDRiP.XViD-CiRCUS.FTT
+.DVDRip.XViD-FiZZ
+-DVDrip
+ - Dvd Rip - By Shr L@sTe@m - {www.lastorrent.tk}
+ - {www.lastorrent.tk}
+ [Qc]
+_DvdRip_French
+.Xvid.DVDrip-HIDD3N
+.DivX6
+.DivX-MP3
+.dvdrip.xvid.ac3
+ (kiss)
+ [TE@M-DISCOUNT][DVD.RIP]
+ [Te@m DiscounTorrent]
+.DVDivX-SOUTHSiDE
+.DVDRip.XviD-iMMORTALs
+-DVD-R
+ XviD DVDRip
+.DivX
+_xvid_mp3_beef_stew
+_M-VCD
+.SVCD(german)
+ (reseeded from my box)
+.PDTV.XviD-hV
+.DVDRip.XviD-ToM
+.XviD.TVRiP-MiRAGETV
+.xvid.K4RM4
+.DSR.XviD-XOR
+.DSR.XviD-TBS
+ DVDRip kvcd Jamgood(TUS Release)
+(TUS Release)
+.DVDRip.XviD-NoSchidt
+(Xvid)(Darkside_RG)
+(Xvid)
+.dsr-umd
+.ITMN
+ - Mixed BY Gookzilla
+_mp3_BTSCHE_(www.BitTorrents24.ch)
+_(APE)
+_Eac_Ape_By_Mapi
+__messe.rip
+-JUST
+_By_Sergen
+.MVCD
+ DVB-DivX5.21
+.DivX511.www.MVGroup.org
+.www.MVGroup.org
+ [rl]
+.HDTV.XviD-TCM
+ {C_P}
+_dsr_xvid-crimson
+.dsrip.xvid-lol
+.dsr-lol
+.dsr-xor
+.DVDRip.XViD-ALLiANCE
+.psychic.FINALE.xvid-lgm
+.HR.PDTV.AC3.5.1.XviD-CTU
+.hdtv-lol
+_Ripped_by_Retro_
+.Subtitles-AnDrOiD
+.DVD.RiP.
+._www.the-realworld.de_
+.DVDRip.XViD-FTS
+ DVDripyv12ALIENSyb
+.DVDRip.XviD-StEfX
+ SUPDVDripDivx6[HQ.]ALIENSyb
+ DVDripDivx6ALIENSyb
+.HDTV.XviD-TV
+.DVDRip.XviD-SAPHiRE
+.HDTV.XviD-LOL
+.xvid-fov
+.WS.PDTV.XviD-ORENJi
+.HDTV.XviD-LOL
+.WS.PDTV.XviD-REMAX
+.HDTV.XviD.REAL.REPACK-LOL
+.HDTV.XviD-FQM
+ [digitaldistractions]
+.PDTV.XviD-TV
+.HDTV.XviD-XOR
+.hdtv.xvid-tcm.[VTV]
+.WS.PDTV.XviD-RiVER
+.DSR.XViD-DeFaCto
+.[Videoseed.com].(iPod)
+ [snake_eyes]
+.pdtv.576p.ac3.xvid-fty
+.PDTV.XviD.PROPER-LOL
+.DSR.XviD-NBS
+.PROPER
+.hdtv.fixed-lol
+.HDTV.XviD-TvD
+.hdtv-lol.[VTV]
+.HR.HDTV.AC3.5.1.XviD-NBS
+.UNiTy
+.DVDRip.XviD-FoV
+ - VCD
+ [dd]
+.hdtv.xvid-tbs
+.DivX.mp3
+.divx.mp3
+.-DVD-Divx.6-AC3
+.XviD-AC3.www.mvgroup.org
+.HDTV.XviD-SAiNTS
+.DVDRiP.MD.German.XViD-MC
+.DVD.RIP.German.by.HABiT.[www.ToRRenTSpy.tk]
+.TC.Dubbed.German.DVDRip.DivX-AIO
+.DVDSCREENER.LD.MVCD[T-Boyz]
+.DVDRip.[H264.He-Aac.{Ger-Fr-Eng}.St{Fr}.Editions Ver2.Chaps]
+.DvDRip.MVCD.German
+.TS.XVID.German
+.FRENCH.STV.FS.DVDRip.XviD-CRiMETiME-AW-FUCK.LENNYBARR
+.FRENCH.DVDRip.Effixe.CinefeeL
+french-dvdripxvidAliensyb
+.DVDRIP.FRENCH.XviD-LAST
+.FRENCH.DVDRip.CinefeeL
+.DVDivx.SOUTHSiDE
+.www.smartorrent.com
+ [ECHiZEN]
+ Xvid
+ DVD-RIP
+.DVDRip.DivX
+ DVDSCR kvcd by PJ(TUS Release)
+_xvid
+_dvdrip_xvid
+_dvdrip
+.BS
+.-.WwW.LimiteMusic.CoM
+ - RaggaeDub - [www.0system.tk]
+ - [www.0system.tk]
+-[WwW.DivxTotal.CoM]
+ - [www.pctrecords.com]
+[www.pctrecords.com]
+.[WwW.LiMiTeDiVx.CoM]
+(StefWan-Team)
+-DOH
+-SSR
+.-.WwW.DivxTotal.CoM
+ [DVD][www.pctorrent.com]
+ -[www.pctorrent.com]
+-[www.pctorrent.com]
+[www.pctorrent.com]
+-EGO
+(Darkside_RG)
+-RNS
+_mp3_BTSCHE_(www.BitTorrents24.ch
+(www.BitTorrents24.ch
+-hifi-torrents
+ -DivxTotal.CoM
+-TS
+ by EJ
+ DVDSCR kvcd by PJ(TUS Release)
+(DTS 5.1)XviD [vertigo173]
+ [www.torrentazos.com]
+_-_www.torrentazos.com
+ - www.torrentazos.com
+ [Ripped by Retro]
+.pdtv-lol.[VTV]
+.REPACK.HDTV.XviD-XOR
+.REPACK
+.PDTV.XviD-LOL
+ {C_P}
+.Sat-Rip.XviD.(Fr).Rip.Et.Shared.By.$Death-Team$
+EOF
+
+$re_suffix = qr/(?:$re_suffix)/i;
+#print $re,"\n";
+
+for (@ARGV) {
+  my $old = $_;
+
+  no warnings;
+  my $old2 = $old;
+  while (1) {
+      s/^$re_prefix//; s/^\s+//;
+      s/$re_suffix(\.\w+)?$/$1/;
+      s/\s+(\.\w+)?$/$1/;
+      last if $old2 eq $_;
+      $old2 = $_;
+  }
+  use warnings;
+
+  if ($old ne $_) {
+    print "$old -> $_\n";
+    if (-e $_) {
+      warn "ERROR: $_ already exists, skipped\n";
+    } else {
+      rename $old, $_ or warn "ERROR: Can't rename $old -> $_: $!\n";
+    }
+  }
+}

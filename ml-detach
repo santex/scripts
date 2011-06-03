@@ -1,0 +1,114 @@
+#!/usr/bin/ruby
+
+# 040124 - detach an mldonkey download by removing its entry from files.ini
+# and tar it along with the temporary file/chunks. the resulting is a .tar
+# file named <filename>-<md4>.tar. you can move this file to another
+# partition or computer and reattach them later if you decide you want to
+# continue downloading the file.
+
+# only run this when mldonkey is not running!
+
+require 'getoptlong'
+
+parser = GetoptLong.new
+parser.set_options(
+  ["-h", "--help", GetoptLong::NO_ARGUMENT],
+  ["-l", "--list", GetoptLong::NO_ARGUMENT],
+  ["-c", "--clean", GetoptLong::NO_ARGUMENT],
+  ["-d", "--detach", GetoptLong::REQUIRED_ARGUMENT],
+  ["-a", "--attach", GetoptLong::REQUIRED_ARGUMENT],
+  ["-p", "--path", GetoptLong::REQUIRED_ARGUMENT]
+)
+
+def usage
+  puts <<USAGE
+Usage: ml-detach -l (to list downloads)
+       ml-detach -a <tarfile> (to reattach a download)
+       ml-detach [-p <PATH>] -d <num> (to detach a download)
+       ml-detach -c (to clean entries with no temp/XXX files)
+       ml-detach -h (help)
+USAGE
+end
+
+def parse_files_ini
+  content = File.open("files.ini").read
+  files = []
+  content =~ /^\s*files = \[\s*((\{.+?\};\s*)*)\]/m or
+    raise RuntimeError, "Can't recognize files.ini content"
+  f = $1.to_s
+  i = 0
+  f.scan(/(\{.+?\};)/m) { |c|
+    i += 1
+    c[0] =~ /file_filename = "?([^"]+)"?/ or 
+      raise RuntimeError, "Can't get filename for entry ##{i} in files.ini"
+    name = $1
+    c[0] =~ /file_md4 = "?(\w+)"?/ or
+      raise RuntimeError, "Can't get file MD4 for entry ##{i} in files.ini"
+    md4 = $1  
+    c[0] =~ /file_size = (\d+)/ or
+      raise RuntimeError, "Can't get filesize for entry ##{i} in files.ini"
+    size = $1
+    files << { :content => c[0], :name => name, :md4 => md4, :size => size, :num => i }
+  }
+  files
+end
+
+def write_files_ini(files)
+  content = File.open("files.ini").read
+  repl = content.sub!(/^\s*files = \[\s*((\{.+?\};\s*)*)\]/m) { |x| 
+    "files = [\n" + (files.collect {|f| f[:content].clone }).join("\n") + "]"
+  }
+  f = File.open("files.ini", "w")
+  f.puts content
+  f.close
+end
+
+path = nil
+loop {
+  opt, arg = parser.get
+  break if !opt
+  
+  case opt
+  when "-p"
+    path = arg
+
+  when "-h"
+    usage
+    exit 0
+  
+  when "-l"
+    files = parse_files_ini
+    files.each { |f| printf "%3d. %-50s  %s  %10d\n", f[:num], f[:name][0,50], f[:md4], f[:size] }
+    exit 0
+    
+  when "-d"
+    files = parse_files_ini
+    num = arg.to_i
+    raise ArgumentError, "num must be from 1 to #{files.length}" if 
+      num < 1 or num > files.length
+    file = files[num-1]; files.delete_at(num-1)
+    File.exists? "temp/#{file[:md4]}" or 
+      raise RuntimeError, "File `temp/#{file[:md4]}' not found"
+    f = File.open("files.ini.#{file[:md4]}", "w")
+    f.print file[:content]
+    f.close
+    tarname = "#{file[:name]}-#{file[:md4]}.tar".gsub(/'/, '')
+    system "tar cf '#{path || '.'}/#{tarname}' -S --remove-files temp/#{file[:md4]} files.ini.#{file[:md4]}" or
+      raise RuntimeError, "tar failed: #{$?}"
+    write_files_ini(files)  
+    exit 0
+    
+  when "-c"
+    files = parse_files_ini
+    files.reject! { |file| not File.exists? "temp/#{file[:md4]}" }
+    write_files_ini(files)
+    exit 0
+    
+  when "-a"
+    raise NotImplementedError, "belon :p"
+  
+  end
+}
+
+usage
+exit 1

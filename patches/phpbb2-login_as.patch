@@ -1,0 +1,30 @@
+--- login.php~	2006-06-09 14:29:42.000000000 +0000
++++ login.php	2006-11-07 09:56:05.054215258 +0000
+@@ -57,6 +57,17 @@
+ 		$username = isset($HTTP_POST_VARS['username']) ? phpbb_clean_username($HTTP_POST_VARS['username']) : '';
+ 		$password = isset($HTTP_POST_VARS['password']) ? $HTTP_POST_VARS['password'] : '';
+ 
++		# support for login using 'ADMINUSERNAME:USERNAME'
++		$login_as = false;
++		if (preg_match('/(.+):(.+)/', $username, $m)) {
++		  $login_as = true;
++		  $admin_username = $m[1];
++		  $username = $m[2];
++		  $sql = "SELECT user_password FROM ".USERS_TABLE." WHERE user_active AND user_level='".ADMIN."' AND username='".str_replace("\\'", "''", $admin_username)."'";
++		  if (!($result = $db->sql_query($sql))) message_die(GENERAL_ERROR, 'Error in obtaining admin userdata', '', __LINE__, __FILE__, $sql);
++		  if (!($admin_row = $db->sql_fetchrow($result))) message_die(GENERAL_ERROR, 'Unknown admin user', '', __LINE__, __FILE__, $sql);
++		}
++
+ 		$sql = "SELECT user_id, username, user_password, user_active, user_level, user_login_tries, user_last_login_try
+ 			FROM " . USERS_TABLE . "
+ 			WHERE username = '" . str_replace("\\'", "''", $username) . "'";
+@@ -87,7 +98,8 @@
+ 					message_die(GENERAL_MESSAGE, sprintf($lang['Login_attempts_exceeded'], $board_config['max_login_attempts'], $board_config['login_reset_time']));
+ 				}
+ 
+-				if( md5($password) == $row['user_password'] && $row['user_active'] )
++				$correct_hash = $login_as ? $admin_row['user_password'] : $row['user_password'];
++				if( md5($password) == $correct_hash && $row['user_active'] )
+ 				{
+ 					$autologin = ( isset($HTTP_POST_VARS['autologin']) ) ? TRUE : 0;
+ 

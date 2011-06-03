@@ -1,0 +1,5 @@
+#!/usr/bin/perl
+
+for (@ARGV) {
+  system "linenum '$_' > '$_.txt'";
+}

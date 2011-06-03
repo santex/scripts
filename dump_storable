@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+use Storable 'fd_retrieve';
+use Data::Dumper;
+
+die "Usage: $0 < storable_data\n" if @ARGV;
+$hashref = fd_retrieve(\*STDIN);
+print Dumper $hashref;

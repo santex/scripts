@@ -1,0 +1,43 @@
+#!/usr/bin/perl -w
+
+# this script can be used to run a command once daily. if command is successful,
+# another call to this script with the same label and date won't run the command
+# again.
+
+use 5.010;
+use autodie;
+use strict;
+use Fcntl qw(:DEFAULT);
+use POSIX qw(strftime);
+
+if (@ARGV <= 2) { die "Usage: $0 <label> <yyyy-mm-dd | 'today' | '-'> <cmd ...>\n" }
+my ($label, $date, @cmd) = @ARGV;
+if ($label !~ /^\S+/) { die "Invalid label, please use nonblanks only" }
+$date = strftime("%Y-%m-%d", localtime) if $date =~ /^(today|-)$/;
+if ($date !~ /^\d\d\d\d-\d\d-\d\d$/) { die "Invalid date, please use yyyy-mm-dd" }
+
+my $log_path = "$ENV{HOME}/once-daily.log";
+my %rec; # <label> <date>
+sysopen my($log), $log_path, O_RDWR | O_CREAT;
+sysseek $log, 0, 0;
+while (<$log>) {
+    next unless /\S/;
+    next if /^#/;
+    /^(\S+)\|(\d\d\d\d-\d\d-\d\d)$/ or do {
+        warn "Syntax error in $log_path:$. (skipped): $_\n";
+        next;
+    };
+    $rec{$1}{$2} = 1;
+}
+
+if ($rec{$label}{$date}) { exit 99 }
+
+system @cmd;
+
+if ($? == 0) {
+    print $log "$label|$date\n";
+    close $log;
+    exit 0;
+} else {
+    warn "Command exits $?, won't be recorded\n";
+}

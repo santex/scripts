@@ -1,0 +1,5 @@
+#!/bin/sh
+
+sync-spanel-config --user root --none --servers 23,ciledug
+sync-spanel-config --user root --all --has mwn --has dns --lack intranet
+sync-spanel-config --user root --all --has mwn --has remote-backup

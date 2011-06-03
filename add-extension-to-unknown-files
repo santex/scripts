@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w
+
+# 2004-08-16 - unfinished
+# 2009-07-15 - iseng finish first draft
+
+use strict;
+use Log::Log4perl qw(:easy);
+
+sub esc {
+    local $_ = shift;
+    s/'/'"'"'/g;
+    "'$_'";
+}
+
+my %known_mimes = (
+    "text/plain" => "txt",
+    "text/html" => "html",
+    "text/css" => "css",
+    "application/javascript" => "js",
+
+    "image/gif" => "gif",
+    "image/jpeg" => "jpg",
+
+    "video/mpeg" => "mpg",
+    "video/mp4" => "mp4",
+    "video/x-msvideo" => "avi",
+);
+
+# MAIN
+
+Log::Log4perl->easy_init($DEBUG);
+
+for (@ARGV) {
+    INFO "Processing $_ ...";
+    if (/\.(\w+)$/) {
+        WARN "$_ already has extension ($1), skipped";
+        next;
+    }
+    my $cmd = "file --mime-type ".esc($_);
+    my $mime = `$cmd`; chomp($mime); $mime =~ s/.+: //;
+    DEBUG "MIME type for $_ is `$mime`";
+    if ($known_mimes{$mime}) {
+        my $ext = $known_mimes{$mime};
+        INFO "$_ -> $_.$ext";
+        # XXX overwrite? dry run?
+        rename $_, "$_.$ext";
+    }
+}

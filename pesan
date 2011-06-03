@@ -1,0 +1,118 @@
+#!/usr/bin/perl
+
+$debug = $ENV{DEBUG};
+$stdout_instead = 1;
+#($day_now,$mon_now,$year_now)=(29,3,2003);
+
+use Mail::Sendmail;
+use REST::Google::Search::Images;
+use YAML::Syck;
+
+@dom = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+if (!$day_now or !$mon_now or !$year_now) {
+  ($day_now,$mon_now,$year_now) = (localtime)[3,4,5]; $mon_now++; $year_now += 1900;
+}
+$ndays_now = calc_ndays($day_now,$mon_now,$year_now);
+@matches = ();
+
+# didisable dulu, kadang2x infinite loop WWW::GI nya, sucks.
+my $GOOGLE_IMAGES = 1;
+REST::Google::Search::Images->http_referer('http://example.com');
+
+while (<>) {
+  next unless /\S/;
+  next if /^[#;]/;
+  do { warn "Line $.: not match!: $_"; next; } unless
+      /^([JUT]) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')(?: (\d+) (\d+))?\s*("[^"]+"|'[^']+')?$/ or
+      /^(BIRTHDAY|ONETIME|YEARLY) (\d\d)(\d\d)(\d\d\d\d) ("[^"]+"|'[^']+')((?:\s+-?\d+)+)\s*("[^"]+"|'[^']+')?$/;
+  if ($1 eq 'J' || $1 eq 'U' || $1 eq 'T') {
+      ($t, $mday, $mon, $year, $msg, $a, $b, $opts) = ($1, $2, $3, $4, substr($5,1,length($5)-2), $6, $7);
+      warn "Line $.: must have a and b: $_" if $t ne 'U' and (!defined($a) or !defined($b));
+      $a = 0 if !defined($a); $b = 0 if !defined($b); do{$a=7;$b=1} if $t eq 'U';
+      if ($t ne 'J') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
+      @d = (-$a..$b);
+      print "DEBUG: $t, $mday, $mon, $year, $msg, $a, $b, $opts\n" if $debug;
+  } else {
+      ($t, $mday, $mon, $year, $msg, $days_list, $opts) = ($1, $2, $3, $4, $5, $6, $7);
+      @d = $days_list =~ /(-?\d+)/g;
+      @d = (0) unless @d;
+      if ($t ne 'ONETIME') { @y = ($year_now-1,$year_now,$year_now+1) } else { @y = $year }
+      print "DEBUG: $t, $mday, $mon, $year, $msg, $days_list=[${\(join ', ', @d)}], $opts\n" if $debug;
+  }
+  if ($opts) {
+      for ($opts) { if (/^'/) { s/^'//; s/'$//; } else { s/^"//; s/"$//; } }
+      $opts = Load($opts);
+  }
+  #print "DEBUG: opts = ".Dump($opts) if $debug;
+  $done=0;
+  L:
+  for $y (@y) {
+    last if $done;
+    $ndays = calc_ndays($mday,$mon,$y);
+
+    my $msg_opt = "";
+    if (grep { $ndays_now == $ndays+$_ } @d) {
+      $done++;
+      print " hit!" if $debug;
+      my $delta = $ndays - $ndays_now;
+      $msg1 = $delta == 0 ? "hari ini" :
+              (abs($delta) . " hari " . ($delta < 0 ? "yl":"lagi"));
+      $msg2 = $t eq 'U' ? "$msg ultah yang ke-".($year_now-$year) :
+              $t eq 'BIRTHDAY' ? "$msg ultah" :
+              $msg;
+
+      my $do_gi = $opts->{gi} && ($opts->{gi}{day} == $delta || $t eq 'BIRTHDAY') && $GOOGLE_IMAGES;
+      if ($do_gi) {
+          my $s = $opts->{gi};
+          print "DEBUG: retrieving google images ($s->{q})..." if $debug;
+          my $res = REST::Google::Search::Images->new(
+              q => $s->{q},
+              #min_size => ($s->{min_size} || 25),
+              #max_size => ($s->{max_size} || 150),
+              #limit => ($s->{limit} || 10),
+          );
+          if ($res->responseStatus != 200) {
+              $msg_opt .= "(can't query google images for query `$s->{q}`: ".$res->responseStatus.")";
+          }
+          my @im = map { $_->{url} } @{ $res->responseData->results };
+          if (@im) {
+              $msg_opt .= "[img]".$im[rand @im]."[/img]";
+          } else {
+              $msg_opt .= "(no images returned by google images for query `$s->{q}`)";
+          }
+      }
+
+      push @matches, [$ndays-$ndays_now, "$msg1: $msg2 ($mday-$mon-$y)".($msg_opt ? "\n\n$msg_opt" : "")."\n"];
+    }
+    print "\n" if $debug;
+  }
+}
+
+if (@matches) {
+  $body = join "", map {$_->[1]} sort {$a->[0] <=> $b->[0]} @matches;
+} else {
+  $body = "";
+}
+
+exit unless $body;
+
+if ($stdout_instead) {
+  print $body;
+} else {
+  sendmail(
+    subject => "Pesan hari ini ($day_now-$mon_now-$year_now)",
+    from => $from,
+    to => $to,
+    message => $body
+  ) or die "Error sending mail: $Mail::Sendmail::error\n";
+}
+
+sub calc_ndays {
+  my ($d,$m,$y)=@_;
+  my $c;
+
+  $dom[1] = $y%4==0 ? 29:28;
+  $c=0;
+  for(0..$m-2){$c+=$dom[$_]}
+  int(($y-1905)*365.25)+($d-1)+$c;
+}

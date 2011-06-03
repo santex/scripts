@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+
+sub collrate($$) {
+    my ($N, $n) = @_;
+    my $res = 1;
+    for (1..($n-1)) {
+        $res *= ($N-$_)/$N;
+    }
+    1-$res;
+}
+
+if (@ARGV != 2) {
+    print "Usage: $0 <N> <n>\nExample: To find collision rate of 18 people in a room having the same birthday: $0 365 18\n";
+    exit 1;
+} else {
+    print collrate($ARGV[0], $ARGV[1]), "\n";
+}
+

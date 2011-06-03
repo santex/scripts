@@ -1,0 +1,6 @@
+#!/bin/bash
+arch=debian_linux-lenny-i386
+plarch=i486-linux-gnu-thread-multi
+ssh=user1@192.168.0.106
+rsync -avz --exclude "/lib/perl5/$plarch" $ssh:perl5/ $HOME/proj/spanel/perl5/
+rsync -avz $ssh:perl5/lib/perl5/$plarch $HOME/proj/spanel/arch/$arch/perl5/lib/perl5/

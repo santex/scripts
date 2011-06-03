@@ -1,0 +1,3 @@
+#!/usr/bin/perl -ln
+s/'/'"'"'/g;
+print "'$_'";

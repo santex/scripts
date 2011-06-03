@@ -1,0 +1,3 @@
+#!/bin/sh
+. set-zh
+exec /opt/firefox/firefox

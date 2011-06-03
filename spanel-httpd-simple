@@ -1,0 +1,172 @@
+#!/usr/bin/perl
+
+# used to run Spanel web interface (for development only!) on my PC without
+# installing the whole Spanel. Currently also need these tricks to run:
+#
+# 1. I symlink /c to my Spanel repo, so I created spanel-cgi as a clone of my
+# user (by editing /etc/passwd and just copying my user's line to spanel-cgi user
+#
+
+use 5.010;
+use warnings;
+use strict;
+
+package Spanel::HTTPD::Simple;
+use Capture::Tiny qw(capture);
+use Data::Dump qw(dump);
+use FileHandle;
+use File::Slurp;
+use HTML::Entities qw(encode_entities);
+use HTTP::Server::Simple::CGI;
+use IPC::Open2; # yes, can't catch stderr with this, but it's simpler to use
+use String::ShellQuote;
+use URI::Escape;
+use base qw(HTTP::Server::Simple::CGI);
+
+sub handle_request {
+    my ($self, $cgi) = @_;
+
+    my $uripath = $cgi->path_info();
+    my $pathinfo;
+    my $docroot;
+    # XXX check attempt to go outside of docroot
+
+    if ($uripath =~ m!^/debug!) {
+        print "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n";
+        print "\$self: ", dump($self), "\n\n";
+        print "\$cgi: ", dump($cgi), "\n\n";
+        print "\$self->{_r}: ", dump($self->{_r}), "\n\n";
+        return;
+    }
+
+    if ($uripath =~ m!^/webapps/!) {
+        $docroot = "/c";
+    } else {
+        $docroot = "/c/www";
+    }
+
+    my $path = $docroot;
+    my @pe = (grep {length} split m!/+!, $uripath);
+    @pe = ("") if !@pe;
+    my $pe;
+    while (defined($pe = shift @pe)) {
+        $path .= (length($pe) ? "/" : "") . $pe;
+        if (!(-e $path)) {
+            print "HTTP/1.0 404 Not found\r\n\r\nNot found";
+            return;
+        } elsif (-d $path) {
+            next;
+        } elsif (-f $path) {
+            $pathinfo = substr($uripath, length($path));
+            if ($path =~ /\.(html|php)$/) {
+                $self->handle_php(cgi => $cgi, uripath=>$uripath,
+                                  path=>$path, pathinfo => $pathinfo);
+                return;
+            } elsif ($path =~ /\.(cgi)$/) {
+                $self->handle_cgi(cgi => $cgi, uripath=>$uripath,
+                                  path=>$path, pathinfo => $pathinfo);
+                return;
+            } else {
+                $self->serve_file($path);
+                return;
+            }
+        }
+    }
+    if (-d $path) {
+        $self->handle_dir($path, $uripath);
+        return;
+    }
+}
+
+sub setup {
+    my ($self, %args) = @_;
+    $self->{_r} //= {};
+    $self->{_r}{$_} = $args{$_} for keys %args;
+    $self->SUPER::setup(%args);
+}
+
+sub serve_file {
+    my ($self, $path) = @_;
+    my $cmd = "file --mime-type ".shell_quote($path);
+    my ($mime) = `$cmd` =~ /.+: (.+)/;
+    print "HTTP/1.0 200 OK\r\n";
+    print "Content-Length: ", (-s $path), "\r\n";
+    print "Content-Type: $mime\r\n";
+    print "\r\n";
+    print read_file($path);
+}
+
+sub handle_dir {
+    my ($self, $path, $uripath) = @_;
+    #print "HTTP/1.0 403 Forbidden\r\n\r\nDirectory Viewing Not Allowed"; return;
+    print "HTTP/1.0 200 OK\r\nContent-Type: text/html\n\n";
+    my $euripath = encode_entities($uripath);
+    print "<title>$euripath</title><h1>$euripath</h1>\n";
+    local *D;
+    chdir $path;
+    opendir D, ".";
+    for my $f (sort readdir D) {
+        next if $f eq ".";
+        my $suffix = (-d $f) ? "/" : "";
+        print "<a href=\"".uri_escape($f)."$suffix\">".encode_entities($f).$suffix."</a><br>\n";
+    }
+    closedir D;
+}
+
+sub handle_php {
+    my ($self, %args) = @_;
+    $ENV{REDIRECT_STATUS} = $args{cgi}->path_info;
+    $self->handle_cgi(%args, interpreter=>"/usr/bin/php5-cgi");
+}
+
+sub handle_cgi {
+    my ($self, %args) = @_;
+    my $cgi = $args{cgi};
+    my $path = $args{path};
+
+    $ENV{REQUEST_METHOD} = $self->{_r}{method};
+    $ENV{REQUEST_URI} = $self->{_r}{request_uri};
+    $ENV{QUERY_STRING} = $self->{_r}{query_string};
+    $ENV{SERVER_PROTOCOL} = $self->{_r}{protocol};
+    $ENV{SERVER_ADDR} = "127.0.0.1";
+    $ENV{SERVER_PORT} = $self->port;
+    $ENV{SERVER_NAME} = $0;
+    $ENV{REMOTE_ADDR} = $self->{_r}{peeraddr};
+    $ENV{REMOTE_HOST} = $self->{_r}{peername};
+    $ENV{REMOTE_PORT} = $self->{_r}{peerport};
+    $ENV{PATH_INFO} = $cgi->path_info;
+
+    my @cmd;
+    push @cmd, $args{interpreter} if $args{interpreter};
+    push @cmd, shell_quote($path);
+    my ($chld_out, $chld_in);
+    my ($stdout, $stderr);
+
+    #open2 -> gagal capture
+    my $pid = open2($chld_out, $chld_in, @cmd);
+
+    #open CGI, "| ".join(" ", @cmd) + capture::tiny -> gagal capture
+    #system join(" ", @cmd) + capture::tiny -> gagal capture
+    # wtf? gw terpaksa pake qx, tapi
+    my $cmd = join(" ", @cmd);
+    print STDERR "DEBUG: cmd=$cmd\n";
+    #$stdout = `$cmd`;
+
+    if ($self->{_r}{method} eq 'POST') {
+        # print to child's input
+    }
+
+    # XXX parse Location & Status, and change http status accordingly
+    $self->stdout_handle->print("HTTP/1.0 200 OK\r\n");
+    #$self->stdio_handle->print($stdout);
+    $self->stdout_handle->print(<$chld_in>);
+
+    waitpid($pid, 0);
+}
+
+package main;
+
+my $server = Spanel::HTTPD::Simple->new(80);
+$server->run;
+
+1;

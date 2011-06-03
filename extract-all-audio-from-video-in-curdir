@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Getopt::Long;
+use Log::Log4perl qw(:easy);
+use Cwd;
+
+# --- globals
+
+my %DefOpt = (
+           log_level => 'info',
+           bitrate => '64k',
+           samprate => '44000',
+           copy => 1,
+           format => 'mp3',
+          );
+my %Opt = %DefOpt;
+
+# --- subs
+
+sub mysystem {
+  INFO "system(): ".join(" ",@_);
+  system @_;
+}
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}
+
+# --- main
+
+GetOptions(
+           'log-level=s' => \$Opt{log_level},
+           'debug' => sub { $Opt{log_level} = 'debug' },
+           'verbose' => sub { $Opt{log_level} = 'info' },
+           'bitrate=s' => \$Opt{bitrate},
+           'samprate=i' => \$Opt{samprate},
+           'help' => \$Opt{help},
+           'copy!' => \$Opt{copy},
+           'format=s' => \$Opt{format},
+          );
+if ($Opt{help}) {
+  print <<EOF;
+$0 [options] [FILES ...]
+
+If files are not specified, process all movie files in current dir.
+
+Options:
+ --log-level=L  Set verbosity level (fatal/error/warn/info/debug).
+                Default is verbose.
+ --nocopy       Do not attempt to just copy the audio from movie
+                 files, but do a re-encoding to MP3
+ --debug        Set verbosity level to debug.
+ --verbose      Set verbosity level to verbose.
+ --bitrate      Set bitrate (default: $DefOpt{bitrate}).
+ --samprate     Set sampling rate (default: $DefOpt{samprate}).
+ --format F     Set output format (default: $DefOpt{format}).
+EOF
+  exit 0;
+}
+
+my $log_level;
+if    ($Opt{log_level} eq 'fatal') { $log_level = $FATAL }
+elsif ($Opt{log_level} eq 'error') { $log_level = $ERROR }
+elsif ($Opt{log_level} eq 'warn' ) { $log_level = $WARN  }
+elsif ($Opt{log_level} eq 'info' ) { $log_level = $INFO  }
+elsif ($Opt{log_level} eq 'debug') { $log_level = $DEBUG }
+else  { die "FATAL: Unknown log level: $Opt{log_level}. Use one of: fatal, error, warn, info, debug'\n" }
+Log::Log4perl->easy_init($log_level);
+
+my $cwd = getcwd;
+my @files;
+if (@ARGV) { @files = @ARGV } else { @files = (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>, <*.flv>, <*.mp4>) }
+for my $f (@files) {
+  chdir $cwd;
+  INFO "Processing file: `$f'...";
+  my $d = $f; $d =~ s/\.\w+$/\.$Opt{format}/;
+  if (-e $d) {
+    WARN "`$d' already exists, skipped";
+    next;
+  }
+  my @opts = ();
+  if ($f =~ /\.rmvb$/ || !$Opt{copy}) {
+      push @opts, "-ab $Opt{bitrate} -ar $Opt{samprate}";
+  } else {
+      push @opts, "-acodec copy";
+  }
+  mysystem "ffmpeg ".join(" ", @opts)." -i ".esc($f)." ".esc($d);
+  if ($?) {
+    ERROR "Failed extracting audio from `$f': $! ($?), skipped\n";
+    next;
+  }
+}

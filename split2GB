@@ -1,0 +1,64 @@
+#!/usr/bin/perl
+
+# 2004-12-01
+
+use File::Basename;
+use POSIX;
+$|++;
+
+$CHUNKSIZE = 64*1024;
+$PARTSIZE = 1900*1024*1024;
+
+if (@ARGV != 1) {
+  print "Usage: $0 <file>\n";
+  exit 0;
+}
+
+$file = $ARGV[0];
+die "FATAL: $file is not a file\n" unless (-f $file);
+
+$size = -s _;
+die "FATAL: $file is 0 bytes, I refuse to split it\n" unless $size;
+
+$basename = basename($file);
+if ($basename =~ /(.+)\.(.+)/) {
+  $prefix = $1; $ext = $2;
+} else {
+  $prefix = $basename; $ext = "";
+}
+
+$numparts = POSIX::ceil($size / $PARTSIZE);
+$numdigits = length($numparts);
+
+die "ERROR: There will only be 1 part, exiting...\n" if $numparts == 1;
+
+open F, $file or die "FATAL: Can't read $file: $!\n";
+
+$totalpartssize = 0;
+
+for (1..$numparts) { 
+  $partfile = sprintf "%s.%0${numdigits}dof%d%s", $prefix, $_, $numparts, (length($ext) ? ".$ext" : "");
+  print "$partfile ... ";
+  open P, ">$partfile" or die "FATAL: Can't open $partfile for writing: $!\n";
+
+  $partsize = $PARTSIZE;
+  $partsize = $size - $totalpartssize if $totalpartssize + $PARTSIZE > $size;
+  #print "(totalpartssize=$totalpartssize, partsize=$partsize)";
+  $offset = 0;
+  WHILE: while ($offset < $partsize) {
+    $readsize = ($offset + $CHUNKSIZE > $partsize) ? 
+      $partsize-$offset : $CHUNKSIZE;
+    $read = sysread F, $buff, $readsize;
+    die "FATAL: Can't read $readsize bytes (read=$read, pos=$offset, err=$!)\n" unless $read==$readsize;
+
+    $written = syswrite P, $buff;
+    die "FATAL: Can't write $readsize bytes (written=$written, pos=$offset, err=$!)\n" unless $written=$readsize;
+
+    $offset += $readsize;
+    last WHILE if $offset >= $partsize; # XXX sebetulnya yg benar == sih.
+  }
+
+  close P;
+  print "$partsize\n";
+  $totalpartssize += $partsize;
+}

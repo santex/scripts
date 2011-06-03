@@ -1,0 +1,4 @@
+#!/bin/bash
+# this is a useless script, but somehow i keep forgetting that there is the 'history' command
+if [[ "$PAGER" == "" ]]; then PAGER=less; fi
+perl -pe'$_=localtime($1)."|" if /^#(\d+)$/' ~/.bash_history | $PAGER

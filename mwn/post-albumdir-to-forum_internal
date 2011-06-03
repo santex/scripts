@@ -1,0 +1,51 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Cwd;
+use Log::Log4perl qw(:easy);
+use File::Temp qw/tempfile/;
+use App::Options (
+    option => {
+        tag => { type => 'string', required => 0, default => '' },
+    },
+);
+
+my @files;
+
+Log::Log4perl->easy_init($DEBUG);
+
+# cek argumen
+unless (@ARGV) {
+  print "Usage: $0 [--tag=some_label] <moviedir> ...\n";
+  exit 1;
+}
+
+my $orig_dir = getcwd;
+
+my $tags = $App::options{tag} ? "[$App::options{tag}] " : "";
+
+for my $dir (@ARGV) {
+  chdir $orig_dir;
+
+  chdir $dir or do {
+    WARN "Can't chdir to `$dir', skipped";
+    next;
+  };
+
+  my $msg = `make-phpbb-album-posting`;
+  length($msg) or do {
+    WARN "Can't get album posting information for dir `$dir', skipped";
+    next;
+  };
+
+  my ($fh, $filename) = tempfile();
+  print $fh "Subject: $tags$dir\n";
+  print $fh "\n";
+  print $fh $msg;
+  push @files, $filename;
+}
+
+# send it!
+system "phpbb2-post --profile=sharing_music ".join(" ", @files);
+unlink @files;
+

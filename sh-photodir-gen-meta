@@ -1,0 +1,65 @@
+#!/usr/bin/perl -w
+
+use autodie;
+use strict;
+use Cwd;
+use DateTime;
+use Log::Log4perl qw(:easy);
+
+use App::Options (
+    option => {
+        overwrite => { type => 'boolean', required => 0, default => 0, },
+        photo_dir => { type => 'string', require => 1, default => '.', },
+        meta_dir => { type => 'string', require => 0, }, # default = {photo_dir}
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+    },
+);
+
+if (!defined($App::options{meta_dir})) { $App::options{meta_dir} = $App::options{photo_dir} }
+
+if ( $App::options{log_level} eq 'FATAL' ) {
+    Log::Log4perl->easy_init($FATAL);
+}
+elsif ( $App::options{log_level} eq 'ERROR' ) {
+    Log::Log4perl->easy_init($ERROR);
+}
+elsif ( $App::options{log_level} eq 'WARN' ) {
+    Log::Log4perl->easy_init($WARN);
+}
+elsif ( $App::options{log_level} eq 'INFO' ) {
+    Log::Log4perl->easy_init($INFO);
+}
+else { Log::Log4perl->easy_init($DEBUG) }
+
+if (-f "$App::options{meta_dir}/meta.yaml") {
+    WARN "Meta file ($App::options{meta_dir}/meta.yaml) already exists";
+    exit 1 unless $App::options{overwrite};
+}
+
+DEBUG "Opening meta file ($App::options{meta_dir}/meta.yaml) ...";
+open META, ">$App::options{meta_dir}/meta.yaml";
+print META "images:\n";
+
+INFO "Processing photo dir ($App::options{photo_dir}) ...";
+my $cwd = getcwd;
+chdir $App::options{photo_dir};
+
+for my $img (sort {lc($a) cmp lc($b)} (<*.jpg>, <*.JPG>)) {
+    my @st = stat($img);
+    print META sprintf "  \"%s\": {date: %s, title: \"\", tags: []}\n",
+        $img, DateTime->from_epoch(epoch => $st[9])->ymd;
+}
+
+print META "\n";
+print META "notes:\n";
+print META "  #- title: \"\"\n";
+print META "  #  images:\n";
+print META "  #    - filename1.jpg\n";
+print META "  #    - filename2.jpg\n";
+print META "  #    - [with_all_tags, tag1, tag2] # all images which have both tag1 AND tag2 will be included\n";
+print META "  #    - [with_any_tags, tag1, tag2] # all images which have either tag1 OR tag2 will be included\n";
+print META "  #  note: \"a potentially long text\"\n";
+print META "\n";
+
+close META;
+chdir $cwd;

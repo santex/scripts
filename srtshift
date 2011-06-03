@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+# 030206
+
+$secs_re = qr/[+-]?\d+(?:\.\d*)?/;
+$hms_re = qr/[+-]?\d\d?:\d\d?:\d\d?(?:,\d{1,3})?/;
+$hms_re_catch = qr/([+-]?)(\d\d?):(\d\d?):(\d\d?)(?:,(\d{1,3}))?/;
+sub hms2secs { local $_=shift; /^$hms_re_catch$/ or return; "${1}1" * ($2*3600+$3*60+$4+$5*0.001) }
+sub secs2hms { local $_=shift; /^$secs_re$/ or return "00:00:00,000"; my $ms=1000*($_-int($_)); $_=int($_); my $s=$_%60; $_-=$s; $_/=60; my $m=$_%60; $_-=$m; $_/=60; sprintf "%02d:%02d:%02d,%03d",$_,$m,$s,$ms }
+
+###
+
+$|++;
+die "Usage: $0 secs FILE\n" unless @ARGV >= 1;
+$_ = shift @ARGV;
+if (/^$secs_re$/) {
+	$secs = $_;
+} elsif (/^$hms_re$/) {
+	$secs = hms2secs($_);
+} else {
+	die "FATAL: Invalid secs `$_'\n";
+}
+
+$para = "";
+$lines = 1;
+while (1) {
+	$_ = <>;
+	if (/\S/ || $lines <= 2) {
+		s/\015//g;
+		$para .= $_;
+		$lines++;
+	} elsif ($para =~ /\S/) {
+		($no, $hms1, $hms2, $text) = $para =~ /(\d+)\n($hms_re) ---?> ($hms_re)\n(.*)/s or
+			die "FATAL: Invalid entry in line $.: $para\n";
+		print $no, "\n", 
+			secs2hms(hms2secs($hms1)+$secs), " --> ", secs2hms(hms2secs($hms2)+$secs), "\n",
+			$text, "\n";
+		$para = "";
+	} else {
+		$lines = 1;
+		$para = "";	
+	}
+	last unless $_;
+}

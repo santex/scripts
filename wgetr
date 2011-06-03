@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+die "Usage: $0 url ... [options]\n" unless @ARGV;
+
+if ($ARGV[0] =~ m#^\w+://([^/]+)(:\d+)?/?#) {
+  $host = $1;
+} elsif ($ARGV[0] =~ m#^([A-Za-z0-9][A-Za-z0-9.-]+)#) {
+  $host = $1;
+} elsif ($ARGV[0] =~ m#^-#) {
+  die "First argument must be URL; otherwise I can't parse the hostname!\n";
+}
+
+$host =~ s/:\d+$//;
+
+$cmd = "wget -k -r -l0 -np -H -D $host -e'robots=off' ".join(" ",map {escapeshellarg($_)} @ARGV);
+print $cmd,"\n";
+system $cmd;
+
+sub escapeshellarg {
+  local $_=shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

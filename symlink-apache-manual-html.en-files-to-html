@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use File::Find;
+
+find sub {
+    return unless -f;
+    return unless /\.html\.en$/;
+    ($new = $_) =~ s/\.html\.en/.html/;
+    next if -e $new;
+    print "$new -> $_\n";
+    symlink $_, $new;
+}, ".";

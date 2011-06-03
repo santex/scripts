@@ -1,0 +1,4 @@
+#!/bin/bash
+summarize-git-changes-for-last-month \
+  --software=Spanel \
+  --skip_files_re='^(webapps/[a-z]|lib/perl/cpan/|bin/cpanm|perl5)'

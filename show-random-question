@@ -1,0 +1,44 @@
+#!/usr/bin/perl -w
+
+use 5.010;
+use autodie;
+use strict;
+use App::Options (
+    option => {
+        file => { type => 'string', required => 0, default => "$ENV{HOME}/notes/questions.txt", },
+    },
+);
+
+my @lines = read_file($App::options{file});
+my $line = $lines[rand @lines];
+say fmt(unbrace($line));
+
+sub read_file {
+    my ($file) = @_;
+    open my ($f), $file;
+    my @res;
+    while (<$f>) {
+        next unless /\S/;
+        next if /^#/;
+        chomp;
+        push @res, $_;
+    }
+    @res;
+}
+
+sub unbrace {
+    my ($str) = @_;
+    my $pick = sub {
+        my ($str) = @_;
+        my @str = split /,/, $str;
+        $str[rand @str];
+    };
+    $str =~ s/\{(.+?)\}/$pick->($1)/eg;
+    $str;
+}
+
+sub fmt {
+    my ($str) = @_;
+    $str =~ s/\s{2,}/ /g;
+    $str;
+}

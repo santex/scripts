@@ -1,0 +1,6 @@
+#!/usr/bin/perl -0777 -ln
+
+use URI::Find;
+
+my $finder = URI::Find->new(sub { my ($uri, $txt) = @_; print $uri->as_string, "\n" });
+$finder->find(\$_);

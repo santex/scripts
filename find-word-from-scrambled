@@ -1,0 +1,25 @@
+#!/usr/bin/perl -w
+
+# specify a scrambled word in ARGV[0], feed it a list of words in
+# stdin, script will find it in list.
+
+use strict;
+
+my $word;
+unless ($word = $ARGV[0]) {
+    print "$0 - Find scrambled word in list of unscrambled word\n\n";
+    print "Usage: $0 <scrambled-word> < word-list\n\n";
+}
+
+my $sorted = join "", (sort {$a cmp $b} (split //, lc $word));
+my $found = 0;
+while (<STDIN>) {
+    chomp;
+    my $sorted2 = join "", (sort {$a cmp $b} (split //, lc $_));
+    if ($sorted eq $sorted2) {
+        print "$word = $_\n";
+        $found++;
+    }
+}
+
+exit $found ? 0 : 1;

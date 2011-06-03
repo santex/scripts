@@ -1,0 +1,634 @@
+#!/usr/bin/perl -w
+
+# this script logins to forum and repeatedly searches for new posts
+# mentioning itself, looking for commands, e.g.: "infobot, cariin
+# gambar kucing".
+#
+# if a command is found, it will try to reply to the same topic with
+# the answer.
+
+use 5.010;
+use strict;
+
+BEGIN { }
+
+use DBI;
+use Data::Dumper;
+use File::Slurp;
+use List::Util qw(shuffle min);
+use Log::Any::App '$log',
+    -screen=>{pattern_style=>'script_long'};
+use URI::Escape;
+use REST::Google::Search::Images;
+use WWW::Mechanize;
+use Digest::MD5 qw(md5_hex);
+
+our $VERSION = '0.100429a';
+our $quit = 0;
+
+use App::Options (
+    option => {
+        # general settings
+        profile => { type => 'string', required => 0, default => 'default', },
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+
+        secret_key => { type => 'string', required => 0, },
+
+        # forum settings
+        username => { type => 'string', required => 1, },
+        password => { type => 'string', required => 1, },
+        base_url => { type => 'string', required => 1, },
+
+        # bot settings
+        botname => { type => 'string', required => 1, description => 'bot name(s), separate with comma for multiple names' },
+        delay => { type => 'int', required => 1, default => 30, },
+        post_delay => { type => 'int', required => 1, default => 4, },
+        search_delay => { type => 'int', required => 1, default => 6, },
+        db_path => { type => 'string', required => 1, default => "$ENV{HOME}/phpbb2-infobot.db", },
+
+        run_spelling_nazi => { type=>'boolean', default=>1 },
+        mispelled_words => { type => 'string', required => 1, description => 'mispelled words that wants to be reminded, in this format: bad=>good, anotheur=>another, ...' },
+        mispelled_batch => { type => 'string', required => 1, description => 'how many words should be searched at once', default=>20 },
+
+        sigs_file => { type=>'string' },
+
+        # after 1-2 days, this script has stability problems. the weird thing
+        # is, search for new posts will give no result. only after the script is
+        # restarted, new post will be found again (problem with what? mechanize?
+        # phpbb2 itself (the session handling)? anyway, the easiest workaround
+        # for now is to exit after a predefined period and let
+        # run-phpbb2-infobot script restart this script.
+        suicide_after => { type=>'int', default => 86400 },
+    },
+);
+
+my $Mech = new WWW::Mechanize;
+my $Db;
+
+REST::Google::Search::Images->http_referer('http://example.com');
+
+my $Botname_Regex = join "|", split /,\s*/, $App::options{botname};
+$Botname_Regex = qr/(?:$Botname_Regex)/i;
+$log->debug("Botname_Regex=$Botname_Regex");
+
+my @Responses = (
+
+    {pat => qr/^(bantuan|help)*$/,
+     name => 'HELP',
+     handler => sub {
+         join("",
+              "Bantuan: beberapa perintah yang saat ini dikenali:\n\n",
+              "* bantuan / help -> pesan ini\n",
+              "* tampilkan gambar KATAKUNCI -> cari gambar di google images\n",
+              "* status -> tampilkan uptime, hostname, pid, dll\n",
+              "* USERNAME++ (ALASAN) / USERNAME-- (ALASAN) -> beri karma positif/negatif\n",
+              "* karma dari USERNAME -> tampilkan daftar karma yang diberikan seorang user\n",
+              "* karma USERNAME -> tampilkan daftar karma yang diterima seorang user\n",
+          );
+     }},
+
+    {pat => qr/^\s*$/,
+     name => 'EMPTY',
+     handler => sub {
+         pick("ya um?",
+              "ada apa pak?",
+              "kenapa bu?",
+              "hadir pak!",
+              "yup?",
+          );
+     }},
+
+    # empty, tapi panggilan sayang
+    {pat => qr/^(honey|hani|hon|sayang|chayank|say|darling|baby|babe|beibeh|beib)$/,
+     name => 'EMPTY',
+     handler => sub {
+         pick("ya honey?",
+              "ada apa say?",
+              "kenapa baby?",
+              "hadir hon!",
+              "yup darling?",
+              "iya sayang...",
+          );
+     }},
+
+    {pat => qr/^(thanks|tx|thx|tq|tenkyu|thank you|makasih|te?rima ?kasih|trm ksh|xie-xie|xie2)$/,
+     name => 'THANKS',
+     handler => sub {
+         pick("sama2x say :))",
+              "u're welcome ;)",
+              "seim2x :)",
+              "no problem",
+              "sip...",
+              "it's oke :)...",
+              "my pleasure...",
+              "kembali :)",
+          );
+     }},
+
+    {pat => qr/^status(-?(ka)?mu)?$/,
+     name => 'STATUS',
+     handler => sub {
+         pick("single",
+              "single and looking",
+              "masih jomlo nih",
+              "janda beranak satu",
+              "baru putus",
+              "available",
+          ) . "\n\nkidding :)\n\n" .
+              sprintf("Real status: Uptime: %.1f jam, Versi skrip: %s, Host: %s, User: %s, PID: %d, Database path: %s",
+                      (time - $^T) / 3600, $VERSION, ($ENV{HOSTNAME} || "?"), $ENV{USER}, $$, $App::options{db_path});
+     }},
+
+    {pat => qr/^(exit|quit)?$/,
+     name => 'QUIT',
+     handler => sub {
+         $quit = 1;
+         "exiting ...";
+     }},
+
+    {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(?:(\d+)(!)?\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
+     name => 'SEARCH IMAGE',
+     handler => sub {
+         my (%args) = @_;
+         my $n = $args{match}[1] // 1;
+         if ($args{match}[2]) {
+             $n = 100 if $n > 100;
+         } else {
+             $n = 10 if $n > 10;
+         }
+         my $res;
+         my $err;
+         my @im;
+         my $has_raw_result;
+         my $i = 0;
+         my @pg_im;
+       SEARCH:
+         while (1) {
+             eval {
+                 my $start = $i*@pg_im+1;
+                 $log->debugf("collected %d images, searching google (start=%d)...", scalar(@im), $start);
+                 $res = REST::Google::Search::Images->new(
+                     q => $args{match}[3],
+                     #min_size => 25,
+                     #max_size => 150,
+                     #limit => 10,
+                     start => $start,
+                 );
+                 $i++;
+             };
+             my $add_info = @im ? " (setelah terkumpul ".scalar(@im)." imej)" : "";
+             if ($@) { $log->warn("eval error: %s", $@); $err = "gak bisa ngakses gugel imejes nih kayaknya han...$add_info"; last SEARCH }
+             if ($res->responseStatus != 200) { $err = "gugel imejes return status http ".$res->responseStatus." han ...$add_info"; last SEARCH }
+             sleep 2; # to avoid hitting google too often
+             @pg_im = @{ $res->responseData->results };
+             if (!@pg_im) { last }
+             $has_raw_result++;
+             @pg_im = grep { !/[%?]/ } map { $_->{url} } @pg_im; # phpbb2 sucks!
+             for (@pg_im) {
+                 push @im, $_;
+                 last SEARCH if @im >= $n;
+             }
+         }
+         if (!$has_raw_result) { return "gugel imejes gak punya gambar itu tuh han ..." }
+         if (!@im) { return $err ? $err : "gak dapet say :(" }
+         $log->debugf("\@im = %s", \@im);
+         return
+             join("", map {"[img]".$_."[/img]\n\n"} shuffle @im).
+                 ($err ? "btw, $err" : "");
+     }},
+
+    {pat => qr/^(\S+)\s*(\+\+|--)\s*(?:\((.*)\))?$/i,
+     name => 'KARMA GIVE',
+     handler => sub {
+         my (%args) = @_;
+         my ($username, $to, $karma) = ($args{cmd}{username}, $args{match}[1], $args{match}[2]);
+         if ($username eq $to && $karma eq '++') {
+             return pick(
+                 "yee... ga aci ah say",
+                 "yee...",
+                 "maaf, tidak diperbolehkan say...",
+                 "nunggu dikasih org dong say...",
+                 "ferplei dong say...",
+                 "sportip dong say...",
+             );
+         }
+         my $reason = $args{match}[3] || "";
+         if (!$reason) { return "alasannya dong han..." }
+         my $time = time;
+         my $url = join('',
+                        "$App::options{base_url}/karma.php?mode=give",
+                        "&from=".uri_escape($username),
+                        "&to=".uri_escape($to),
+                        "&reason=".uri_escape($reason),
+                        "&ref=".uri_escape("ua=$0, post_id=$args{cmd}{post_id}, topic_id=$args{cmd}{topic_id}"),
+                        "&time=$time",
+                        ($App::options{secret_key} ? "&hash=".md5_hex("$App::options{secret_key}|$username|$to|$reason|$time") : ""),
+                        "&karma=".($karma eq '++' ? 1 : -1),
+                    );
+         $Mech->get($url);
+         if ($Mech->content =~ /^((?:SUCCESS|ERROR): .*)/m) {
+             my $resp = $1;
+             my $extra = "";
+             if ($resp =~ /^SUCCESS/) {
+                 if ($args{match}[1] =~ /^$Botname_Regex$/) {
+                     $extra = "\n\n" . ($karma eq '++' ? "tenkyu btw say :)" : "hiks... tapi gpp say :)");
+                 } else {
+                     # some evilness
+                     $extra = "\n\n" . pick(
+                         "rasain!",
+                         "hihihihihi...",
+                         #"puas...",
+                         #"emang enak...",
+                         "nah loh?!",
+                         "cakiiiitttt!",
+                         "peliiihhhh!",
+                         "ouch!",
+                         #"mati lu!",
+                         "gaswat nih...",
+                         #"mampus lu!",
+                         #"wakakakakak...",
+                         "hehehehehe...",
+                         #"eug siah...",
+                         #"modar koe...", # kasar gak sih?
+                     ) if $karma eq '--';
+                     # biar balance deh
+                     $extra = "\n\n" . pick(
+                         "aseeeek!",
+                         "traktir traktir...",
+                         "wah enak...",
+                         "makan makan :)",
+                         "wuihhhhh...",
+                         "seeepppp say...",
+                     ) if $karma eq '++';
+                 }
+             }
+             return $resp . $extra;
+         } else {
+             return "gagal say :(";
+         }
+     }},
+
+    {pat => qr/^karma\s+(?:dari|oleh)\s+(\S+)$/i,
+     name => 'KARMA GIVING LIST',
+     handler => sub {
+         my (%args) = @_;
+         my $u = $args{match}[1];
+         $u = $args{cmd}{username} if $u =~ /^(guah?|gw|gueh?|saya|sy|aku|abang)$/i;
+         my $url = join('',
+                        "$App::options{base_url}/karma.php?mode=list&from=",
+                        uri_escape($u),
+                    );
+         $Mech->get($url);
+         if ($Mech->content =~ /^(.*karma.*:.*)/ms) {
+             return $1;
+         } else {
+             return "gagal say :(";
+         }
+     }},
+
+    {pat => qr/^karma(?:s|-?nya)?(?:\s+(\S+))?$/i,
+     name => 'KARMA LIST',
+     handler => sub {
+         my (%args) = @_;
+         my $u = $args{match}[1] || "";
+         $u = $args{cmd}{username} if $u =~ /^(guah?|gw|gueh?|saya|sy|aku|abang)$/i;
+         my $url = join('',
+                        "$App::options{base_url}/karma.php?mode=list",
+                        ($args{match}[1] ? "&user=".uri_escape($u) : ''),
+                    );
+         $Mech->get($url);
+         if ($Mech->content =~ /^(.*karma.*:.*)/ms) {
+             return $1;
+         } else {
+             return "gagal han :(";
+         }
+     }},
+
+    {pat => qr//,
+     name => 'DEFAULT',
+     handler => sub {
+         pick("maaf say, aq kagak ngerti perintahnya nih",
+              "maaf han, q agak belet, bisa diulang perintahnya?",
+              "what??",
+              "gak ngerti say...",
+              "au ah gelap",
+              "'paan c???",
+              "entahlah.",
+              "bodo",
+              "(pura-pura gak denger...)",
+              "???",
+              "maksudnya apa niccch???",
+              "o gitu... tapi maksudnya apa yaaaa?",
+              "ngerti ngerti ... tapi maksudnya apa yaaaa?",
+              "ic ic ... tapi maksudnya apa yaaaa?",
+          );
+     }},
+);
+
+$log->info("Starting infobot $App::options{botname} ...");
+
+init_db();
+login();
+run();
+
+###
+
+sub run {
+  RUN:
+    while (1) {
+        find_new_commands();
+        respond_command(unreplied_commands());
+        spelling_nazi();
+
+        if ($quit) {
+            $log->infof("Exiting because instructed to ...");
+            return;
+        }
+
+        sleep $App::options{delay};
+
+        my $run_time = time()-$^T;
+        if ($App::options{suicide_after} &&
+                $run_time >= $App::options{suicide_after}) {
+            $log->infof("Exiting (has run for %d secs, told to exit after ".
+                            "running for %d secs)",
+                        $run_time, $App::options{suicide_after});
+            return;
+        }
+    }
+}
+
+sub init_db {
+    $Db = DBI->connect("dbi:SQLite:dbname=$App::options{db_path}", "", "", {RaiseError=>1});
+    $Db->do("CREATE TABLE IF NOT EXISTS cmds (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               post_id INTEGER NOT NULL,
+               username TEXT NOT NULL,
+               forum_id INTEGER NOT NULL,
+               topic_id INTEGER NOT NULL,
+               ctime BIGINT NOT NULL,
+               status TEXT NOT NULL DEFAULT 'new',
+               raw_command TEXT NOT NULL,
+               note TEXT)");
+    # to avoid viewing a post multiple times and bubbling view count [noticed by
+    # bayo, 2011-01-04]
+    $Db->do("CREATE TABLE IF NOT EXISTS viewed_posts (
+               post_id INTEGER PRIMARY KEY,
+               ctime BIGINT NOT NULL)");
+}
+
+sub add_sig {
+    my $resp_ref = shift;
+    return unless $App::options{sigs_file};
+    my @sigs = read_file($App::options{sigs_file}, err_mode=>'quiet');
+    return unless @sigs;
+    my $sig  = pick(@sigs);
+    return unless $sig;
+    $$resp_ref .= "\n\n______________________\n$sig";
+}
+
+sub respond_command {
+    my (@cmds) = @_;
+    return unless @cmds;
+    my %cmds_by_post_id; # key = post_id, val = [cmd, ...]
+    for (@cmds) {
+        $cmds_by_post_id{$_->{post_id}} //= [];
+        push @{ $cmds_by_post_id{$_->{post_id}} }, $_;
+    }
+
+    for my $post_id (keys %cmds_by_post_id) {
+        my $overall_resp = "";
+        my $cmd;
+        for (@{ $cmds_by_post_id{$post_id} }) {
+            $cmd = $_;
+            $log->info("Parsing command: $cmd->{raw_command} ...");
+            my $handled;
+            for my $r (@Responses) {
+                if ($cmd->{raw_command} =~ $r->{pat}) {
+                    $log->info("Command matches $r->{name}");
+                    my $resp = $r->{handler}->(r=>$r, match=>[$0, $1, $2, $3, $4, $5, $6, $7, $8, $9], cmd=>$cmd);
+                    $overall_resp .= "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp;
+
+                    $Db->do("UPDATE cmds SET status='replied' WHERE id=?", {}, $cmd->{id});
+                    $handled++;
+                    last;
+                }
+            }
+            do { $log->fatal("Command not handled: $cmd->{raw_command}"); die } unless $handled;
+        }
+        add_sig(\$overall_resp);
+        forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
+                   bbcode=>1,
+                   message => $overall_resp);
+    }
+}
+
+sub unreplied_commands {
+    my @res;
+    my $sth = $Db->prepare("SELECT * FROM cmds WHERE status='new' ORDER by ctime");
+    $sth->execute;
+    while (my $row = $sth->fetchrow_hashref) { push @res, $row }
+    $sth->finish;
+    @res;
+}
+
+sub forum_search {
+    my %args = @_;
+    $log->debug("Searching for $args{keywords} ...");
+    # by default search one-day worth of posts (well, only 1st page)
+    my $url = join "",
+        "$App::options{base_url}/search.php?mode=results",
+        "&search_keywords=", uri_escape($args{keywords}),
+        "&search_terms=all&search_forum=-1&search_time=1&search_cat=-1&sort_by=0",
+        "&show_results=posts&return_chars=".($args{chars} // 200);
+    $log->trace("MECH: get $url ...");
+    $Mech->get($url);
+    my $ct = $Mech->content;
+    $log->trace("MECH: content length=".length($ct));
+    do {
+        $log->error("Search speed blocked, try increasing search_delay");
+        return [500, "Speed blocked, try increasing search_delay"];
+    } if $ct =~ /You cannot make another search so soon after your last/;
+    do {
+        $log->debug("No result");
+        return [200, "No result", []];
+    } if $ct =~ />No topics or posts met your search criteria</;
+
+    $ct =~ s/.+>Search found (\d+) match(?:es)?<//s or do {
+        $log->debug("ct=$ct");
+        $log->error("Can't parse search result page, skipping");
+        return [500, "Can't parse search result page"];
+    };
+    my $now = time;
+    my @res;
+    while ($ct =~ m!<a href="profile.php\?mode=viewprofile&amp;u=(\d+)">([^>]+)</a>.+?<a href="viewforum.php\?f=(\d+)" class="postdetails">.+?<a href="viewtopic.php\?p=(\d+).+?>(.+?)<!sg) {
+        my ($uid, $username, $forum_id, $post_id, $subject) = ($1, $2, $3, $4, $5);
+        next if $Db->selectrow_array("SELECT id FROM cmds WHERE post_id=$post_id");
+        next if $Db->selectrow_array("SELECT post_id FROM viewed_posts WHERE post_id=$post_id");
+        $Mech->get("$App::options{base_url}/viewtopic.php?p=$post_id");
+        $Mech->content =~ /<a class="maintitle" href="viewtopic.php\?t=(\d+)&/ or do {
+            $log->tracef("response from mech: %s", $Mech->content);
+            $log->error("Can't get topic ID for post #$post_id, skipped");
+            next;
+        };
+        my $topic_id = $1;
+        $Mech->content =~ m!<a name="$post_id">.+?<span class="postbody">(.+?)</span><span class="gensmall">!s or do {
+            $log->error("Can't grab message body ID for post #$post_id, skipped");
+            next;
+        };
+        $Db->do("INSERT INTO viewed_posts (post_id, ctime) VALUES (?, ?)", {}, $post_id, $now);
+        my $message = $1;
+        for ($message) {
+            s!<br />!\n!g;
+            s!<td class="quote">.+</td>!!sg;
+            s!\012?\015\012?!\n!g;
+            s!<[^>]+>!!sg;
+        }
+
+        push @res, {
+            uid=>$uid,
+            username=>$username,
+            post_id=>$post_id,
+            topic_id=>$topic_id,
+            forum_id=>$forum_id,
+            subject=>$subject,
+            message=>$message,
+        };
+    }
+    $log->debug("Found ".scalar(@res)." result(s)");
+    sleep $App::options{search_delay};
+    [200, "OK", \@res];
+}
+
+sub spelling_nazi {
+    return unless $App::options{mispelled_words};
+    $log->trace("Running spelling nazi ...");
+
+    state $words;
+    if (!$words) {
+        $words = { split /\s*(?:,|=>)\s*/, lc($App::options{mispelled_words}) };
+    }
+    my $search_words = [keys %$words];
+    state $search_re;
+    if (!$search_re) {
+        $search_re = join("|", map {quotemeta} @$search_words);
+        $search_re = qr/(?:\b(?:$search_re)\b)/;
+    }
+
+    my $b = $App::options{mispelled_batch};
+    while (@$search_words) {
+        my @batch = splice @$search_words, 0,
+            min($App::options{mispelled_batch}, scalar(@$search_words));
+        my $res = forum_search(keywords=>join(" ", @batch), chars=>1000);
+        do {
+            #$log->
+            next;
+        } unless $res->[0] == 200;
+        for my $r (@{ $res->[2] }) {
+            # don't self-critize
+            do {
+                $log->debug("Wrong-speller (topic ID $r->{topic_id}) is me, skipping ...");
+                next;
+            } if $r->{username} eq $App::options{username};
+            $log->debug("Nitpicking wrong-speller `$r->{username}` (topic ID $r->{topic_id}) ...");
+            my @c;
+            for my $s ($r->{subject}, $r->{message}) {
+                my @s = $s =~ /($search_re)/ig;
+                for (@s) {
+                    $_ = lc;
+                    push @c, $_ unless $_ ~~ @c;
+                }
+            }
+            next unless @c;
+            my $reply = "";
+            $reply .= "[quote=\"$r->{username}\"]".join("", map{"$_ ...\n"} @c)."[/quote]\n\n";
+            $reply .= "maaf OOT say, cuma mo ngingetin aja bahwa ejaan yang benar utk:\n\n";
+            $reply .= join("", map {"* $_ => $words->{$_}\n"} @c);
+            forum_post(
+                forum_id=>$r->{forum_id}, topic_id=>$r->{topic_id},
+                bbcode=>1,
+                subject=>"spelling nazi",
+                message => $reply);
+        }
+    }
+}
+
+sub find_new_commands {
+    my $n = join " ", split /,\s*/, $App::options{botname};
+    my $res = forum_search(keywords=>$n);
+    return unless $res->[0] == 200;
+    my $now = time;
+    for my $r (@{ $res->[2] }) {
+        my @cmds;
+        while ($r->{message} =~ /^$Botname_Regex\s*[:,]\s*(\b.*?)(?:[.?!]+)?$/mg) {
+            push @cmds, $1;
+        }
+        @cmds = grep { $_ eq '' || /\w/ } @cmds;
+        next unless @cmds;
+        if (@cmds > 5) {
+            $log->warn("Too many commands (".scalar(@cmds).", will only process 5");
+            splice @cmds, 5;
+        }
+        $log->debugf("Found command(s) in post #$r->{post_id}: %s", \@cmds);
+        $log->debug("Message is (quotes cleaned): $r->{message}");
+        for (@cmds) {
+            $Db->do("INSERT INTO cmds (post_id, ctime, forum_id, topic_id, username, raw_command) VALUES (?, ?, ?, ?, ?, ?)", {},
+                    $r->{post_id}, $now, $r->{forum_id}, $r->{topic_id}, $r->{username}, $_);
+        }
+    }
+}
+
+sub login {
+    $log->info("Logging in to forum $App::options{base_url} ...");
+    $Mech->get("$App::options{base_url}/login.php");
+    $Mech->submit_form(
+        form_number => 1,
+        fields      => {
+            username => $App::options{username},
+            password => $App::options{password},
+        },
+        button => 'login',
+    );
+    #print $Mech->content();
+}
+
+sub forum_post {
+    my (%args) = @_;
+
+    $log->info("Posting to forum (forum #$args{forum_id}".($args{topic_id} ? ", topic #$args{topic_id}" : "").") ...");
+
+    # get new posting form
+    $Mech->get(
+        $args{topic_id}
+        ? "$App::options{base_url}/posting.php?mode=reply&t=$args{topic_id}"
+        : "$App::options{base_url}/posting.php?mode=newtopic&f=$args{forum_id}"
+    );
+
+    if ($args{obfuscate_link}) {
+        $args{message} =~ s!\bhttp(s?)://!hxxp$1://!ig;
+    }
+
+    #$log->debug("posting = $posting");
+    $Mech->submit_form(
+        form_number => 1,
+        fields      => {
+            subject         => $args{subject} || "Re:",
+            message         => $args{message},
+            disable_html    => "on",
+            disable_bbcode  => ($args{bbcode} ? "off" : "on"),
+            disable_smilies => "on",
+        },
+        button => 'post',
+    );
+
+    #print $Mech->content;
+
+    unless ( $Mech->content =~ /successfully/i ) {
+        $log->error("Failed posting!");
+    }
+    sleep $App::options{post_delay};
+}
+
+sub pick {
+    $_[rand @_];
+}

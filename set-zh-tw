@@ -1,0 +1,7 @@
+#!/bin/sh
+export LANG="zh_TW.UTF-8"
+export XMODIFIERS="@im=SCIM"
+export GTK_IM_MODULE="scim"
+if test `ps aux|grep -v grep|grep steven|grep -q scim;echo $?` -ne 0; then
+  scim -d
+fi

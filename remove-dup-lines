@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+# like uniq, but you don't have to sort first, it remembers every line (and
+# thus, has a limit on how big the input is...)
+
+while (<>) {
+  print unless $memory{$_}++;
+}

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+REPO=~/proj/spanel
+CPANLST=$REPO/share/perl/cpan.lst
+if [[ ! -f $CPANLST ]]; then CPANLST=$REPO/doc/cpan.lst; fi; # old location
+
+perl -lne's/\s*#.*//; next unless /\S/; print' $CPANLST >/tmp/cpan.lst
+for ssh in $sshspaneldev_build_squeeze_i386u $sshspaneldev_build_squeeze_amd64u; do
+  scp /tmp/cpan.lst $ssh:
+done
+
+echo "Done, all you have to do now is run 'cpanm -n < cpan.lst' on the build VM"

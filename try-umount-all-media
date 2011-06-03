@@ -1,0 +1,114 @@
+#!/usr/bin/ruby
+
+class SystemCommandError < StandardError; end
+module Kernel
+  alias_method :orig_system, :system
+  def system(cmd, *args)
+    puts "INFO: Executing #{cmd} #{args.join ' '}"
+    orig_system(cmd, *args) # or raise SystemCommandError, "#{$?}"
+  end
+end
+
+def mounted_parts
+  mounts = {} # device => mountpoint
+  `mount`.split("\n").reverse.select {|x| x =~ %r(^/)}.each {|m|
+    m =~ /(.+) on (.+) type / or next
+    mounts[$1] = $2
+  }
+  mounts
+end
+
+#def used_loops
+#  loops = {} # file => /dev/loopX
+#  Dir["/dev/loop[0-9]*"].each {|l|
+#    `losetup #{l} 2>/dev/null` =~ /\((.+)\)/ or next
+#    loops[$1] = l
+#  }
+#  loops
+#end
+
+def used_mappers
+  mappers = {} # name => device
+  Dir["/dev/mapper/*"].each {|m|
+    m =~ %r(.+/(.+)); n = $1
+    next if n == 'control'
+    `cryptsetup status #{n}` =~ /device:\s*(.+)/
+    mappers[n] = $1
+  }
+  mappers
+end
+
+def umount_all
+  parts = mounted_parts
+  mappers = used_mappers
+
+  # uninstall swapfiles
+  `swapon -s | grep ^/`.each {|x|
+    x =~ /(\S+)/ # XXX di-octal-escape
+    puts "INFO: Uninstall swap file #{$1} ..."
+    system "swapoff #{$1}"
+  }
+
+  # unmount partitions
+  parts.each_pair {|dev, mp|
+    puts "INFO: Unmounting #{dev} ..."
+    if dev =~ %r(^/dev/mapper/(.+))
+      # dmcrypt partition
+      m = $1
+      system "umount #{dev}"
+      system "cryptsetup remove #{m}"
+      system "losetup -d #{mappers[m]}" if mappers[m] =~ %r(^/dev/loop)
+      
+    #elsif # bestcrypt XXX
+
+    else
+      # a normal unencrypted partition
+      system "umount #{dev}"
+
+    end
+  }
+
+  # we are satisfied if all devices except root are unmounted
+  parts = mounted_parts
+  return true if parts.length == 1
+  false
+end
+
+def lsof(path)
+  %x(/usr/bin/lsof #{path})
+end
+
+def stopdaemon(daemon)
+  system "/etc/init.d/#{daemon} stop"
+end
+
+def killproc(name, signal="TERM")
+  system "killall -#{signal} #{name}"
+end
+
+#def ps_ax
+#  `ps ax`
+#end
+
+i = 0
+until umount_all
+  puts "INFO: Some partitions are still mounted" if i > 0
+  case i += 1
+  when 1
+    puts "INFO: Killing some known background processes ..."
+    %w(gpg-agent famd esd artsd smbd uim-helper-server).each {|p| killproc p}
+    sleep 2
+  when 2
+    puts "INFO: Stopping daemons ..."
+    stopdaemon "apache2"
+    stopdaemon "squid"
+    # killproc "squid" # suka gak predictable
+    stopdaemon "samba"
+    stopdaemon "qmail"
+    sleep 2
+  else
+    #puts "Some partitions are still not mounted, giving up. Btw, here are " +
+    #  "the processes that still use /encrypted:\n" + lsof("/encrypted")
+    exit 1
+  end
+end

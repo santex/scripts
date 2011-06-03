@@ -1,0 +1,40 @@
+#!/usr/bin/perl -w
+
+use strict;
+require LWP::UserAgent;
+use URI::Escape;
+
+use App::Options (
+    option => {
+        engine => { type => 'string', required => 1, default => 'google' },
+    }
+);
+
+if ( @ARGV == 0 ) {
+    print "Usage: $0 <keyword> [...]\n";
+    exit 0;
+}
+
+die "Unknown engine, only google is supported at the moment\n"
+    unless $App::options{engine} eq 'google';
+
+my $ua = new LWP::UserAgent;
+$ua->agent("Mozilla/4.0");
+$ua->env_proxy;
+
+for my $kw (@ARGV) {
+    print "$kw: ";
+    while (1) {
+        my $resp = $ua->get("http://www.google.com/search?q=" . uri_escape($kw));
+        if ( !$resp->is_success ) { print "? (can't query)"; last }
+        $resp->content =~ m! <b>\d+</b> - <b>\d+</b> [^<]+ <b>([0-9,. ]+)</b>!
+            or do { print "? (can't parse)"; last };
+        my $n = $1;
+        $n =~ s/\D//g;
+        print $n;
+        last;
+    }
+    print "\n";
+}
+
+__END__

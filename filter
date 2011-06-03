@@ -1,0 +1,182 @@
+#!/usr/bin/perl -l
+
+use strict;
+use Getopt::Long;
+use Data::Dumper;
+$|++;
+
+my $DISABLED = 0;
+my $LOGLEVEL = 3;
+my $LOGFILE = "/var/log/squid/filter.log";
+
+my %actions_urls = (
+    EMPTYPAGE => "http://netshelter.adtrix.com/filter/empty.html",
+    PASS => sub {$_[0]},
+    MARC1 => sub{"301:http://marc.theaimsgroup.com/"},
+);
+
+my %types_actions = (
+    USELESSPAGE => 'EMPTYPAGE',
+    PAGE => 'PASS',
+    WHITELIST => 'PASS'
+);
+
+###
+
+my %filters = (); # key = hostname or ip, value = [ [regex, type, action], ... ]
+my %whitelists = (); # key = hostname or ip, value = [regex, ...]
+
+# read filter list
+while (<DATA>) {
+    s/\s{2,}/ /g;
+    s/^\s+//; s/\s+$//s;
+    next unless /\S/;
+    next if /^#/;
+    
+    my @w = split /\s+/, $_;
+    my $host; my $regex; my $type; my $action;
+    @w > 1 or die "Syntax error in rule $_\n";
+    
+    my $is_ip; my $is_hostname;
+    $is_ip++ if $w[0] =~ /^\d+\.(\d+\.(\d+\.\d*)?)?(:\d+)?$/;
+    $is_hostname++ if $w[0] =~ /^\.?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(:\d+)?$/;
+    if ($is_ip or $is_hostname) {
+        $host = lc $w[0]; $regex = "";
+        if ($w[1] =~ /^[A-Z][A-Z0-9_]*$/) {
+            $type = $w[1]; $action = $w[2];
+        } else {
+            $regex = $w[1]; $type = $w[2]; $action = $w[3];
+        }
+    } else {
+        $host = ""; $regex = $w[0]; $type = $w[1]; $action = $w[2];
+    }
+    die "Error in rule $_: unspecified type/regex\n" unless $type and defined($regex);
+    die "Error in rule $_: unknown type `$type'\n" unless exists $types_actions{$type};
+    die "Error in rule $_: unknown action `$action'\n" if $action and not exists $actions_urls{$action};
+    $host = "[$host]" if $is_ip;
+    if ($type eq 'WHITELIST') {
+        push @{ $whitelists{$host} }, $regex;
+    } else {
+        push @{ $filters{$host} }, [qr/$regex/i, $type, $action];
+    }
+}
+
+my $TEST;
+GetOptions(
+    "test|t" => \$TEST,
+    "disable|d" => \$DISABLED,
+    "loglevel|v=i" => \$LOGLEVEL,
+    "logfile|o=s" => \$LOGFILE,
+);
+
+if ($TEST) {
+    print "%filters: ", Dumper(\%filters);
+    print "%whitelist: ",Dumper(\%whitelists);
+    exit 0;
+}
+
+if ($LOGLEVEL > 0) {
+    open LOG, ">>$LOGFILE" or die "Can't open log: $!\n";
+}
+
+_log(1, "started");
+
+while (<>) {
+    _log(5, "input = $_");
+
+    my ($url, $ip) = m#^(\S+) ([^/]+)/#;
+    my ($host) = $url =~ m#^(?:https?|ftp)://(?:.+?\@)?([^/]+)(?::|/|$)#;
+    my @hosts = ();
+    my $type; my $action;
+    
+    _log(5, "host = $host");
+    if ($host =~ /^\d+\.\d+\.\d+\.\d+(:\d+)?$/) {
+        do {
+            push @hosts, "[$host]";
+        } while $host =~ s/\d+\.?(:\d+|$)/$1/;
+    } else {
+        $host = lc $host;
+        push @hosts, ".$host";
+        do {
+            push @hosts, $host;
+        } while $host =~ s/^\.?[^.]+\././;
+    }
+    push @hosts, '';
+    
+    _log(5, "hosts to test = " . join(",",map{qq('$_')}@hosts));
+    
+    if ($DISABLED) {
+    	_log(3, "filter is disabled, setting action to PASS");
+    	$type = 'PASS';
+    } else {
+        for my $h (@hosts) {
+            # cocokkan whitelist
+            if (exists $whitelists{$h}) {
+                _log(9, "host matches '$h' in whitelist");
+                for (@{ $whitelists{$h} }) {
+                    _log(9, "matching url with $_ for whitelist");
+                    if ($url =~ /$_/) {
+                        _log(4, "url $url matches whitelist [$h, $_]");
+                        $type = 'WHITELIST';
+                        goto DOIT;
+                    }
+                }
+            }        
+            if (exists $filters{$h}) {
+                _log(9, "host matches '$h' in filter");
+                for (@{ $filters{$h} }) {
+                    _log(9, "matching url with $_->[0] for filter");
+                    if ($url =~ /$_->[0]/) {
+                        _log(3, "url $url matches filter [$_->[0], $_->[1], $_->[2]]");
+                        $type = $_->[1];
+                        $action = $_->[2];
+                        goto DOIT;
+                    }
+                }
+            }
+        }
+    }            
+    
+    DOIT:
+    if ($type or $action) {
+        $action = $types_actions{$type} if not $action;
+        my $new_url = $actions_urls{$action};
+        if (not $new_url) {
+            _log(9, "undefined action, setting url to original url");
+            $new_url = $url;
+        } else {
+            if (ref($new_url)) {
+                _log(9, "action is code, executing code");
+                $new_url = $new_url->($url);
+                _log(9, "result = $new_url");
+            }
+        }
+        _log($type eq 'WHITELIST' ? 4:3, "new url = $new_url");
+        print $new_url;
+    } else {
+        print;
+    }
+}
+
+sub _log {
+    my ($level, $msg) = @_;
+    return if $LOGLEVEL < $level;
+    $msg =~ s/\s+$//s;
+    syswrite LOG, "[" . scalar(localtime) . "] [$level] [$$] $msg\n";
+}
+
+__DATA__
+# format: HOSTNAME_OR_IP_OR_REGEX TYPE [ACTION]
+#     or: HOSTNAME REGEX TYPE [ACTION]
+#
+# hostname format: domain.com (only matches 'domain.com', doesn't match 'www.domain.com' for example)
+#              or: .domain.com (matches all hostnames that end with '.domain.com', including 'domain.com' itself)
+# ip format: 12.34.56.78 (only matches this ip)
+#        or: 12.34.56. (matches all ips that begin with 12.34.56.)
+
+marc.theaimsgroup.com/$ WHITELIST
+marc.theaimsgroup.com/\?l=bind9-users&r=\d+&w=2$ WHITELIST
+marc.theaimsgroup.com/\?l=bind9-users&r=\d+&b=\d+&w=2$ WHITELIST
+marc.theaimsgroup.com/\?t=\d+&r=\d+&w=2&n=\d+$ WHITELIST
+marc.theaimsgroup.com/\?l=bind9-users&m=\d+&w=2$ WHITELIST
+marc.theaimsgroup.com/.+ PAGE MARC1

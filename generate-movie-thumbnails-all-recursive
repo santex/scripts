@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+use File::Find;
+
+find sub {
+  return unless -f;
+  return unless (-s) > 20_000_000; # don't need to thumbnail small files
+  return if /\.mkv$/i; # mplayer can't deal with this right now? always hangs
+  system "generate-movie-thumbnails --skip --every=60 ".esc($_);
+}, ".";
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

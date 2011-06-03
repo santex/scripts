@@ -1,0 +1,3 @@
+#!/usr/bin/perl -p
+# make urls live by adding <A HREF=...></A>
+s{\b((?:mailto|https?|ftp|telnet|gopher|news):\S+)}{<a href=$1>$1</a>}g;

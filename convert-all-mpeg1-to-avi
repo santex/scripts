@@ -1,0 +1,115 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+
+our $VERSION = '0.03 (2007-05-28)';
+
+my %Opt = (
+        # 384 kbps, sepertiga mpeg...
+        # 2007-05-27 - jelek hasilnya.
+        #vcodec => 'xvid',
+        #vbitrate => '328k',
+        #abitrate => '56k',
+
+        # i think ffmpeg's --sameq is useless? it picks too low
+        # bitrates for mpeg1 (around 220 kbps for video).
+
+        # current best default: h264 2-pass
+        # XXX, h264 doesn't support 2pass? 1pass and 2pass result are identical
+        #vcodec => 'h264',
+        #vbitrate => '328k',
+        #abitrate => '56k',
+        #pass => 1,
+
+        #acodec => 'mp3',
+
+        # 2009-03-06, di debian lenny, x264 hasil build crash mulu
+        # jadi hanya ada xvid. utk low bitrates sebenernya paling
+        # bagus saat ini h264 sih, tapi apa daya. xvid blocky, meski
+        # udah ditambahin blur flag.
+        #vcodec => 'libxvid',
+        #vbitrate => '420k',
+        #abitrate => '56k',
+        #pass => 1,
+        #acodec => 'libmp3lame',
+        #extra_opts => '-flags +loop',
+        #
+        # bleh, tetep terlalu blocky ah. mendingan blur daripada
+        # blocky, sangat mengganggu kalo blocky. cari encoder wmv atau
+        # rmvb aja deh.
+
+        size => "", # same as input
+       );
+my %DefOpt = %Opt;
+
+GetOptions(
+           'help' => \$Opt{help},
+           'vcodec=s' => \$Opt{vcodec},
+           'acodec=s' => \$Opt{acodec},
+           'vbitrate=s' => \$Opt{vbitrate},
+           'abitrate=s' => \$Opt{abitrate},
+           'extra-opts=s' => \$Opt{extra_opts},
+           'size=s' => \$Opt{size},
+
+           'version|v' => \$Opt{version},
+          );
+if ($Opt{version}) {
+  print "$0 $VERSION\n";
+  exit 0;
+} elsif ($Opt{help}) {
+  print <<EOF;
+$0 $VERSION
+
+Usage:
+ $0 [options]
+
+Options:
+ --version    Show version and exit.
+ --help       Show this message and exit.
+ --vcodec     (default: $DefOpt{vcodec}).
+ --acodec     (default: $DefOpt{acodec}).
+ --vbitrate   (default: $DefOpt{vbitrate}).
+ --abitrate   (default: $DefOpt{abitrate}).
+ --size       (default: $DefOpt{size}).
+ --pass       1 or 2 (default: $DefOpt{pass}).
+ --extra-opts (default: $DefOpt{extra_opts}).
+EOF
+  exit 0;
+}
+#die "Invalid size, use WxH syntax\n" unless $Opt{size} =~ /^\d+x\d+$/;
+
+my @files;
+if (@ARGV) {
+    @files = @ARGV;
+} else {
+    @files = (<*.mpg>, <*.mpeg>, <*.dat>, <*.MPG>, <*.MPEG>, <*.DAT>);
+}
+
+for my $f (@files) {
+  if (-f "$f.avi") {
+    print "WARNING: $f.avi exists, skipped";
+  }
+  my $esc = esc($f);
+  my $opt0 = "-vcodec $Opt{vcodec} $Opt{extra_opts} -acodec $Opt{acodec} -b $Opt{vbitrate} -ab $Opt{abitrate}".
+             ($Opt{size} ? " -s $Opt{size}":"");
+
+  my $cmd;
+
+  if ($Opt{pass} == 1) {
+    $cmd = "ffmpeg -i $esc $opt0 $esc.avi";
+  } elsif ($Opt{pass} == 2) {
+    $cmd = "ffmpeg -i $esc $opt0 -pass 1 $esc.avi && ".
+           "rm -f $esc.avi && ".
+           "ffmpeg -i $esc $opt0 -pass 2 $esc.avi";
+  }
+
+  print "$cmd\n";
+  system $cmd;
+}
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

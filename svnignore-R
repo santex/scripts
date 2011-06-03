@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# 2005-10-03 - svn propset sucks deh. "-F -" gak mau. terima "\n" gak
+# diinterpret. padahal svn:ignore butuh newline-separated. rese.
+
+tempfile=/tmp/svnpropset-`uuidgen`.tmp
+echo -e "$*" > "$tempfile"
+svn propset -R svn:ignore -F "$tempfile" .
+rm -f "$tempfile"

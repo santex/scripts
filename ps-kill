@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+while (<>) {
+  /^\S+\s+(\d+)/ and push @pids, $1;
+}
+
+print map { "kill -9 $_\n" } @pids;

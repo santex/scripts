@@ -1,0 +1,4 @@
+#!/bin/bash
+set -x
+cd $HOME/repo/mwn && git pull /media/bismuthb/home/sloki/user/dudi/public/bzr/mwn
+

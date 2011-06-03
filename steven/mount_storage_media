@@ -1,0 +1,282 @@
+#!/usr/bin/ruby
+
+# todo: support unmounting, add --no-block
+
+# BUG: jika --force-index maka meskipun block partition tidak/gagal dimount maka akan diindex
+
+# ---
+
+require 'yaml'
+require 'getoptlong'
+
+# --- consts
+
+DIRS = ["/u/#{ENV['USER']}/private/etc', '/etc/local']
+DIRS.each {|x|
+   FILE = x+"/storage_media_summary.yaml" if FileTest.exist?(x)
+}
+MEDIA_LIST = YAML::load(File::open(FILE))
+IDE_DEVICES = %w(/dev/hda /dev/hdb /dev/hdc /dev/hdd)
+SATA_DEVICES = %w(/dev/sda /dev/sdb)
+DATA_DIR = "/home/stats/media/ls-lR"
+EMPTY_DIR = "#{DATA_DIR}/.empty"
+NUM_LOOP_DEVICES = 8
+
+# --- methods/routines
+
+class SystemCommandError < StandardError; end
+module Kernel
+  alias_method :orig_system, :system
+  def system(cmd, *args)
+    puts "INFO: Executing #{cmd} #{args.join ' '}"
+    orig_system(cmd, *args) # or raise SystemCommandError, "#{$?}"
+  end
+end
+
+class NullIO
+  def orig_puts(s) end
+  def puts(s) end
+end
+
+class IO
+  alias_method :orig_puts, :puts
+end
+
+def mount(path, mpoint, fstype, opts)
+  system "mount -t #{fstype} #{path} #{(opts && !opts.empty?) ? '-o '+opts : ''} #{mpoint}"
+  $? == 0
+end
+
+def mount_block(path, mpoint, fstype, opts, ctype)
+  if ctype == 'bc'
+
+    $log.puts("Mounting #{path}")
+    # XXX kuduna mah ngecek heula nya, ulah sembarang diunlock
+    system "bctool unlock #{path}"
+    system "bcmount -m 755 -t #{fstype} #{(opts && !opts.empty?) ? '-o '+opts : ''} #{path} #{mpoint}"
+
+  elsif ctype == 'dm'
+
+    system "modprobe dm_crypt"
+
+    use_loop = 1 unless path =~ %r(^/dev/)
+
+    system "modprobe loop" if use_loop
+
+    # find a free loop device
+    output = `losetup -f`
+    if output =~ %r{/dev/loop(\d+)}
+      loop_num = $1.to_i
+    else
+      puts "ERROR: Can't find free loop device"
+      return
+    end
+
+    mapper_name = path.gsub(%r([^a-z0-9]+), "_")
+    if FileTest.exists?("/dev/mapper/#{mapper_name}")
+      puts "INFO: Not mounting block volume #{path}: /dev/mapper/#{mapper_name} already exists"
+      return
+    end
+
+    $log.puts("Mounting #{path}")
+
+    if use_loop
+      system "losetup /dev/loop#{loop_num} #{path}"
+      if $? != 0
+        puts "ERROR: Can't mount block volume #{path}: failed to loop"
+        return
+      end
+    end
+
+    target = use_loop ? "/dev/loop#{loop_num}" : path
+    system "cryptsetup create #{mapper_name} #{target}"
+    if $? != 0
+      puts "ERROR: Can't mount block volume #{path}: failed to cryptsetup create"
+      return
+    end
+
+    mount("/dev/mapper/#{mapper_name}", mpoint, fstype, opts)
+
+  else
+
+    raise "Unknown block type: #{ctype}"
+
+  end
+end
+
+# --- parse cmdline opts
+
+parser = GetoptLong.new
+parser.set_options(
+  ["-h", "--help", GetoptLong::NO_ARGUMENT],
+  ["-d", "--dry-run", GetoptLong::NO_ARGUMENT],
+  ["-i", "--force-index", GetoptLong::NO_ARGUMENT])
+opts = {}
+loop do
+  begin
+    opt, arg = parser.get
+    break if not opt
+    case opt
+    when "-h"
+      puts "#{$0} - mounts known storage media (my harddisks, memory cards, etc) and optionally index their contents"
+      puts "Usage: #{$0} [options] [medianame ...]"
+      puts "Options:"
+      puts "  -h, --help         Print this message and exit"
+      puts "  -d, --dry-run      Don't actually mount or index media"
+      puts "  -i, --force-index  Run the indexing process even if the medium is already mounted"
+      exit 0
+    when "-d"
+      opts[:dry_run] = true
+    when "-i"
+      opts[:force_index] = true
+    end
+
+  rescue GetoptLong::Error => err
+    puts err
+    break
+  end
+end
+
+# --- initial setup
+
+if FileTest.symlink?(DATA_DIR)
+  puts "ERROR: Data directory #{dir} is a symlink"
+  exit 1
+end
+
+if FileTest.directory?(DATA_DIR)
+  $log = File.open("#{DATA_DIR}/mount.log", "a");
+else
+  $log = NullIO.new
+end
+
+def $log.puts(s)
+  orig_puts("#{Time.now}: #{s}")
+end
+
+system "modprobe loop"
+
+# ---
+
+serial_numbers = {}
+MEDIA_LIST.each_pair {|k, v|
+  s = v['serial_number']
+  serial_numbers[s] = [k, v] unless serial_numbers[s]
+}
+
+# get a list of mounted partitions
+already_mounted = {}
+`mount`.each {|l|
+  l =~ %r(^(/\S+) on (.+) type ) or next
+  already_mounted[$1] = $2
+}
+#p already_mounted
+
+to_be_indexed = []
+
+puts "INFO: Mounting IDE & SATA devices..."
+(IDE_DEVICES + SATA_DEVICES).each {|dev|
+  `hdparm -I #{dev}` =~ /Serial Number:\s*(\S+)/ or next
+  serial = $1
+  puts "INFO: Found IDE/SATA device on #{dev}, serial=#{serial}"
+
+  if serial_numbers[serial]
+    label = serial_numbers[serial][0]
+    detail = serial_numbers[serial][1]
+    puts "INFO: IDE/SATA device #{serial} is `#{label}'"
+  else
+    puts "WARN: Unknown serial #{serial}, skipped"
+    next
+  end
+
+  if ARGV.length > 0 and !ARGV.include?(label)
+    puts "INFO: #{label} is not in #{ARGV.inspect}, skipped"
+    next
+  end
+
+  # saat ini diasumsikan tiap harddisk hanya punya 1 partition
+  part = dev + "1"
+
+  if already_mounted[part]
+    puts "INFO: #{label} is already mounted at #{already_mounted[part]}, skipped"
+  else
+    puts "INFO: Mounting #{label} on #{detail['mount_point']}..."
+    $log.puts("Mounting #{label}")
+    unless opts[:dry_run]
+      if detail['block']
+        mount_block(part, detail['mount_point'], detail['filesystem'], detail['mount_options'], detail['block_type'])
+      else
+        mount(part, detail['mount_point'], detail['filesystem'], detail['mount_options'])
+      end
+    end
+  end
+
+  did_mount_blocksub = false
+  blocksub_is_mounted = false
+
+  (1..10).each {|num|
+
+    suffix = num == 1 ? '' : num.to_s
+    tmp  = "#{detail['mount_point']}/.block#{suffix}".gsub(%r(//), "/")
+    tmp2 = "#{detail['mount_point']}/mnt#{suffix}".gsub(%r(//), "/")
+    if FileTest.exists?(tmp)
+      puts "INFO: Block volume #{tmp} exists"
+      unless opts[:dry_run]
+        mount_block(tmp, tmp2, "ext3", "", "dm") && did_mount_blocksub = true
+      end
+    end
+    tmp  = "#{detail['mount_point']}/.block#{suffix}.jbc".gsub(%r(//), "/")
+    tmp2 = "#{detail['mount_point']}/mnt#{suffix}".gsub(%r(//), "/")
+    if FileTest.exists?(tmp) && !already_mounted[tmp]
+      puts "INFO: Block volume #{tmp} exists and not yet mounted"
+      unless opts[:dry_run]
+        mount_block(tmp, tmp2, "ext3", "", "bc") && did_mount_blocksub = true
+      end
+    end
+
+    tmp = "#{detail['mount_point']}/mnt#{suffix}/swapfile"
+    if FileTest.exists?(tmp) && !`swapon -s | grep file`.include?(tmp)
+      puts "INFO: Swap file #{tmp} exists and not yet installed"
+      $log.puts("Setup swap #{tmp}")
+      unless opts[:dry_run]
+        system "mkswap #{tmp} && swapon #{tmp}"
+      end
+    end
+
+    if !already_mounted[part] || opts[:force_index]
+      to_be_indexed << {
+        :label => label,
+        :mpath => detail['mount_point'],
+        :ipath => (detail['index_point'] || detail['mount_point']),
+        :dont_index => detail['dont_index']
+      }
+    end
+
+    if did_mount_blocksub || (opts[:force_index]) # && blocksub_is_mounted)
+      p2 = "#{detail['mount_point'] == '/' ? '' : detail['mount_point']}/mnt#{suffix}"
+      to_be_indexed << {
+        :label => "#{label}-block#{suffix}",
+        :mpath => p2,
+        :ipath => (detail['block_index_point'] || p2),
+        :dont_index => detail['block_dont_index']
+      }
+    end
+
+  }
+}
+
+p to_be_indexed
+
+now = Time.now
+ymd = now.strftime "%Y%m%d%H%M%S"
+to_be_indexed.each {|item|
+  puts "INFO: Launching indexing process for #{item[:label]}, #{item[:ipath]}..."
+  $log.puts("Indexing #{item[:label]}")
+  unless opts[:dry_run]
+    if item[:dont_index]
+      system "( cd #{EMPTY_DIR}; cd #{item[:ipath]}; ( df -h #{item[:mpath]} ; echo           ) | gzip -c > #{DATA_DIR}/#{item[:label]}.#{ymd}.txt.gz ) &"
+    else
+      system "( cd #{EMPTY_DIR}; cd #{item[:ipath]}; ( df -h #{item[:mpath]} ; echo ; ls -laR ) | gzip -c > #{DATA_DIR}/#{item[:label]}.#{ymd}.txt.gz ) &"
+    end
+  end
+}

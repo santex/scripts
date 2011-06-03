@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use FindBin '$Bin';
+use POSIX qw(strftime);
+
+my @urls = map {chomp; $_} <>;
+my $dir = sprintf("%s/../comics/%s", $Bin, (strftime "%Y-%m-%d", localtime));
+system qq(mkdir -p "$dir");
+chdir $dir;
+
+for (@urls) {
+    chomp;
+    system qq(wget -q -p "$_");
+}

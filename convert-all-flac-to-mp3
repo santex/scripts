@@ -1,0 +1,52 @@
+#!/usr/bin/perl -l
+
+use strict;
+use Getopt::Long;
+
+my %Opt = (
+        samprate => 44100,
+        bitrate => '128k',
+       );
+my %DefOpt = %Opt;
+
+GetOptions(
+           'help' => \$Opt{help},
+           'bitrate=s' => \$Opt{bitrate},
+           'samprate=i' => \$Opt{samprate},
+          );
+if ($Opt{help}) {
+  print <<EOF;
+$0 [options]
+
+Options:
+ --help       Show this message and exit.
+ --bitrate=B  Set bitrate in bit/s, default is $DefOpt{bitrate}.
+ --samprate=S Set sampling rate in Hz, default is $DefOpt{samprate}.
+EOF
+  exit 0;
+}
+
+my @files;
+if (@ARGV) { @files = @ARGV } else { @files = (<*.flac>, <*.FLAC>) }
+
+for my $f (@files) {
+  if (-f "$f.mp3") {
+    print "WARNING: $f.mp3 exists, skipped";
+  }
+  my $esc = esc($f);
+  my $cmd;
+  if (1) { #$Opt{encoder} eq 'ffmpeg') {
+      $cmd = "ffmpeg -i $esc -ar $Opt{samprate} -ab $Opt{bitrate} $esc.mp3";
+  } else {
+      #$cmd = "lame -b $Opt{bitrate} $esc $esc.mp3";
+  }
+
+  print $cmd;
+  system $cmd;
+}
+
+sub esc {
+  local $_ = shift;
+  s/'/'"'"'/g;
+  "'$_'";
+}

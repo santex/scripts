@@ -1,0 +1,5 @@
+#!/usr/bin/perl -ln
+$|++;
+@_ = split / /,$_,2;
+print $_[0] eq 'netshelter' && crypt($_[1],$_[1]) eq 'std.x0ZMTl8XM' ? "OK":"ERR";
+

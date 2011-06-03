@@ -1,0 +1,44 @@
+--- Sendmail.pm-0.78	Mon Jan 27 13:28:50 2003
++++ Sendmail.pm	Mon Jan 27 13:40:27 2003
+@@ -131,7 +131,7 @@
+ 
+     my (%mail, $k,
+         $smtp, $server, $port, $connected, $localhost,
+-        $message, $fromaddr, $recip, @recipients, $to, $header,
++        $message, $envfromaddr, $fromaddr, $recip, @recipients, $to, $header,
+        );
+ 
+     sub fail {
+@@ -189,9 +189,15 @@
+     # Extract 'From:' e-mail address
+ 
+     $fromaddr = $mail{'From'} || $default_sender || $mailcfg{'from'};
++    $envfromaddr = $mail{'Return-path'} || $fromaddr;
++    $envfromaddr =~ s/^<//; $envfromaddr =~ s/>$//;
++
+     unless ($fromaddr =~ /$address_rx/) {
+         return fail("Bad or missing From address: \'$fromaddr\'");
+     }
++    unless ($envfromaddr =~ /$address_rx/ or $envfromaddr eq '') {
++        return fail("Bad or missing Return-Path address: \'$envfromaddr\'");
++    }
+     $fromaddr = $1;
+ 
+     # add Date header if needed
+@@ -312,7 +318,7 @@
+         return fail("HELO error ($_)")
+     }
+     
+-    print S "mail from: <$fromaddr>\015\012";
++    print S "mail from: <$envfromaddr>\015\012";
+     chomp($_ = <S>);
+     if (/^[45]/ or !$_) {
+         return fail("mail From: error ($_)")
+@@ -340,6 +346,7 @@
+ 
+     # print headers
+     foreach $header (keys %mail) {
++        next if $header =~ /^(?:Return-path)$/;
+         $mail{$header} =~ s/\s+$//o; # kill possible trailing garbage
+         print S "$header: ", $mail{$header}, "\015\012";
+     };

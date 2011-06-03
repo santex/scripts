@@ -1,0 +1,6 @@
+#!/bin/bash
+arch=debian_linux-squeeze-i386
+plarch=i486-linux-gnu-thread-multi
+ssh=$sshspaneldev_build_squeeze_i386u
+rsync -avz --exclude "/lib/perl5/$plarch" $ssh:perl5/ $HOME/proj/spanel/perl5/
+rsync -avz $ssh:perl5/lib/perl5/$plarch $HOME/proj/spanel/arch/$arch/perl5/lib/perl5/

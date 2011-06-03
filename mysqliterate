@@ -1,0 +1,192 @@
+#!/usr/bin/perl -w
+
+my $VERSION = '0.011';
+my $NAME = "mysqliterate";
+
+use strict;
+use DBI;
+use Getopt::Long;
+
+sub displayVersion();
+sub displayHelp();
+sub doConnect();
+sub doReplace();
+
+my $help = 0;
+my $version = 0;
+my $user = (getpwuid($>))[0];
+my $db;
+my $host="localhost";
+my $port="";
+my $socket;
+my @tables;
+my @fields;
+my $str;
+my $re;
+my $compre;
+my $repl;
+my $eval;
+my $evalsub;
+my $pw = "";
+my $escape = 0;
+my $stdout = 0;
+my $verbose = 0;
+my $dbh;
+
+my $TABLE;
+my $FIELD;
+my $ROW;
+
+GetOptions(
+	"help|?" => \$help,
+	"version|V" => \$version,
+	"user|u=s" => \$user,
+	"password|p=s" => \$pw,
+	"host|h=s" => \$host,
+	"string|s=s" => \$str,
+	"regex|r=s" => \$re,
+	"replacement|o=s" => \$repl,
+	"escape" => \$escape,
+	"stdout" => \$stdout,
+	"eval|e=s" => \$eval,
+	"verbose" => \$verbose
+);
+
+displayVersion(), exit 0 if $version;
+displayHelp(), exit 0 if $help;
+displayHelp(), exit 1 if @ARGV == 0;
+if ($eval) { eval "\$evalsub = sub {$eval};"; die "Error in eval: $@\n" if $@; }
+if ($re) { eval "\$compre = qr$re;"; die "Error in regex: $@\n" if $@; }
+unless ($eval || (($re || $str) && $repl)) { displayHelp(); exit 1; }
+($db, @tables) = @ARGV;
+
+doConnect();
+
+if (!@tables) {
+	@tables = $dbh->func('_ListTables');
+}
+
+for $TABLE (@tables) {
+	my @fields = ();
+	my $sth;
+	
+	$sth = $dbh->prepare("SHOW COLUMNS FROM $TABLE");
+	$sth->execute();
+	while (($_) = $sth->fetchrow_array()) {
+		push @fields, $_;
+	}
+	
+	$sth->finish();
+	
+	$sth = $dbh->prepare("SELECT ".join(",",@fields)." FROM $TABLE");
+	$sth->execute();
+	$ROW = 0;
+	while (my @row = $sth->fetchrow_array()) {
+		$ROW++;
+		my @newRow = ();
+		for my $i (0..@fields-1) {
+			$FIELD = $fields[$i];
+			$_ = $row[$i];
+			doReplace();
+			push @newRow, $_;
+			
+		}
+		
+		if ($stdout) {
+			for my $i (0..@fields-1) {
+				print "D: $TABLE $ROW $fields[$i] ";
+				if ($escape) {
+					$newRow[$i] =~ s/([\x00-\x1f\x80-\xff])/sprintf "\\x%02x", $1/eg;
+				}
+				print "$newRow[$i]\n";
+			}
+		} else {
+			my $different = 0;
+			{ local $^W = 0; for my $i (0..@fields-1) { $different=1, last if $row[$i] ne $newRow[$i] } }
+			$dbh->do("REPLACE INTO $TABLE (".join(",",@fields).") ".
+			         "  VALUES (".join(",",map{$dbh->quote($_)} @newRow).")")
+			  if $different;
+			if ($verbose) {
+				print "V: $TABLE $ROW ",($different ? "replaced":"same"),"\n";
+			}
+		}
+	}
+}
+
+exit 0;
+
+
+#############
+# SUBROUTINES
+#############
+
+sub displayVersion() {
+	print "$NAME  Ver $VERSION\n";
+}
+
+sub displayHelp() {
+	displayVersion();
+	print <<'_';
+By Steven Haryanto
+This software comes with ABSOLUTELY NO WARRANTY. This is free software,
+and you are welcome to modify and redistribute it under the GPL license
+
+Iterating over each column and row to do processing.
+Usage: $NAME [OPTIONS] database [tables]
+Specify at least -s and -o, -p and -o, or -e.
+
+  -?, --help
+    Display help (this message) and exit.
+  -V, --version
+    Display program version and exit.
+  -u, --user=[...]
+    MySQL username. Defaults to Unix username if not specified.
+  -p, --password=[...]
+    Password to use when connecting. Asked on tty if password not given.
+  -h, --host=[...]
+    Host to connect to. Defaults to localhost.
+  -s, --string=[...]
+    String to find, ignored if -r or -e is specified.
+  -r, --regex=[...]
+    Regex to match. Use perl's form: '/PAT/'. Ignored if -e is specified.
+  -o, --replacement=[...]
+    Replacement string, ignored if -e is specified.
+  -e, --eval=[...]
+    Perl code to execute. $_ is the value of the current field. $FIELD is
+    the current field name, $ROW is the row counter (starting from one).
+    $TABLE is the current table name.
+  --stdout
+    Dump replacement result to stdout instead of writing back to database.
+  --escape
+    Escape nonprinting or control characters. Only useful together with
+    --stdout.
+_
+}
+
+sub doConnect() {
+	$dbh = DBI->connect("dbi:mysql:database=$db;host=$host", $user, $pw,
+		{ PrintError => 1, RaiseError => 1 }
+	) or die "$DBI::errstr\n";
+}
+
+sub doReplace() {
+	if ($evalsub) {
+		&$evalsub();
+	} elsif ($compre) {
+		s/$compre/$repl/og;
+	} else {
+		s/\Q$str\E/$repl/og;
+	}
+}
+
+
+__END__
+HISTORY:
+011004 0.01 first stab
+
+TODO:
+- change behaviour of -p to mimic mysql utilites; prompt password + stty -echo when prompting password
+- -A, --all-databases
+- --add-locks
+- -S, --socket
+- backup feature

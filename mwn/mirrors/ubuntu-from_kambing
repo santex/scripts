@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use FindBin '$Bin';
+use lib $Bin;
+BEGIN { require 'common.pl'; }
+
+$TO='/u/archive/public/mirrors/ubuntu';
+$EXCLUDES = [excludes_debian_arch_not_i386()];
+
+$PROTO='ftp'; $HOST='kambing.vlsm.org'; $DIR='/ubuntu'; $RATE_LIMIT = 50;
+
+MirrorDebian();

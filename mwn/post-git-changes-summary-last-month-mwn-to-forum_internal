@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd /u/steven/public/git/mwn && ( summarize-mwn-git-changes-for-last-month | phpbb2-post --profile=commit_mwn - )
+

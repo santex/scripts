@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use FindBin '$Bin';
+use lib $Bin;
+BEGIN { require 'common.pl'; }
+
+$TO='/backup/archive/mirrors/centos';
+$EXCLUDES = [
+  'alpha', 'ia64', 'x86_64', 's390', 's390x', 'build', 'isos', 'isos-dvd',
+  '/2', '/2.?',
+  '/3', '/3.?',
+  '/4.0', '/4.1', '/4.2',
+  ];
+  
+$PROTO='ftp'; $HOST='dist1.800hosting.com'; $DIR='/centos'; $RATE_LIMIT=30;
+
+Mirror();

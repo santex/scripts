@@ -1,0 +1,77 @@
+#!/usr/bin/perl -w
+
+# tujuan skrip ini adalah supaya direktori spt ini:
+#
+# dl-20090313/
+#   .t/
+#     audio/
+#       book/
+#         torrent1.torrent
+#       music/
+#         torrent2.torrent
+#     video/
+#       ...
+#
+# bisa didownload dengan rtorrent sehingga menghasilkan:
+# dl-20090313/
+#   .t/
+#     ...
+#   audio/
+#     book/
+#       torrent1/
+#     music/
+#       torrent2.torrent
+#   video/
+#     ...
+#
+# dengan kata lain, struktur direktori torrent di .t/
+# direproduksi. tujuan gw membuat ini adalah agar kita bisa
+# mengkategorisasikan download secara dini, karena nama file hasil
+# download kadang tidak berkorelasi dengan torrent.
+#
+# jalankan skrip ini di direktori yang mengandung .t/
+
+use strict;
+use File::Find;
+use Data::Dumper;
+use Proc::Reliable;
+
+die "Tidak ada .t/ di direktori aktif\n" unless -d ".t";
+my @dirs;
+find(sub {
+         return if $_ eq '.' || $_ eq '..';
+         return unless -d;
+         my $contain_files = grep {-f} <$_/*>;
+         #print "testing $File::Find::dir/$_/* ? $contain_files\n";
+         return unless $contain_files;
+         my $e = "$File::Find::dir/$_";
+         $e =~ s!^\.t/!!;
+         push @dirs, $e;
+     }, ".t");
+#print Dumper \@dirs;
+
+if (-d ".s") {
+
+    system "rtorrent -s .s";
+
+} else {
+
+    system "mkdir -p .s";
+
+    print "Please be patient, generating session .torrents. Will be getting in and out of rtorrent repeatedly ...\n";
+    for (my $i=0; $i<@dirs; $i++) {
+
+        print $i+1, " of ", @dirs+0, " ($dirs[$i]) ...\n";
+        system qq!mkdir -p "$dirs[$i]"!;
+
+        no warnings;
+        my $p = Proc::Reliable->new;
+        $p->maxtime(10); # XXX gimana memastikan timer yang cocok?
+        $p->run(qq!rtorrent -s .s -d "$dirs[$i]" ".t/$dirs[$i]/"*!);
+        use warnings;
+    }
+
+    print "Running rtorrent for real now ...\n";
+    system "rtorrent -s .s";
+    #system "reset";
+}

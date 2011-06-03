@@ -1,0 +1,25 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Cwd;
+use File::Find;
+use Log::Log4perl qw(:easy);
+
+# try to create imdb.url
+unless (-e "imdb.url") {
+    if (<*.txt>) {
+        system "extract-urls-from-text *.txt | grep imdb.com/title/tt > imdb.url";
+        unlink "imdb.url" unless (-s "imdb.url");
+    }
+}
+
+# delete useless files which are small txt and html files usually
+# containing only links to websites.
+unlink grep { $_ ne "imdb.url" }
+       grep { (-f) && (((-s) <= 500) || /\.(nfo|sfv)$/) } <*>;
+
+# delete other crappy files
+unlink glob("_*padding*_");
+
+# rmvb files that are smaller than 20MB, this is probably ads
+unlink grep { (-s) <= 20_000_000 } <*.rmvb>;

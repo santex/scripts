@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+#use Carp qw(verbose);
+use Carp::Always;
+use App::Options (
+  option => {
+    ics_dir => {
+      description => "Directory that contains .ics files",
+      default => "/home/steven/organizer",
+      required => 1,
+    },
+    log_level => {
+      description => "Log level, either debug, info, warn, error, fatal",
+      default => "warn",
+      required => 1,
+    },
+  }
+);
+use DateTime;
+use iCal::Parser;
+use Log::Log4perl qw(:easy);
+
+my $lvl = $App::options{log_level};
+my $level = ($lvl eq 'fatal' ? $FATAL :
+             $lvl eq 'error' ? $ERROR :
+             $lvl eq 'warn'  ? $WARN  :
+             $lvl eq 'info'  ? $INFO  :
+             $lvl eq 'debug' ? $DEBUG : 0);
+Log::Log4perl->easy_init($level || $INFO);
+
+chdir $App::options{ics_dir} or 
+  die "Can't chdir to ics_dir: $App::options{ics_dir}: $!\n";
+
+my $now = DateTime->now;
+
+my $num_files = 0;
+my $num_todos = 0;
+my $num_events = 0;
+my $num_todos_completed = 0;
+my $num_todos_overdue = 0;
+FILE: for my $f (<*.ics>) {
+  $num_files++;
+  INFO "Parsing file #$num_files: $f ...";
+  open F, "$f"; my $content = join "", <F>; close F;
+  # korganizer sometimes uses unix timestamp that confuses iCal::Parser
+  $content =~ s/^DTSTART;VALUE=DATE:\d{8,}\n//mg;
+  # iCal::Parser can't handle korg's time duration format in TRIGGER
+  $content =~ s/^TRIGGER.*\n//mg;
+  my $cal = iCal::Parser->new->parse_strings($content);
+  next FILE unless $cal;
+  if ($cal->{events}) {
+    for my $event (keys %{ $cal->{events} }) {
+      $num_events++;
+    }
+  }
+  if ($cal->{todos}) {
+    for my $todo (@{ $cal->{todos} }) {
+      $num_todos++;
+      if ($todo->{'PERCENT-COMPLETE'} == 100) {
+        $num_todos_completed++;
+      } elsif ($todo->{'DUE'}) {
+        $num_todos_overdue++ if $todo->{'DUE'} lt $now;
+      }
+    }
+  }
+}
+
+print  "Number of files = $num_files\n";
+print  "Number of events = $num_events\n";
+print  "Number of todos = $num_todos\n";
+printf "Number of completed todos = %d (%.0f%%)\n", $num_todos_completed, ($num_todos ? $num_todos_completed/$num_todos : 0)*100;
+printf "Number of uncompleted todos = %d (%.0f%%)\n", $num_todos-$num_todos_completed, ($num_todos ? ($num_todos-$num_todos_completed)/$num_todos : 0)*100;
+printf "Number of overdue todos = %d\n", $num_todos_overdue;

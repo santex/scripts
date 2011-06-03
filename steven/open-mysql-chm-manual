@@ -1,0 +1,2 @@
+#!/bin/sh
+kchmviewer /archive/free_doc/m/mysql/manual/5.0/refman-5.0-en.chm

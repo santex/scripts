@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+use JSON;
+use PHP::Serialization qw(serialize);
+
+undef $/;
+
+print serialize(from_json(scalar <>));
+

@@ -1,0 +1,145 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Cwd;
+use Data::Dumper;
+use Date::Parse;
+use File::Slurp;
+use File::Temp qw(tempfile);
+use HTML::Entities;
+use Log::Log4perl qw(:easy);
+use LWP::Simple;
+use XML::RSSLite;
+use App::Options (
+    option => {
+        profile => { type => 'string', required => 0, default => 'default' },
+        forum_url => { type => 'string', required => 1 },
+        rss_url => { type => 'string', required => 1 },
+        db_path => { type => 'string', required => 1 }, # utk menyimpan ingatan rss mana yg sudah diposting
+        forum_id => { type => 'int', required => 1 },
+        topic_id => { type => 'int', required => 0, default => 0 },
+        username => { type => 'string', required => 1 },
+        password => { type => 'string', required => 1 },
+        delay => { type => 'int', required => 0, default => 15 }, # default phpbb3
+        bbcode => { type => 'bool', required => 0, default => 0 },
+        dry_run => { type => 'bool', required => 0, default => 0 },
+        log_level => { type => 'string', required => 0, default => 'DEBUG' },
+        obfuscate_link => { type => 'bool', required => 0, default => 0, },
+        prefix => { type => 'string', required => 0, default => '', },
+    },
+);
+
+#$Data::Dumper::Indent = 0;
+
+if ( $App::options{log_level} eq 'FATAL' ) {
+    Log::Log4perl->easy_init($FATAL);
+}
+elsif ( $App::options{log_level} eq 'ERROR' ) {
+    Log::Log4perl->easy_init($ERROR);
+}
+elsif ( $App::options{log_level} eq 'WARN' ) {
+    Log::Log4perl->easy_init($WARN);
+}
+elsif ( $App::options{log_level} eq 'INFO' ) {
+    Log::Log4perl->easy_init($INFO);
+}
+else { Log::Log4perl->easy_init($DEBUG) }
+
+# XXX saat ini memori hanya menyimpan timestamp terakhir posting. saat
+# ini good enough deh.
+my $latest_time = 0;
+if (open F, $App::options{db_path}) {
+    $latest_time = (scalar <F>) || 0;
+}
+
+my $content = get $App::options{rss_url};
+LOGDIE "Can't get RSS: $App::options{rss_url}. Aborting." unless $content;
+
+# naive XML::RSSLite can't parse CDATA
+$content =~ s{<!\[CDATA\[(.+?)\]\]>}{$1}sg;
+DEBUG "content = $content";
+
+my $rss = {};
+parseRSS($rss, \$content);
+
+my @files;
+my $new_latest_time = $latest_time;
+my $i = 0;
+for my $item (reverse @{ $rss->{item} }) {
+    my $status = 'new';
+    my $time = str2time($item->{pubDate});
+    DEBUG "Timestamp: latest=$latest_time vs item=$time ($item->{pubDate})";
+    if ($latest_time >= $time) {
+        $status = 'old';
+    } else {
+        $new_latest_time = $time;
+    }
+    $i++;
+    INFO "Parsed #$i: ".Dumper($item)." (status=$status)";
+    next unless $status eq 'new';
+
+    my ($fh, $filename) = tempfile();
+    print $fh "Subject: ".html2bbcode(($App::options{prefix} ? "$App::options{prefix}: " : "") . $item->{title})."\n";
+    print $fh "\n";
+    print $fh "Waktu asli posting blog: $item->{pubDate}\n";
+    print $fh "Diposting oleh: ".$item->{'dc:creator'}."\n" if $item->{'dc:creator'};
+    print $fh "\n";
+    print $fh html2bbcode($item->{description} || "(no description)");
+    print $fh "\n\n";
+    if ($item->{'media:content'}) {
+        #DEBUG "Item #$i has media content";
+        for my $m (@{ $item->{'media:content'} }) {
+            if ($m->{medium} eq 'image') {
+                print $fh "[img]".$m->{url}."[/img]\n\n";
+            }
+        }
+    }
+    print $fh $item->{link};
+    push @files, $filename;
+}
+
+# send it!
+if (@files) {
+    my $cmd = "phpbb2-post".
+        " --delay=".esc($App::options{delay}).
+        " --base_url=".esc($App::options{forum_url}).
+        " --username=".esc($App::options{username}).
+        " --password=".esc($App::options{password}).
+        " --forum_id=".esc($App::options{forum_id}).
+        " --topic_id=".esc($App::options{topic_id}).
+        " --log_level=".esc($App::options{log_level}).
+        " --bbcode=".esc($App::options{bbcode}).
+        " --obfuscate_link=".esc($App::options{obfuscate_link}).
+        " ".join(" ", @files);
+    DEBUG "cmd: $cmd";
+    if ($App::options{dry_run}) {
+        my $i = 0;
+        for (@files) {
+            $i++;
+            print "DRY_RUN: Posting #$i: [[".read_file($_)."]]\n";
+        }
+    } else {
+        system $cmd;
+    }
+    unlink @files;
+
+    DEBUG "Updating db ...";
+    open F, ">$App::options{db_path}";
+    print F $new_latest_time;
+    close F or ERROR "Can't write db: $App::options{db_path}: $!";
+}
+
+sub esc {
+    local $_ = shift;
+    s/'/'"'"'/g;
+    "'$_'";
+}
+
+sub html2bbcode {
+    local $_ = shift;
+    $_ = decode_entities($_);
+    s!<br( /)?>!\n!ig;
+    s!<span\s+style=[^>]+>|</span>!!sig;
+    #s#<img[^>]*\ssrc="?(.+?)"?(?:>| />|\s)#"[img]".$1."[/img]"#sige;
+    $_;
+}

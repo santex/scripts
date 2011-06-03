@@ -1,0 +1,2 @@
+#!/usr/bin/perl -p
+s/\d+\.\d+/scalar localtime $&/e;

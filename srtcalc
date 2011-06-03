@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+# 030206
+
+$secs_re = qr/[+-]?\d+(?:\.\d*)?/;
+$hms_re = qr/\d\d?:\d\d?:\d\d?(?:,\d\d\d)?/;
+$hms_re_catch = qr/(\d\d?):(\d\d?):(\d\d?)(?:,(\d\d\d))?/;
+sub hms2secs { local $_=shift; /^$hms_re_catch$/ or return; $1*3600+$2*60+$3+$4*0.001 }
+sub secs2hms { local $_=shift; /^$secs_re$/ or return "00:00:00,000"; my $ms=1000*($_-int($_)); $_=int($_); my $s=$_%60; $_-=$s; $_/=60; my $m=$_%60; $_-=$m; $_/=60; sprintf "%02d:%02d:%02d,%03d",$_,$m,$s,$ms }
+
+###
+
+die "Usage: $0 SECS_OR_HMS\nIf SECS is entered, HMS is returned. Vice versa.\n" unless @ARGV;
+
+for (@ARGV) {
+	if (/^$secs_re$/) {
+		print "$_ secs = ", secs2hms($_), "\n";
+	} elsif (/^$hms_re$/) {
+		print "$_ = ", hms2secs($_), " secs\n";
+	} else {
+		print "Invalid input: $_\n";
+	}
+}
