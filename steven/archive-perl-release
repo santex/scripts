@@ -1,3 +1,16 @@
-#!/bin/bash
-# XXX if private, to ~/proj/pr/.private/
-cp -av "$1" ~/proj/prp/
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Cwd;
+
+my $cwd = getcwd;
+my $repo_name = $cwd; $repo_name =~ s!.+/!!;
+my $is_private = $repo_name =~ /^priv-/;
+
+system "cp", "-av", $ARGV[0],
+    "$ENV{HOME}/repos/priv-perl/releases/".
+    ($is_private ? ".private" : ".published");
+
