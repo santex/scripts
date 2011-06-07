@@ -4,51 +4,87 @@ use 5.010;
 use strict;
 use warnings;
 use Log::Any::App '$log';
-BEGIN { $::Log_Level = 'info' }
+BEGIN { no warnings; $::Log_Level = 'info' }
 
-use Cwd;
+use File::chdir;
+use Cwd qw(getcwd);
 
-my $repo = getcwd;
-$repo =~ s!.+/!!;
-$log->debugf("repo name is %s", $repo);
+sub _mysystem {
+    $log->tracef("system(): cwd=%s, cmd=%s", $CWD, join(" ", @_));
+    system @_;
+}
 
-my $is_priv    = $repo =~ /^priv-/;
-my $is_mwn     = $repo =~ /^mwn(-|$)/;
-my $is_perl    = $repo =~ /(^|-)perl-/;
-my $is_media   = $repo =~ /(^|-)media-/;
-my $is_spanel  = $repo =~ /(^|-)spanel(-|$)/;
+my $repo_dir = getcwd;
+my $repo_name = $repo_dir;
+$repo_name =~ s!.+/!!;
+$log->debugf("repo name is %s", $repo_name);
+
+my $is_priv    = $repo_name =~ /^priv-/;
+my $is_mwn     = $repo_name =~ /^mwn(-|$)/;
+my $is_perl    = $repo_name =~ /(^|-)perl-/;
+my $is_media   = $repo_name =~ /(^|-)media-/;
+my $is_spanel  = $repo_name =~ /(^|-)spanel(-|$)/;
 my $is_public  = !$is_priv && !$is_mwn && !$is_spanel;
 
 $log->debug("is_priv? $is_priv. is_mwn? $is_mwn. is_perl? $is_perl. ".
                 "is_media? $is_media. is_spanel? $is_spanel. ".
                     "is_public? $is_public");
 
+my $backup_dir = "/backup/mnt2/repos"; #"/backup/mnt/$ENV{SYSTEM}.local";
+$log->trace("Checking whether backup_dir $backup_dir exists ...");
+my $has_backup_part = (-d $backup_dir);
+
 # push to backup partition, if available
 if ($has_backup_part) {
-    $log->info("Pushing to backup partition ...");
+    my $remote_dir = "$backup_dir/$repo_name";
+    #"$backup_dir/current/home/$ENV{USER}/repos/$repo_name";
+    $log->trace("Checking whether remote_dir $remote_dir exists ...");
+    if (-d $remote_dir) {
+        {
+            $log->info("Pushing to backup partition ...");
+            local $CWD = $remote_dir;
+            _mysystem "git", "pull", $repo_dir;
+        }
+    }
 }
 
 # push public repos to github, for backup as well
+my $online = 1; # XXX
+my $git_user = "sharyanto";
 if ($is_public && $online) {
     $log->info("Pushing to github ...");
+    $log->trace("Checking whether remote origin has been added to config ...");
+    _mysystem "git", "config", "--get", "remote.origin.url";
+    if ($?) {
+        $log->debug("remote origin doesn't seem be added yet, adding ...");
+        _mysystem "git", "remote", "add", "origin",
+            "git\@github.com:$git_user/$repo_name.git";
+    }
+    _mysystem "git", "push", "origin", "master";
 }
 
 # push all repos except private ones to hloc
-if (!$is_priv && $in_office) {
-    $log->info("Pushing to hloc ...");
-    # ...
-    # announce to forumi
-    $log->info("Annoucing to forumi ...");
-    # ...
+my $hloc_dir = "/media/bismuthb/home/sloki/user/steven/public/git";
+$log->trace("Checking whether hloc_dir $hloc_dir exists ...");
+if (!$is_priv && (-d $hloc_dir)) {
+    {
+        $log->info("Pushing to hloc ...");
+        local $CWD = $hloc_dir;
+        _mysystem("gitbunch", "sync",
+                  "--source", "$repo_dir/..",
+                  "--target", "$hloc_dir",
+                  "--include-repos", "[$repo_name]");
+    }
+    # XXX $log->info("Annoucing to forumi ...");
 }
 
 # push to laptop, if available
-if ($has_laptop) {
-    $log->info("Pushing to laptop ...");
-}
+#if ($has_laptop) {
+#    $log->info("Pushing to laptop ...");
+#}
 
 # push private repos to external harddisk, if available
-if ($has_exthd) {
-    $log->info("Pushing to exthd ...");
-}
+#if ($has_exthd) {
+#    $log->info("Pushing to exthd ...");
+#}
 
