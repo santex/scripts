@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use Log::Any::App '$log';
+BEGIN { $::Log_Level = 'info' }
+
+use Cwd;
+
+my $repo = getcwd;
+$repo =~ s!.+/!!;
+$log->debugf("repo name is %s", $repo);
+
+my $is_priv    = $repo =~ /^priv-/;
+my $is_mwn     = $repo =~ /^mwn(-|$)/;
+my $is_perl    = $repo =~ /(^|-)perl-/;
+my $is_media   = $repo =~ /(^|-)media-/;
+my $is_spanel  = $repo =~ /(^|-)spanel(-|$)/;
+my $is_public  = !$is_priv && !$is_mwn && !$is_spanel;
+
+$log->debug("is_priv? $is_priv. is_mwn? $is_mwn. is_perl? $is_perl. ".
+                "is_media? $is_media. is_spanel? $is_spanel. ".
+                    "is_public? $is_public");
+
+# push to backup partition, if available
+if ($has_backup_part) {
+    $log->info("Pushing to backup partition ...");
+}
+
+# push public repos to github, for backup as well
+if ($is_public && $online) {
+    $log->info("Pushing to github ...");
+}
+
+# push all repos except private ones to hloc
+if (!$is_priv && $in_office) {
+    $log->info("Pushing to hloc ...");
+    # ...
+    # announce to forumi
+    $log->info("Annoucing to forumi ...");
+    # ...
+}
+
+# push to laptop, if available
+if ($has_laptop) {
+    $log->info("Pushing to laptop ...");
+}
+
+# push private repos to external harddisk, if available
+if ($has_exthd) {
+    $log->info("Pushing to exthd ...");
+}
+
