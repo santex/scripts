@@ -1,4 +1,4 @@
 #!/bin/bash
 set -x
-cd $HOME/repo/mwn-masterkey && git pull /media/bismuthb/home/sloki/user/bayo/public/mwn-masterkey
+cd $HOME/repos/mwn-masterkey && git pull /media/bismuthb/home/sloki/user/bayo/public/mwn-masterkey
 
