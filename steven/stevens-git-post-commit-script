@@ -20,6 +20,7 @@ sub is_online {
     my $output = `host www.google.com`;
     $online = !$?;
     $log->debug("We are ".($online ? "online" : "not online ($output)"));
+    $online;
 }
 
 sub is_false {
