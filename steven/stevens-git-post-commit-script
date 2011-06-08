@@ -21,7 +21,7 @@ my $repo_name = $repo_dir;
 $repo_name =~ s!.+/!!;
 $log->debugf("repo name is %s", $repo_name);
 
-my $branch = `git branch` =~ /^\* (.+)/m;
+my ($branch) = `git branch` =~ /^\* (.+)/m;
 $log->debugf("branch is %s", $branch);
 
 my $is_priv    = $repo_name =~ /^priv-/;
@@ -107,7 +107,8 @@ if (!$is_priv && (-d $hloc_dir)) {
     } elsif ($repo_name eq 'mwn-campus') {
         ($forumid, $topicid) = (51, 29753);
     } else {
-        die "Don't know which forum/thread to post announcement to";
+        die "Don't know which forum/thread to post announcement to".
+            " (repo=$repo_name, branch=$branch)";
     }
     _mysystem("post-git-commit-log-to-phpbb2",
               "--phpbb2_post_forum_id=$forumid",
