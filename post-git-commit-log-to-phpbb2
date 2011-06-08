@@ -8,7 +8,9 @@ use App::Options (
         memory_path => { type => 'string' },
         max_look_behind => { type => 'integer', default => 500 },
         phpbb2_post_path => { type => 'string' },
-        phpbb2_post_profile => { type => 'string', required => 1 },
+        phpbb2_post_profile => { type => 'string' },
+        phpbb2_post_forum_id => { type => 'integer' },
+        phpbb2_post_topic_id => { type => 'integer' },
         author_re => {
             type => 'string', required => 0,
             description => 'Only post commits with author matching this regex',
@@ -26,6 +28,12 @@ my $output;
 $output = `git branch`;
 my ($branch) = $output =~ /^\* (.+)/m
     or die "Can't find out current branch (can't grok output of `git branch`)";
+
+if (!$App::options{phpbb2_post_profile} &&
+        !($App::options{phpbb2_post_forum_id} &&
+              $App::options{phpbb2_post_topic_id})) {
+    die "Either specify phpbb2_post_profile or phpbb2_post_topic_id + phpbb2_post_forum_id";
+}
 
 # check args
 
@@ -82,10 +90,20 @@ for (@revs) {
         next;
     }
     $log->infof("($i/%d) Posting rev $_ to phpBB2 forum ...", scalar(@revs));
-    system "( echo 'Subject: commit $repo_name ($branch:$_)'; ".
-        "echo; echo -n '[code]'; ".
-        "git log -1 -p $_; echo '[/code]' ) | ".
-        "'$phpbb2_post_path' --profile=$App::options{phpbb2_post_profile} --bbcode=1 -";
+    system(
+        join("",
+             "( echo 'Subject: commit $repo_name ($branch:$_)'; ",
+             "echo; echo -n '[code]'; ",
+             "git log -1 -p $_; echo '[/code]' ) | ",
+             "'$phpbb2_post_path' ",
+             ($App::options{phpbb2_post_profile} ?
+                  "--profile=$App::options{phpbb2_post_profile} " :
+                  "--forum_id=$App::options{phpbb2_post_forum_id} ".
+                      "--topic_id=$App::options{phpbb2_post_topic_id} "
+             ),
+             "--bbcode=1 -"
+         )
+    );
     if ($?) {
         warn "Posting failed (exit=$?), aborting ...";
         $fail++;
