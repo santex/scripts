@@ -9,6 +9,11 @@ BEGIN { no warnings; $::Log_Level = 'info' }
 use File::chdir;
 use Cwd qw(getcwd);
 
+if (defined($ENV{POST_COMMIT}) && !$ENV{POST_COMMIT}) {
+    $log->info("Skipping post-commit script");
+    exit 0;
+}
+
 $log->debug("$0 started");
 
 sub _mysystem {
