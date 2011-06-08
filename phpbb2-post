@@ -64,6 +64,9 @@ LOGDIE "Please specify topic_id OR forum_id"
 
 my $mech = new WWW::Mechanize;
 
+# temporary workaround for LWP 6+ which checks certificate by default
+$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+
 $mech->get("$App::options{base_url}/login.php");
 $mech->submit_form(
     form_number => 1,
