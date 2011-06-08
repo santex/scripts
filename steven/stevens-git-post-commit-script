@@ -9,17 +9,29 @@ BEGIN { no warnings; $::Log_Level = 'info' }
 use File::chdir;
 use Cwd qw(getcwd);
 
-if (defined($ENV{POST_COMMIT}) && !$ENV{POST_COMMIT}) {
+sub _mysystem {
+    $log->tracef("system(): cwd=%s, cmd=%s", $CWD, join(" ", @_));
+    system @_;
+}
+
+sub is_online {
+    state $online;
+    return $online if defined($online);
+    my $output = `host www.google.com`;
+    $online = !$?;
+    $log->debug("We are ".($online ? "online" : "not online ($output)"));
+}
+
+sub is_false {
+    defined($_[0]) && !$_[0];
+}
+
+if (is_false $ENV{POST_COMMIT}) {
     $log->info("Skipping post-commit script");
     exit 0;
 }
 
 $log->debug("$0 started");
-
-sub _mysystem {
-    $log->tracef("system(): cwd=%s, cmd=%s", $CWD, join(" ", @_));
-    system @_;
-}
 
 my $repo_dir = getcwd;
 my $repo_name = $repo_dir;
@@ -58,22 +70,23 @@ if ($has_backup_part) {
     }
 }
 
-my $output = `host www.google.com`;
-my $online = !$?;
-$log->debug("We are ".($online ? "online" : "not online ($output)"));
-
 # push public repos to github, for backup as well
 my $git_user = "sharyanto";
-if ($is_public && $online) {
-    $log->info("Pushing to github ...");
-    $log->trace("Checking whether remote origin has been added to config ...");
-    _mysystem "git", "config", "--get", "remote.origin.url";
-    if ($?) {
-        $log->debug("remote origin doesn't seem be added yet, adding ...");
-        _mysystem "git", "remote", "add", "origin",
-            "git\@github.com:$git_user/$repo_name.git";
+if ($is_public && is_online()) {
+    my $do_github = !is_false($ENV{GITHUB});
+    if (!$do_github) {
+        $log->info("Skipping posting to github");
+    } else {
+        $log->info("Pushing to github ...");
+        $log->trace("Checking whether remote origin has been added ...");
+        _mysystem "git", "config", "--get", "remote.origin.url";
+        if ($?) {
+            $log->debug("remote origin doesn't seem be added yet, adding ...");
+            _mysystem "git", "remote", "add", "origin",
+                "git\@github.com:$git_user/$repo_name.git";
+        }
+        _mysystem "git", "push", "origin", "master";
     }
-    _mysystem "git", "push", "origin", "master";
 }
 
 # push all repos except private ones to hloc
