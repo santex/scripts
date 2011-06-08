@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# bunuh koneksi sebelumnya
+ps ax | grep sshfs | grep backpacker | cut -d" " -f1 | xargs kill
+
+fusermount -u /media/backpacker
+
+sshfs u1@backpacker.localdomain:/ /media/backpacker
+
