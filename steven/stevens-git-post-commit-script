@@ -115,7 +115,7 @@ if (!$is_priv && (-d $hloc_dir)) {
 }
 
 # push from PC to laptop, if laptop is available
-my $laptop_dir = "$ENV{HOME}/hbp/mnt/home/u1/repos";
+my $laptop_dir = "$ENV{HOME}/hbp/repos";
 if (-d $laptop_dir) {
     {
         $log->info("Pushing to laptop ...");
@@ -129,7 +129,7 @@ if (-d $laptop_dir) {
 }
 
 # push from laptop to PC, if PC is available
-my $pc_dir = "$ENV{HOME}/hb/mnt/home/s1/repos";
+my $pc_dir = "$ENV{HOME}/hb/repos";
 if (-d $pc_dir) {
     {
         $log->info("Pushing to PC ...");

@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# bunuh koneksi sebelumnya
-killall -9 ssh sshfs
-fusermount -u /media/builder
-
+kill-sshfs-builder
 sshfs s1@builder:/ /media/builder
 
 #while true; do
