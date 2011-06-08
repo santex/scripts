@@ -11,6 +11,9 @@
 # if topic_id is not specified, post will be a new topic
 # post. otherwise, it's a topic reply post.
 
+# temporary workaround for LWP 6+ which checks certificate by default
+BEGIN { $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0 }
+
 use strict;
 use Cwd;
 use File::Slurp;
@@ -63,9 +66,6 @@ LOGDIE "Please specify topic_id OR forum_id"
     unless $App::options{topic_id} || $App::options{forum_id};
 
 my $mech = new WWW::Mechanize;
-
-# temporary workaround for LWP 6+ which checks certificate by default
-$ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
 
 $mech->get("$App::options{base_url}/login.php");
 $mech->submit_form(
