@@ -9,6 +9,8 @@ BEGIN { no warnings; $::Log_Level = 'info' }
 use File::chdir;
 use Cwd qw(getcwd);
 
+$log->debug("$0 started");
+
 sub _mysystem {
     $log->tracef("system(): cwd=%s, cmd=%s", $CWD, join(" ", @_));
     system @_;
@@ -18,6 +20,9 @@ my $repo_dir = getcwd;
 my $repo_name = $repo_dir;
 $repo_name =~ s!.+/!!;
 $log->debugf("repo name is %s", $repo_name);
+
+my $branch = `git branch` =~ /^\* (.+)/m;
+$log->debugf("branch is %s", $branch);
 
 my $is_priv    = $repo_name =~ /^priv-/;
 my $is_mwn     = $repo_name =~ /^mwn(-|$)/;
@@ -71,11 +76,41 @@ if (!$is_priv && (-d $hloc_dir)) {
         $log->info("Pushing to hloc ...");
         local $CWD = $hloc_dir;
         _mysystem("gitbunch", "sync",
+                  "--exclude-files", "--exclude-non-git-dirs",
                   "--source", "$repo_dir/..",
                   "--target", "$hloc_dir",
                   "--include-repos", "[$repo_name]");
     }
-    # XXX $log->info("Annoucing to forumi ...");
+    $log->info("Announcing to forumi ...");
+    my ($forumid, $topicid);
+    if ($repo_name =~ /^perl-/) {
+        ($forumid, $topicid) = (51, 31078);
+    } elsif ($repo_name eq 'scripts') {
+        ($forumid, $topicid) = (51, 29724);
+    } elsif ($repo_name eq 'spanel' && $branch eq 'stable') {
+        ($forumid, $topicid) = (28, 29723);
+    } elsif ($repo_name eq 'spanel' && $branch eq 'dev') {
+        ($forumid, $topicid) = (28, 29718);
+    } elsif ($repo_name eq 'mwn') {
+        ($forumid, $topicid) = (51, 29725);
+    } elsif ($repo_name eq 'php-sh_functions') {
+        ($forumid, $topicid) = (51, 29731);
+    } elsif ($repo_name eq 'mwn-foruminternal') {
+        ($forumid, $topicid) = (51, 28910);
+    } elsif ($repo_name eq 'mwn-site') {
+        ($forumid, $topicid) = (51, 29732);
+    } elsif ($repo_name eq 'mwn-steven-webdev') {
+        ($forumid, $topicid) = (51, 25544);
+    } elsif ($repo_name eq 'mwn-campus') {
+        ($forumid, $topicid) = (51, 29753);
+    } elsif ($repo_name eq '') {
+        ($forumid, $topicid) = (51, );
+    } else {
+        die "Don't know which forum/thread to post announcement to";
+    }
+    _mysystem("post-git-commit-log-to-phpbb2",
+              "--phpbb2_post_forum_id=$forumid",
+              "--phpbb2_post_topic_id=$topicid");
 }
 
 # push to laptop, if available
@@ -88,3 +123,4 @@ if (!$is_priv && (-d $hloc_dir)) {
 #    $log->info("Pushing to exthd ...");
 #}
 
+$log->debug("$0 ended");
