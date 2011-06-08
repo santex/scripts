@@ -1,0 +1,55 @@
+#!/usr/bin/perl
+
+# tugas skrip ini adalah mengamati file mp3 baru yang terbentuk di cache opera,
+# lalu jika ukurannya >1MB, memonitornya. dan jika dalam 30 detik sudah tidak
+# bertambah lagi ukurannya, print nama file dan ukuran akhirnya. skrip ini utk
+# mempermudah merename file mp3 dari tingbook.com yang harus diplay, gak bisa
+# didownload.
+
+use 5.010;
+use strict;
+#use warnings;
+use Log::Any::App '$log';
+
+use File::chdir;
+use File::MimeInfo;
+
+$CWD = "$ENV{HOME}/.opera/cache";
+
+my %last_sizes;
+my %sizes;
+my %last_increase_time;
+
+while (1) {
+    my $now = time;
+    $log->trace("now = $now");
+
+    for my $f (`ls g*/* --sort=t -r | tail -n 30`) {
+        chomp $f;
+        $log->trace("found file $f");
+        #next unless mimetype($f) =~ /audio/i; # gagal deteksi
+        next unless `file $f` =~ /audio/i;
+        $log->trace("$f is audio file");
+        $sizes{$f} = (-s $f);
+
+        if (!$last_sizes{$f}) {
+            $last_increase_time{$f} = $now;
+        } else {
+            if ($last_sizes{$f} != $sizes{$f}) {
+                $last_increase_time{$f} = $now;
+            } else {
+                if ($now - $last_increase_time{$f} > 30) {
+                    if ($sizes{$f} > 1_000_000) {
+                        my $final = "$now.mp3";
+                        print "$f hasn't changed in 30 seconds, final size = $sizes{$f}, renamed to $final\n";
+                        rename $f, $final;
+                    }
+                }
+            }
+        }
+        $last_sizes{$f} = $sizes{$f};
+    } # for $f
+
+    sleep 2;
+}
+
