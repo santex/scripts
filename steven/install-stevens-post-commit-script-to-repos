@@ -1,0 +1,11 @@
+#!/bin/bash
+rm -f ~/repos/*/.git/hooks/*.sample
+for p in ~/repos/*/.git/hooks; do
+  if [[ -e "$p/post-commit" ]]; then
+    # do nothing, already exists
+    true
+  else
+    echo "Installing stevens-post-commit-script to $p/ ..."
+    ln -s ~/bin/steven/stevens-post-commit-script $p/post-commit
+  fi
+done
