@@ -80,7 +80,7 @@ if ($is_public && is_online()) {
     } else {
         $log->info("Pushing to github ...");
         $log->trace("Checking whether remote origin has been added ...");
-        _mysystem "git", "config", "--get", "remote.origin.url";
+        my $output = `git config --get remote.origin.url`;
         if ($?) {
             $log->debug("remote origin doesn't seem be added yet, adding ...");
             _mysystem "git", "remote", "add", "origin",
