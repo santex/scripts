@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# created: 2011-06-08
+
 # tugas skrip ini adalah mengamati file audio/video baru yang terbentuk di cache
 # opera, lalu jika ukurannya >1MB, memonitornya. dan jika dalam 30 detik sudah
 # tidak bertambah lagi ukurannya, print nama file dan ukuran akhirnya. skrip ini
