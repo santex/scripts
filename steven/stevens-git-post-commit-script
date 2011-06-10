@@ -119,6 +119,8 @@ if (!$is_priv && (-d $hloc_dir)) {
         ($forumid, $topicid) = (51, 29731);
     } elsif ($repo_name eq 'mwn-foruminternal') {
         ($forumid, $topicid) = (51, 28910);
+    } elsif ($repo_name eq 'mwn-masterkey') {
+        ($forumid, $topicid) = (51, 29726);
     } elsif ($repo_name eq 'mwn-site') {
         ($forumid, $topicid) = (51, 29732);
     } elsif ($repo_name eq 'mwn-steven-webdev') {
