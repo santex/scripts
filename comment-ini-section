@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Config::INIFiles;
+use Sub::Spec::CmdLine qw(run);
+
+our %SPEC;
+
+$SPEC{comment_ini_section} = {
+    summary => 'Comment a section in INI file',
+    args    => {
+        file => ['str*' => {
+            summary => 'INI file',
+            arg_pos => 0,
+        }],
+        section => ['str*' => {
+            summary => 'Section name',
+            arg_pos => 1,
+        },
+    },
+};
+sub comment_ini_section {
+    my %args = @_;
+    # XXX schema
+    my $file    = $args{file}    or return [400, "Please specify file"];
+    my $section = $args{section} or return [400, "Please specify section"];
+
+    my $ini = Config::INIFiles->new(-file => $file)
+        or return [500, "Can't initialize Config::INIFiles: ".
+                       join(" ", @Config::IniFiles::errors)];
+    # $ini->...
+    [501, "Not yet implemented"];
+    #[200, "OK"];
+}
+
+run(load=>0, module=>'main', sub=>'comment_ini_section');
