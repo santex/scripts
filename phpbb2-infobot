@@ -304,6 +304,14 @@ my @Responses = (
          }
      }},
 
+    {pat => qr/^avatars$/i,
+     name => 'AVATARS',
+     handler => sub {
+         my (%args) = @_;
+         $Mech->get("$App::options{base_url}/utils.php?mode=avatars");
+         return $Mech->content;
+     }},
+
     {pat => qr//,
      name => 'DEFAULT',
      handler => sub {
