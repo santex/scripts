@@ -19,7 +19,7 @@ $App::options{verbose}++ if $App::options{dry_run};
 for (@ARGV) {
     /(.*?)[ _.-]*S(\d\d?)E(\d\d)[ _.-]*(.*)\.(\w+)$/i or
     /^(.*?)[ _.-]*(\d\d?)\s*x?\s*(\d\d)[ _.-]*(.*)\.(\w+)$/i or
-    /(.*?)[ _.-]*SE?(\d\d?)[ _.-]*E(\d\d)[ _.-]*(.*)\.(\w+)$/i or
+    /(.*?)[ _.-]*SE?(\d\d?)[ _.-]*Ep?(\d\d)[ _.-]*(.*)\.(\w+)$/i or
       do {
         warn "File `$_' doesn't contain episode number or extension, skipped\n";
         next;
