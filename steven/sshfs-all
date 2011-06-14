@@ -1,5 +1,5 @@
 #!/bin/bash
-sshfs steven@gold:/             /media/gold
-sshfs steven@hosting:/          /media/bismuthb
-sshfs s10010@23.masterweb.net:/ /media/server23
-sshfs steven@xenon:/            /media/xenon
+sshfs -o umask=022 steven@gold:/             /media/gold
+sshfs -o umask=022 steven@hosting:/          /media/bismuthb
+sshfs -o umask=022 s10010@23.masterweb.net:/ /media/server23
+sshfs -o umask=022 steven@xenon:/            /media/xenon

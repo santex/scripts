@@ -1,5 +1,5 @@
 #!/bin/bash
 
 kill-sshfs-backpacker
-sshfs u1@backpacker.localdomain:/ /media/backpacker
+sshfs -o umask=022 u1@backpacker.localdomain:/ /media/backpacker
 
