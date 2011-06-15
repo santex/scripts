@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+
+# created: 2011-06-15
+
+# turns 'go to http://foo.com/bar and click on the image' into 'go to <a
+# href="http://foo.com/bar">http://foo.com/bar</a> and click on the image'
+
+use 5.010;
+use strict;
+use warnings;
+
+#use HTML::Entities;
+use URI::Find::Schemeless;
+
+my $text = join "", <>;
+URI::Find::Schemeless->new(
+    sub {
+        #my $uri = encode_entities $_[0];
+        my $uri = $_[0];
+        return qq|<a href="$uri">$uri</a>|;
+     })->find(\$text);
+print $text;
