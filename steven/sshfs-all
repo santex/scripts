@@ -1,5 +1,5 @@
 #!/bin/bash
-sshfs -o umask=022 steven@gold:/             /media/gold
-sshfs -o umask=022 steven@hosting:/          /media/bismuthb
-sshfs -o umask=022 s10010@23.masterweb.net:/ /media/server23
-sshfs -o umask=022 steven@xenon:/            /media/xenon
+sshfs -o idmap=user steven@gold:/             /media/gold
+sshfs -o idmap=user steven@hosting:/          /media/bismuthb
+sshfs -o idmap=user s10010@23.masterweb.net:/ /media/server23
+sshfs -o idmap=user steven@xenon:/            /media/xenon
