@@ -11,6 +11,13 @@ die "Usage: $0 <CPANID> ...\n" unless @ARGV;
 
 for my $cpanid (@ARGV) {
     my $dom = Mojo::DOM->new(get "http://search.cpan.org/~".lc($cpanid)."/");
+
+    my $e = $dom->at("div[class=t1]");
+    my $name = $e ? $e->text : undef;
+
     my $trs = $dom->find('tr a[href*="/src/"]');
-    printf "%s has %d distributions on CPAN\n", $cpanid, scalar(@$trs);
+    my $numdists = @$trs;
+
+    printf "%s has %d distributions on CPAN\n",
+        (defined($name) ? "$name ($cpanid)" : $cpanid), $numdists;
 }
