@@ -73,17 +73,20 @@ $log->debug("Botname_Regex=$Botname_Regex");
 
 my @Responses = (
 
-    {pat => qr/^(bantuan|help)*$/,
+    {pat => qr/^(bantuan|help|commands|perintah|daftar\s+perintah)*$/,
      name => 'HELP',
      handler => sub {
          join("",
               "Bantuan: beberapa perintah yang saat ini dikenali:\n\n",
-              "* bantuan / help -> pesan ini\n",
-              "* tampilkan gambar KATAKUNCI -> cari gambar di google images\n",
-              "* status -> tampilkan uptime, hostname, pid, dll\n",
-              "* USERNAME++ (ALASAN) / USERNAME-- (ALASAN) -> beri karma positif/negatif\n",
-              "* karma dari USERNAME -> tampilkan daftar karma yang diberikan seorang user\n",
-              "* karma USERNAME -> tampilkan daftar karma yang diterima seorang user\n",
+              "* [b]bantuan[/b] / [b]help[/b] -> pesan ini\n",
+              "* [b]tampilkan gambar [/b][i]KATAKUNCI[/i] -> cari gambar di google images\n",
+              "* [b]status[/b] -> tampilkan uptime, hostname, pid, dll\n",
+              "* [i]USERNAME[/i][b]++ ([/b][i]ALASAN[/i][b])[/b] / [i]USERNAME[/i][b]-- ([/b][i]ALASAN[/i][b])[/b] -> beri karma positif/negatif\n",
+              "* [b]karma dari [/b][i]USERNAME[/i] -> tampilkan daftar karma yang diberikan seorang user\n",
+              "* [b]karma [/b][i]USERNAME[/i] -> tampilkan daftar karma yang diterima seorang user\n",
+              "* [b]thanks[/b] -> ucapkan terima kasih pada bot\n",
+              "* [b]exit[/b] / [b]quit[/b] -> bunuh proses bot\n",
+              "* [b]avatars[/b] -> tampilkan avatar semua user aktif saat ini\n",
           );
      }},
 
