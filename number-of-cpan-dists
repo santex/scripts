@@ -9,6 +9,8 @@ use Mojo::DOM;
 
 die "Usage: $0 <CPANID> ...\n" unless @ARGV;
 
+binmode STDOUT, ":utf8";
+
 for my $cpanid (@ARGV) {
     my $dom = Mojo::DOM->new(get "http://search.cpan.org/~".lc($cpanid)."/");
 
