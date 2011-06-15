@@ -47,7 +47,7 @@ while (1) {
                 $last_increase_time{$f} = $now;
             } else {
                 if ($now - $last_increase_time{$f} > 30) {
-                    if ($sizes{$f} > 1_000_000) {
+                    if ($sizes{$f} > 400_000) {
                         my $final = "$now.mp3";
                         print "$f hasn't changed in 30 seconds, final size = $sizes{$f}, renamed to $final\n";
                         rename $f, $final;
