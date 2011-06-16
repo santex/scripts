@@ -45,6 +45,10 @@ $log->debugf("branch is %s", $branch);
 my $is_priv    = $repo_name =~ /^priv-/;
 my $is_mwn     = $repo_name =~ /^mwn(-|$)/;
 my $is_perl    = $repo_name =~ /(^|-)perl-/;
+my $is_ruby    = $repo_name =~ /(^|-)perl-/;
+my $is_python  = $repo_name =~ /(^|-)python-/;
+my $is_php     = $repo_name =~ /(^|-)php-/;
+my $is_js      = $repo_name =~ /(^|-)js-/;
 my $is_media   = $repo_name =~ /(^|-)media-/;
 my $is_spanel  = $repo_name =~ /(^|-)spanel(-|$)/;
 my $is_public  = !$is_priv && !$is_mwn && !$is_spanel;
@@ -105,8 +109,16 @@ if (!$is_priv && (-d $hloc_dir)) {
     }
     $log->info("Announcing to forumi ...");
     my ($forumid, $topicid);
-    if ($repo_name =~ /^perl-/) {
+    if ($is_perl) {
         ($forumid, $topicid) = (51, 31078);
+    } elsif ($is_php) {
+        ($forumid, $topicid) = (51, 31297);
+    } elsif ($is_python) {
+        ($forumid, $topicid) = (51, 31298);
+    } elsif ($is_ruby) {
+        ($forumid, $topicid) = (51, 31299);
+    } elsif ($is_js) {
+        ($forumid, $topicid) = (51, 31300);
     } elsif ($repo_name eq 'scripts') {
         ($forumid, $topicid) = (51, 29724);
     } elsif ($repo_name eq 'spanel' && $branch eq 'stable') {
@@ -115,8 +127,6 @@ if (!$is_priv && (-d $hloc_dir)) {
         ($forumid, $topicid) = (28, 29718);
     } elsif ($repo_name eq 'mwn') {
         ($forumid, $topicid) = (51, 29725);
-    } elsif ($repo_name eq 'php-sh_functions') {
-        ($forumid, $topicid) = (51, 29731);
     } elsif ($repo_name eq 'mwn-foruminternal') {
         ($forumid, $topicid) = (51, 28910);
     } elsif ($repo_name eq 'mwn-masterkey') {
