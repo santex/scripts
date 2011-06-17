@@ -9,19 +9,18 @@
 
 use 5.010;
 use strict;
-
-BEGIN { }
-
-use DBI;
-use Data::Dumper;
-use File::Slurp;
-use List::Util qw(shuffle min);
 use Log::Any::App '$log',
     -screen=>{pattern_style=>'script_long'};
-use URI::Escape;
-use REST::Google::Search::Images;
-use WWW::Mechanize;
+
+use Data::Dumper;
+use DBI;
 use Digest::MD5 qw(md5_hex);
+use File::Slurp;
+use List::Util qw(shuffle min);
+use REST::Google::Search::Images;
+use SHARYANTO::Utils;
+use URI::Escape;
+use WWW::Mechanize;
 
 our $VERSION = '0.100429a';
 our $quit = 0;
