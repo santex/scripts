@@ -2,55 +2,10 @@
 
 # 990928, pas waktu mo nge-print manual PostgreSQL
 # 000710, nambah biar bisa get document dari URL. BASE HREF aware.
+# 2011-06-17, moved to SHARYANTO::HTML::Extract::ImageLinks
 
-$|++;
-use HTML::Parser;
-use LWP::Simple;
-use URI::URL;
+die "temporarily not working yet, ".
+    "please use SHARYANTO::HTML::Extract::ImageLinks\n";
 
-my %memory;
-my $base; # this is a global...
-
-for (@ARGV) {
-	my $doc;
-#	%memory = (); # jika on, berarti memori link hanya sebatas per file
-	$base = '';
-
-	if (m#^\w+://#) {
-		$doc = get($_);
-		$base = $_ if $doc;
-	}
-	if (!$doc) {
-		local $/;
-		if(open F, $_) { $doc = <F>; }
-	}
-
-	if (!$doc) {
-		if ($!) {
-			warn "$_: $!\n";
-		} else {
-			warn "$_: cannot retrieve document\n";
-		}
-	} else {
-		# cari base href jika ada...
-		if ($doc =~ /<base\b[^>]*\bhref\s*=\s*(\S+)[^>]*>/is) {
-			$base = $1; #$base =~ s/^["']//; $base =~ s/["']$//;
-		}
-		my $p = HTML::Parser->new(
-                    api_version => 3,
-                    start_h => [\&handler, "tagname, attr"],
-                );
-		$p->parse($doc);
-	}
-}
-
-sub handler {
-    my ($tagname, $attr) = @_;
-    return unless $tagname =~ /^img$/i;
-    for ($attr->{src}) {
-        s/#.*//; # buang anchor
-        if (++$memory{$_} == 1) { # link baru (belum pernah di-print
-            print URI::URL->new($_, $base)->abs(), "\n";
-        }
-    }
-}
+use Sub::Spec::CmdLine qw(run);
+run(module=>'SHARYANTO::HTML::Extract::ImageLinks', sub=>'extract_image_links');
