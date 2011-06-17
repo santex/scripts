@@ -42,15 +42,18 @@ $log->debugf("repo name is %s", $repo_name);
 my ($branch) = `git branch` =~ /^\* (.+)/m;
 $log->debugf("branch is %s", $branch);
 
-my $is_priv    = $repo_name =~ /^priv-/;
-my $is_mwn     = $repo_name =~ /^mwn(-|$)/;
+my $is_priv    = $repo_name =~ /^priv-/
+    || (-e "$repo_dir/.git/.private");
+my $is_mwn     = $repo_name =~ /^mwn(-|$)/
+    || (-e "$repo_dir/.git/.mwn");
 my $is_perl    = $repo_name =~ /(^|-)perl-/;
 my $is_ruby    = $repo_name =~ /(^|-)perl-/;
 my $is_python  = $repo_name =~ /(^|-)python-/;
 my $is_php     = $repo_name =~ /(^|-)php-/;
 my $is_js      = $repo_name =~ /(^|-)js-/;
 my $is_media   = $repo_name =~ /(^|-)media-/;
-my $is_spanel  = $repo_name =~ /(^|-)spanel(-|$)/;
+my $is_spanel  = $repo_name =~ /(^|-)spanel(-|$)/
+    || (-e "$repo_dir/.git/.spanel");
 my $is_public  = !$is_priv && !$is_mwn && !$is_spanel;
 
 $log->debug("is_priv? $is_priv. is_mwn? $is_mwn. is_perl? $is_perl. ".
