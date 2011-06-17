@@ -330,7 +330,7 @@ my @Responses = (
                  return "gagal ngekstrak imej-nya say :(";
              }
              if (@{$res->[2]}) {
-                 return join("\n\n", map {"[img]$_[/img]"} @{$res->[2]});
+                 return join("\n\n", map {"[img]".$_."[/img]"} @{$res->[2]});
              } else {
                  return "kayaknya pej tsb ga ada gambarnya tuh say?";
              }
