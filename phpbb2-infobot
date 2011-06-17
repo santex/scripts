@@ -315,7 +315,7 @@ my @Responses = (
          return $Mech->content;
      }},
 
-    {pat => qr/^(?:extract|ekstrak|comot)-?(?:in|kan)\s+
+    {pat => qr/^(?:extract|ekstrak|comot)-?(?:in|kan)?\s+
                (?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+
                (?:dari|dr|from|fr)\s+
                (.+)$/ix,
