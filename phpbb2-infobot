@@ -317,7 +317,7 @@ my @Responses = (
 
     {pat => qr/^(?:extract|ekstrak|comot)-?(?:in|kan)\s+
                (?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+
-               (?:dari|from)\s+
+               (?:dari|dr|from|fr)\s+
                (.+)$/ix,
      name => 'EXTRACT_IMAGE_LINKS',
      handler => sub {
