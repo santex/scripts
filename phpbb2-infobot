@@ -18,11 +18,11 @@ use Digest::MD5 qw(md5_hex);
 use File::Slurp;
 use List::Util qw(shuffle min);
 use REST::Google::Search::Images;
-use SHARYANTO::Utils;
+use SHARYANTO::HTML::Extract::ImageLinks qw(extract_image_links);
 use URI::Escape;
 use WWW::Mechanize;
 
-our $VERSION = '0.100429a';
+our $VERSION = '2011-06-17';
 our $quit = 0;
 
 use App::Options (
@@ -86,6 +86,7 @@ my @Responses = (
               "* [b]thanks[/b] -> ucapkan terima kasih pada bot\n",
               "* [b]exit[/b] / [b]quit[/b] -> bunuh proses bot\n",
               "* [b]avatars[/b] -> tampilkan avatar semua user aktif saat ini\n",
+              "* [b]ekstrak gambar dari [/b][i]URL[/b] -> ambil dan tampilkan semua gambar dari halaman web\n",
           );
      }},
 
@@ -312,6 +313,30 @@ my @Responses = (
          my (%args) = @_;
          $Mech->get("$App::options{base_url}/utils.php?mode=avatars");
          return $Mech->content;
+     }},
+
+    {pat => qr/^(?:extract|ekstrak|comot)-?(?:in|kan)\s+
+               (?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+
+               (?:dari|from)\s+
+               (.+)$/ix,
+     name => 'EXTRACT_IMAGE_LINKS',
+     handler => sub {
+         my (%args) = @_;
+         my $url = $args{match}[1];
+         $Mech->get($url);
+         if ($Mech->success) {
+             my $res = extract_image_links(html => $Mech->content, base=>$url);
+             if ($res->[0] != 200) {
+                 return "gagal ngekstrak imej-nya say :(";
+             }
+             if (@{$res->[2]}) {
+                 return join("\n\n", map {"[img]$_[/img]"} @{$res->[2]});
+             } else {
+                 return "kayaknya pej tsb ga ada gambarnya tuh say?";
+             }
+         } else {
+             return "gagal ngambil pej tsb say :(";
+         }
      }},
 
     {pat => qr//,
