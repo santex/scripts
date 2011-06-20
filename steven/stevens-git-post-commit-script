@@ -177,9 +177,18 @@ if (-d $pc_dir) {
     }
 }
 
-# push private repos to external harddisk, if available
-#if ($has_exthd) {
-#    $log->info("Pushing to exthd ...");
-#}
+# push to external hdd, if available
+my $exthdd_dir = "/media/elements/home/u1/repos";
+if (-d $exthdd_dir) {
+    {
+        $log->info("Pushing to external hdd ...");
+        local $CWD = $exthdd_dir;
+        _mysystem("gitbunch", "sync",
+                  "--exclude-files", "--exclude-non-git-dirs",
+                  "--source", "$repo_dir/..",
+                  "--target", "$exthdd_dir",
+                  "--include-repos", "[$repo_name]");
+    }
+}
 
 $log->debug("$0 ended");
