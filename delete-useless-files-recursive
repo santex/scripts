@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use File::Find;
+use File::Path qw(remove_tree);
+use Log::Any::App '$log';
+BEGIN { no warnings; $::Log_Level = 'info' }
+
+my @uselessn = qw(
+                     desktop.ini
+                     thumbs.db
+                     .mediaartlocal
+             );
+
+my @args = @ARGV ? @ARGV : (".");
+
+finddepth sub {
+    $log->tracef("%s/%s", $File::Find::dir, $_);
+    return if /^(\.\.?)$/;
+
+    my $delete;
+    {
+        # exact filenames
+        if (lc($_) ~~ @uselessn) {
+            $delete++; last;
+        }
+
+        # filename pattern
+        if (/(demonoid.*\.txt)$/i) {
+            $delete++; last;
+        }
+
+        # ext
+        if (/\.(url|nfo|m3u|sfv)$/i) {
+            $delete++; last;
+        }
+    }
+    return unless $delete;
+
+    $log->infof("Deleting %s/%s ...", $File::Find::dir, $_);
+    remove_tree $_;
+}, @args;
