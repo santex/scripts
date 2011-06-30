@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use autodie;
+
+use Config::IniFiles;
+
+unless (@ARGV == 2) {
+    die "Usage: $0 <ini-file> <section-name>\n";
+}
+my ($file, $section) = @ARGV;
+
+my $cfg = Config::IniFiles->new(
+    -file => $file, -fallback => 'GENERAL', -nomultiline=>1)
+    or die "Can't initialize: @Config::IniFiles::errors\n";
+$cfg->DeleteSection($section);
+$cfg->RewriteConfig;
+
