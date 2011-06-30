@@ -78,6 +78,21 @@ if ($has_backup_part) {
     }
 }
 
+# push certain public repos to public dir, for things like sharing scripts to
+# other users
+my $pubdir = "/u/$ENV{USER}/public/repos";
+if ((-d $pubdir) && $is_public && $repo =~ /^(scripts|references)$/) {
+    $log->info("Pushing to public ...");
+    {
+        local $CWD = $pubdir;
+        _mysystem("gitbunch", "sync",
+                  "--exclude-files", "--exclude-non-git-dirs",
+                  "--source", "$repo_dir/..",
+                  "--target", "$pubdir",
+                  "--include-repos", "[$repo_name]");
+    }
+}
+
 # push public repos to github, for backup as well
 my $git_user = "sharyanto";
 if ($is_public && is_online()) {
