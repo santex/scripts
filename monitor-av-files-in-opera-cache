@@ -48,6 +48,7 @@ while (1) {
             } else {
                 if ($now - $last_increase_time{$f} > 30) {
                     if ($sizes{$f} > 400_000) {
+                        notify_sound();
                         my $final = "$now.mp3";
                         print "$f hasn't changed in 30 seconds, final size = $sizes{$f}, renamed to $final\n";
                         rename $f, $final;
@@ -61,3 +62,6 @@ while (1) {
     sleep 5;
 }
 
+sub notify_sound {
+    system "play -q /usr/share/sounds/KDE-K3B-Insert-Medium.ogg";
+}
