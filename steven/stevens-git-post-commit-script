@@ -139,10 +139,12 @@ if (!$is_priv && (-d $hloc_dir)) {
         ($forumid, $topicid) = (51, 31300);
     } elsif ($repo_name eq 'scripts') {
         ($forumid, $topicid) = (51, 29724);
-    } elsif ($repo_name eq 'spanel' && $branch eq 'stable') {
+    } elsif ($is_spanel && $branch eq 'stable') {
         ($forumid, $topicid) = (28, 29723);
-    } elsif ($repo_name eq 'spanel' && $branch eq 'dev') {
+    } elsif ($is_spanel && $branch eq 'dev') {
         ($forumid, $topicid) = (28, 29718);
+    } elsif ($is_spanel && $branch eq 'master') {
+        ($forumid, $topicid) = (28, 32450);
     } elsif ($repo_name eq 'mwn') {
         ($forumid, $topicid) = (51, 29725);
     } elsif ($repo_name eq 'mwn-foruminternal') {
