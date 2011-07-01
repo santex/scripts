@@ -33,6 +33,7 @@ while (1) {
         my $filetype = `file $f`;
         my $ext;
         if ($filetype =~ /audio.+id3|mpeg.+layer iii/i) { $ext = "mp3" }
+        if ($filetype =~ /macromedia flash/i) { $ext = "flv" }
         else {
             $log->trace("type unknown, skipped");
             next;
@@ -49,7 +50,7 @@ while (1) {
                 if ($now - $last_increase_time{$f} > 30) {
                     if ($sizes{$f} > 400_000) {
                         notify_sound();
-                        my $final = "$now.mp3";
+                        my $final = "$now.$ext";
                         print "$f hasn't changed in 30 seconds, final size = $sizes{$f}, renamed to $final\n";
                         rename $f, $final;
                     }
