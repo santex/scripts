@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use autodie;
+
+use Fcntl qw(:DEFAULT :flock);
+
+$ARGV[0] or die "Usage: $0 <scoreboard-file>\n";
+
+my $RECSIZE = 20;
+sysopen my($fh), $ARGV[0], O_RDONLY;
+my $rec;
+while (sysread $fh, $rec, $RECSIZE) {
+    next unless length($rec) == $RECSIZE;
+    my ($pid, $state, $ts) = unpack("NCN", $rec);
+    $state = chr($state);
+    print "pid=$pid, state=$state, ts=$ts\n";
+}
