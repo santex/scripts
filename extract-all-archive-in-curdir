@@ -63,7 +63,7 @@ else {
 Log::Log4perl->easy_init($log_level);
 
 my %archives = (
-    rar => { re => qr/\.(rar|cbr)$/i,            cmd => 'rar x' },
+    rar => { re => qr/\.(rar|cbr)$/i,            cmd => 'unrar x' },
     zip => { re => qr/\.(zip|cbz)$/i,            cmd => 'unzip' },
     tar => { re => qr/\.(tar)$/i,                cmd => 'tar xf' },
     tgz => { re => qr/\.(tgz|tar\.gz)$/i,        cmd => 'tar xfz' },
