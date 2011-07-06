@@ -3,7 +3,7 @@
 # created: 2011-06-08
 
 # tugas skrip ini adalah mengamati file audio/video baru yang terbentuk di cache
-# opera, lalu jika ukurannya >1MB, memonitornya. dan jika dalam 30 detik sudah
+# opera, lalu jika ukurannya >1MB, memonitornya. dan jika dalam 60 detik sudah
 # tidak bertambah lagi ukurannya, print nama file dan ukuran akhirnya. skrip ini
 # awalnya gw pake utk mempermudah merename file mp3 dari tingbook.com yang harus
 # diplay, gak bisa didownload.
@@ -47,11 +47,11 @@ while (1) {
             if ($last_sizes{$f} != $sizes{$f}) {
                 $last_increase_time{$f} = $now;
             } else {
-                if ($now - $last_increase_time{$f} > 30) {
+                if ($now - $last_increase_time{$f} > 60) {
                     if ($sizes{$f} > 400_000) {
                         notify_sound();
                         my $final = "$now.$ext";
-                        print "$f hasn't changed in 30 seconds, final size = $sizes{$f}, renamed to $final\n";
+                        print "$f hasn't changed in 60 seconds, final size = $sizes{$f}, renamed to $final\n";
                         rename $f, $final;
                     }
                 }
