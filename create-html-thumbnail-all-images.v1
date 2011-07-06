@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+
+# created 2008-12-22 - 1 cd dipilah2x jadi sub- (dan sub-sub) folder,
+# capek juga masuk dan keluar foldernya, maka gw buat skrip ini agar
+# ada 1 halaman index.html utk liat semua image video thumbnails
+
+use File::Find;
+#use HTML::Entities;
+#use URI::Escape;
+
+die "index.html already exists!\n" if (-f "index.html");
+open F, ">index.html";
+print F "<div align=center>\n";
+find sub {
+    next unless -f;
+    next unless /\.(jpe?g|png|gif)$/i;
+    $path = "$File::Find::dir/$_";
+    print F "$path<br><img src=\"$path\"><br><br>\n";
+}, ".";
+print F "</div>\n";
+close F;
