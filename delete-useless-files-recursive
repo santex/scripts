@@ -13,6 +13,7 @@ my @uselessn = qw(
                      desktop.ini
                      thumbs.db
                      .mediaartlocal
+                     .directory
              );
 
 my @args = @ARGV ? @ARGV : (".");
