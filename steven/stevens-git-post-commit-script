@@ -98,7 +98,7 @@ my $git_user = "sharyanto";
 if ($is_public && is_online()) {
     my $do_github = !is_false($ENV{GITHUB});
     if (!$do_github) {
-        $log->info("Skipping pushing to github");
+        $log->info("Skipping pushing to github (ENV)");
     } else {
         $log->info("Pushing to github ...");
         $log->trace("Checking whether remote origin has been added ...");
