@@ -166,23 +166,6 @@ if (!$is_priv && (-d $hloc_dir)) {
               "--phpbb2_post_topic_id=$topicid");
 }
 
-# starting 2011-07-07, push perl repos to server23 as a backup for github
-# (someone asked me the other day about pulling Org::Parser when github is
-# experiencing problem)
-my $s23_dir = "/media/server23/home/sloki/user/mwnsteven/public/repos";
-$log->trace("Checking whether s23_dir $s23_dir exists ...");
-if ($is_perl && (-d $s23_dir)) {
-    {
-        $log->info("Pushing to s23 ...");
-        local $CWD = $s23_dir;
-        _mysystem("gitbunch", "sync",
-                  "--exclude-files", "--exclude-non-git-dirs",
-                  "--source", "$repo_dir/..",
-                  "--target", "$s23_dir",
-                  "--include-repos", "[$repo_name]");
-    }
-}
-
 # push from PC to laptop, if laptop is available
 my $laptop_dir = "$ENV{HOME}/hbp/repos";
 if (-d $laptop_dir) {
