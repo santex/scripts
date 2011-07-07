@@ -109,6 +109,7 @@ if ($is_public && is_online()) {
                 "git\@github.com:$git_user/$repo_name.git";
         }
         _mysystem "git", "push", "origin", "master";
+        _mysystem "git", "push", "--tags", "origin", "master";
     }
 }
 
@@ -135,6 +136,7 @@ if ($is_public && is_online()) {
         }
         $log->info("Pushing to gitorious ...");
         _mysystem "git", "push", "gitorious", "master";
+        _mysystem "git", "push", "--tags", "gitorious", "master";
     }
 }
 
