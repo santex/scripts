@@ -98,7 +98,7 @@ my $git_user = "sharyanto";
 if ($is_public && is_online()) {
     my $do_github = !is_false($ENV{GITHUB});
     if (!$do_github) {
-        $log->info("Skipping posting to github");
+        $log->info("Skipping pushing to github");
     } else {
         $log->info("Pushing to github ...");
         $log->trace("Checking whether remote origin has been added ...");
@@ -112,23 +112,29 @@ if ($is_public && is_online()) {
     }
 }
 
-# push public repos to gitorious.org, for backup as well. i create one project
-# per repo. gitorious requires repo name in lowercase.
+# push public repos to gitorious.org, for backup of github, but only do this
+# when remote url has been set (manually). i create one project per repo.
+# gitorious requires repo name in lowercase.
 if ($is_public && is_online()) {
     my $do_gitorious = !is_false($ENV{GITORIOUS});
     my $repo_name_lc = lc $repo_name;
-    if (!$do_gitorious) {
-        $log->info("Skipping posting to gitorious");
-    } else {
-        $log->info("Pushing to gitorious ...");
+    {
+        if (!$do_gitorious) {
+            $log->info("Skipping pushing to gitorious (ENV)");
+            last;
+        }
         $log->trace("Checking whether remote gitorious has been added ...");
         my $output = `git config --get remote.gitorious.url`;
         if ($?) {
+            #$log->debug("remote gitorious doesn't seem be added yet, ".
+            #                "adding ...");
+            #_mysystem "git", "remote", "add", "gitorious",
+            #    "git\@gitorious.org:$repo_name_lc/$repo_name_lc.git";
             $log->debug("remote gitorious doesn't seem be added yet, ".
-                            "adding ...");
-            _mysystem "git", "remote", "add", "gitorious",
-                "git\@gitorious.org:$repo_name_lc/$repo_name_lc.git";
+                            "skipping pushing to gitorious ...");
+            last;
         }
+        $log->info("Pushing to gitorious ...");
         _mysystem "git", "push", "gitorious", "master";
     }
 }
