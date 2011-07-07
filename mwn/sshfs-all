@@ -1,5 +1,5 @@
 #!/bin/bash
-sshfs -o idmap=user -o default_permissions steven@gold:/             /media/gold
-sshfs -o idmap=user -o default_permissions steven@hosting:/          /media/bismuthb
-sshfs -o idmap=user -o default_permissions s10010@23.masterweb.net:/ /media/server23
-sshfs -o idmap=user -o default_permissions steven@xenon:/            /media/xenon
+sshfs -o idmap=user -o default_permissions steven@gold:/                /media/gold
+sshfs -o idmap=user -o default_permissions steven@hosting:/             /media/bismuthb
+sshfs -o idmap=user -o default_permissions mwnsteven@23.masterweb.net:/ /media/server23
+sshfs -o idmap=user -o default_permissions steven@xenon:/               /media/xenon
