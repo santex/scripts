@@ -112,6 +112,27 @@ if ($is_public && is_online()) {
     }
 }
 
+# push public repos to gitorious.org, for backup as well. i create one project
+# per repo. gitorious requires repo name in lowercase.
+if ($is_public && is_online()) {
+    my $do_gitorious = !is_false($ENV{GITORIOUS});
+    my $repo_name_lc = lc $repo_name;
+    if (!$do_gitorious) {
+        $log->info("Skipping posting to gitorious");
+    } else {
+        $log->info("Pushing to gitorious ...");
+        $log->trace("Checking whether remote gitorious has been added ...");
+        my $output = `git config --get remote.gitorious.url`;
+        if ($?) {
+            $log->debug("remote gitorious doesn't seem be added yet, ".
+                            "adding ...");
+            _mysystem "git", "remote", "add", "gitorious",
+                "git\@gitorious.org:$repo_name_lc/$repo_name_lc.git";
+        }
+        _mysystem "git", "push", "gitorious", "master";
+    }
+}
+
 # push all repos except private ones to hloc
 my $hloc_dir = "/media/bismuthb/home/sloki/user/steven/public/git";
 $log->trace("Checking whether hloc_dir $hloc_dir exists ...");
