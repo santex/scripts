@@ -130,8 +130,7 @@ if ($is_public && is_online()) {
             #                "adding ...");
             #_mysystem "git", "remote", "add", "gitorious",
             #    "git\@gitorious.org:$repo_name_lc/$repo_name_lc.git";
-            $log->debug("remote gitorious doesn't seem be added yet, ".
-                            "skipping pushing to gitorious ...");
+            $log->info("Skipping pushing to gitorious (no remote url set) ...");
             last;
         }
         $log->info("Pushing to gitorious ...");
