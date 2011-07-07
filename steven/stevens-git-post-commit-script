@@ -118,11 +118,10 @@ if ($is_public && is_online()) {
 if ($is_public && is_online()) {
     my $do_gitorious = !is_false($ENV{GITORIOUS});
     my $repo_name_lc = lc $repo_name;
-  L1:
     {
         if (!$do_gitorious) {
             $log->info("Skipping pushing to gitorious (ENV)");
-            last L1;
+            last;
         }
         $log->trace("Checking whether remote gitorious has been added ...");
         my $output = `git config --get remote.gitorious.url`;
@@ -133,7 +132,7 @@ if ($is_public && is_online()) {
             #    "git\@gitorious.org:$repo_name_lc/$repo_name_lc.git";
             $log->debug("remote gitorious doesn't seem be added yet, ".
                             "skipping pushing to gitorious ...");
-            last L1;
+            last;
         }
         $log->info("Pushing to gitorious ...");
         _mysystem "git", "push", "gitorious", "master";
