@@ -15,9 +15,10 @@ BEGIN { $::Log_Level = 'info' }
 # very simple implementation, assume normal dist name like Foo-Bar-0.01. more
 # proper implementation should read dist.ini
 
-for (<*>) {
+for (<*>, <.build/*>) {
     $log->trace("Processing $_ ...");
-    next unless /^[A-Z]\w+(-[A-Za-z]\w+)+-[0-9.]+(_\d+)?(\.tar\.gz)?$/;
+    next unless m!^\.build/! or
+        /^[A-Z]\w+(-[A-Za-z]\w+)+-[0-9.]+(_\d+)?(\.tar\.gz)?$/;
     $log->info("Deleting $_ ...");
     next if $ENV{DRY} || $ENV{DRYRUN} || $ENV{DRY_RUN};
     system "rm -rf ".shell_quote($_);
