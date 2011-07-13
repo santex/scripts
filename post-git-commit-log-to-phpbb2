@@ -7,6 +7,7 @@ use App::Options (
     option => {
         memory_path => { type => 'string' },
         max_look_behind => { type => 'integer', default => 500 },
+        max_lines => { type => 'integer', default => 500 },
         phpbb2_post_path => { type => 'string' },
         phpbb2_post_profile => { type => 'string' },
         phpbb2_post_forum_id => { type => 'integer' },
@@ -94,7 +95,8 @@ for (@revs) {
         join("",
              "( echo 'Subject: commit $repo_name ($branch:$_)'; ",
              "echo; echo -n '[code]'; ",
-             "git log -1 -p $_; echo '[/code]' ) | ",
+             "( git log -1 -p $_ | head -n$App::options{max_lines} ) ; ",
+             "echo '[/code]' ) | ",
              "'$phpbb2_post_path' ",
              ($App::options{phpbb2_post_profile} ?
                   "--profile=$App::options{phpbb2_post_profile} " :
