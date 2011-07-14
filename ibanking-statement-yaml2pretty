@@ -11,8 +11,6 @@ my $yaml = join "", <>;
 my $data = Load($yaml);
 print format_pretty(
     $data,
-    {table_column_orders=>[[qw/date seq description amount/]]}
+    {interactive => 1,
+     table_column_orders => [[qw/date seq description amount/]]}
 );
-
-
-
