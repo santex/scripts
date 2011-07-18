@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# force english, can't stand the french default version
+
+LANGUAGE=en_US.UTF-8:en pidgin
