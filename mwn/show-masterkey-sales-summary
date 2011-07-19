@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ssh mwnwhmcs@xenon 'DEBUG=1 ~/wwwbin/set-invoice-sale-date; cd sites/masterkey.masterweb.net/www/bin && perl -I../lib/perl -MMasterkey::AdminArea -e'\''\'"''"' Masterkey::AdminArea::login(); $Masterkey::AdminArea::mech->get("$Masterkey::Config::conf->{CONFIG_ADMIN_URL}/fa-sales-journal.php?output_format=txtsummary1"); print $Masterkey::AdminArea::mech->content'\''\' | \
-  perl -MNumber::Format -MDateTime -MDateTime::BusinessHours -ne'
+  perl -MNumber::Format -MDateTime -MCalendar::ID::Holiday=count_id_workdays -ne'
     BEGIN {
         $now = DateTime->now;
         $eom = $now->clone; $eom->set_day(1); $eom->add(months=>1); $eom->subtract(days=>1);
@@ -17,9 +17,14 @@ ssh mwnwhmcs@xenon 'DEBUG=1 ~/wwwbin/set-invoice-sale-date; cd sites/masterkey.m
         #printf "    --> Perkiraan hingga akhir bulan: %s (sisa hari=%d)\n",
         #    $fmt->format_number($rp * $eom->day/$now->day), ($eom->day-$now->day);
 
-        # business days
-        $bd_this_mon = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$eom)->getdays + 1;
-        $bd_so_far   = DateTime::BusinessHours->new(datetime1=>$som, datetime2=>$now)->getdays + 1;
+        # work days
+        my $res;
+        $res = Calendar::ID::Holiday::count_id_workdays(start_date=>$som, end_date=>$eom);
+        die "count_id_workdays failed (1): $res->[0] - $res->[1]" unless $res->[0] == 200;
+        $bd_this_mon = $res->[2];
+        $res = Calendar::ID::Holiday::count_id_workdays(start_date=>$som, end_date=>$now);
+        die "count_id_workdays failed (2): $res->[0] - $res->[1]" unless $res->[0] == 200;
+        $bd_so_far   = $res->[2];
         if ($bd_so_far) {
             printf "    --> Perkiraan hingga akhir bulan: %s (total hari kerja=%d, hingga hari ini=%d, sisa=%d)\n",
                 $fmt->format_number($rp * $bd_this_mon/$bd_so_far), $bd_this_mon, $bd_so_far, ($bd_this_mon - $bd_so_far);
