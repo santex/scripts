@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "just use SHOW TABLE STATUS :)"
+
+# or, if you insist, you can use something like:
+#   echo 'SHOW TABLES' | mysql ... | perl -lnee 'next unless $i++; print "SELECT \x27$_\x27, COUNT(*) FROM `$_`;' | mysql ...
+
