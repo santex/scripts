@@ -189,7 +189,7 @@ if (!$is_priv && (-d $hloc_dir)) {
         ($forumid, $topicid) = (51, 29753);
     } else {
         $log->error("Don't know which forum/thread to post announcement to".
-                        " (repo=$repo_name, branch=$branch), skipped";
+                        " (repo=$repo_name, branch=$branch), skipped");
     }
     _mysystem("post-git-commit-log-to-phpbb2",
               "--phpbb2_post_forum_id=$forumid",
