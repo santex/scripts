@@ -18,7 +18,7 @@ BEGIN { $::Log_Level = 'info' }
 for (<*>, <.build/*>) {
     $log->trace("Processing $_ ...");
     next unless m!^\.build/! or
-        /^[A-Z]\w+(-[A-Za-z]\w+)+-[0-9.]+(_\d+)?(\.tar\.gz)?$/;
+        /^[A-Z]\w+(-[A-Za-z]\w+)*-[0-9.]+(_\d+)?(\.tar\.gz)?$/;
     $log->info("Deleting $_ ...");
     next if $ENV{DRY} || $ENV{DRYRUN} || $ENV{DRY_RUN};
     system "rm -rf ".shell_quote($_);
