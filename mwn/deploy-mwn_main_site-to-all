@@ -1,3 +1,3 @@
 #!/bin/sh
-sync-www-builder2id_masterwebnet_com $*
-sync-www-builder2us_masterwebnet_com $*
+deploy-mwn_main_site-to-id_masterweb_net $*
+deploy-mwn_main_site-to-us_masterweb_net $*
