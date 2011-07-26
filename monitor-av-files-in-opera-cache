@@ -8,8 +8,8 @@
 # awalnya gw pake utk mempermudah merename file mp3 dari tingbook.com yang harus
 # diplay, gak bisa didownload.
 
-# TODO: instead of just checking mtime, check with lsof if some process (like
-# opera) is still opening it.
+# TODO: instead of just checking a file's mtime, check with lsof if some process
+# (like opera) is still opening it.
 
 use 5.010;
 use strict;
