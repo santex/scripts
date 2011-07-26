@@ -143,9 +143,12 @@ if ($is_public && is_online()) {
 }
 
 # push all repos except private ones to hloc
+my $exclude_hloc =
+    $repo_name =~ /^(lyrics|references|stardict|exploits|
+                       gudangapi|.+-gudangapi|)$/x;
 my $hloc_dir = "/media/bismuthb/home/sloki/user/steven/public/git";
 $log->trace("Checking whether hloc_dir $hloc_dir exists ...");
-if (!$is_priv && (-d $hloc_dir)) {
+if (!$is_priv && (-d $hloc_dir) && !$exclude_hloc) {
     {
         $log->info("Pushing to hloc ...");
         local $CWD = $hloc_dir;
