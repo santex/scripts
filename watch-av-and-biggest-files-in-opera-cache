@@ -1,0 +1,2 @@
+#!/bin/bash
+watch -n1 'ls -l --sort=s -r g*/* *flv 2>/dev/null|tail -n10'
