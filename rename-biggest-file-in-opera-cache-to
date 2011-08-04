@@ -4,13 +4,13 @@ use 5.010;
 use strict;
 use warnings;
 
-die "Usage: $0 <filename>\n" @ARGV != 1;
+die "Usage: $0 <filename>\n" if @ARGV != 1;
 
 my $ocdir = "$ENV{HOME}/.opera/cache";
 chdir $ocdir or die "Can't chdir to $ocdir: $!\n";
 
-@files = sort {(-s $b)<=>(-s $a)} glob "g_*/*";
-die "Can't find any files in cache?\n";
+my @files = sort {(-s $b)<=>(-s $a)} glob "g_*/*";
+die "Can't find any files in cache?\n" unless @files;
 
 print "$files[0] -> $ARGV[0] ...\n";
 rename $files[0], $ARGV[0] or die "Can't rename: $!\n";
