@@ -9,7 +9,7 @@ die "Usage: $0 <filename>\n" @ARGV != 1;
 my $ocdir = "$ENV{HOME}/.opera/cache";
 chdir $ocdir or die "Can't chdir to $ocdir: $!\n";
 
-@files = sort {(-s $b)<=>(-s $a)} glob "g*/*";
+@files = sort {(-s $b)<=>(-s $a)} glob "g_*/*";
 die "Can't find any files in cache?\n";
 
 print "$files[0] -> $ARGV[0] ...\n";
