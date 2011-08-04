@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use autodie;
+
+use Config::IniFiles;
+
+unless (@ARGV == 1) {
+    die "Usage: $0 <ini-file>\n";
+}
+my ($file) = @ARGV;
+
+my $cfg = Config::IniFiles->new(
+    -file => $file, -fallback => 'GENERAL', -nomultiline=>1)
+    or die "Can't initialize: @Config::IniFiles::errors\n";
+
+my $data = {};
+
+for my $section ($cfg->Sections) {
+    $data->{$section} = {};
+    for my $param ($cfg->Parameters($section)) {
+        my @d = $cfg->val($section, $param);
+        $data->{$section}{$param} = @d > 1 ? \@d : $d[0];
+    }
+}
+
+if ($0 =~ /2perl/) {
+    require Data::Dump;
+    Data::Dump::dd($data);
+} elsif ($0 =~ /2yaml/) {
+    require YAML::Syck;
+    print YAML::Syck::Dump($data);
+} elsif ($0 =~ /2json/) {
+    require JSON;
+    print JSON::encode_json($data);
+} else {
+    die "Can't figure out the output format\n";
+}

@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use autodie;
+
+use YAML::Syck qw(LoadFile);
+use Config::IniFiles;
+
+unless (@ARGV == 1) {
+    die "Usage: $0 <yaml-file>\n";
+}
+my ($file) = @ARGV;
+
+my $data = LoadFile $file;
+die "Data must be a hash (of hashes)\n"
+    unless ref($data) eq 'HASH';
+
+my $cfg = Config::IniFiles->new(
+    -fallback => 'GENERAL', -nomultiline=>1)
+    or die "Can't initialize: @Config::IniFiles::errors\n";
+
+for my $section (sort keys %$data) {
+    $cfg->AddSection($section);
+    my $s = $data->{$section};
+    die "Data->{$section} must be a hash\n"
+        unless ref($s) eq 'HASH';
+    for my $param (sort keys %$s) {
+        my $v = $s->{$param};
+        if (ref($v) eq 'ARRAY') {
+            $cfg->newval($section, $param, @$v);
+        } else {
+            $cfg->newval($section, $param, $v);
+        }
+    }
+}
+
+$cfg->OutputConfig;
