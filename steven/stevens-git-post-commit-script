@@ -190,6 +190,8 @@ if (!$is_priv && (-d $hloc_dir) && !$exclude_hloc) {
         ($forumid, $topicid) = (51, 25544);
     } elsif ($repo_name eq 'mwn-campus') {
         ($forumid, $topicid) = (51, 29753);
+    } elsif ($repo_name eq 'mwn-archive-mirrorscripts') {
+        ($forumid, $topicid) = (72, 33593);
     } else {
         $log->error("Don't know which forum/thread to post announcement to".
                         " (repo=$repo_name, branch=$branch), skipped");

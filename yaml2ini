@@ -18,7 +18,7 @@ die "Data must be a hash (of hashes)\n"
     unless ref($data) eq 'HASH';
 
 my $cfg = Config::IniFiles->new(
-    -fallback => 'GENERAL', -nomultiline=>1)
+    -fallback => 'GENERAL', -nomultiline=>0)
     or die "Can't initialize: @Config::IniFiles::errors\n";
 
 for my $section (sort keys %$data) {
