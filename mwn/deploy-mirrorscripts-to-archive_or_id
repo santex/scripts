@@ -1,0 +1,10 @@
+#!/bin/bash
+SRCDIR=$HOME/repos/mwn-archive-mirrorscripts
+TARGETUSER=archive
+TARGETDIR=/home/$TARGETUSER/bin
+
+RSYNCOPTS='--exclude .git --exclude .gitignore --exclude *~ -Pavz'
+for targethost in {mwn-tlkm,mwn-dtp}.archive.or.id; do
+    rsync $RSYNCOPTS --exclude 'per-host/' --del --delete-excluded $* $SRCDIR/                      $TARGETUSER@$targethost:$TARGETDIR/
+    rsync $RSYNCOPTS                                               $* $SRCDIR/per-host/$targethost/ $TARGETUSER@$targethost:$TARGETDIR/
+done
