@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use autodie;
+use Log::Any::App '$log';
+
+use App::UniqFiles qw(uniq_files);
+
+opendir my($dh), ".";
+my @files = grep {(-f $_) && !(-l $_)} readdir($dh);
+closedir $dh;
+
+my $fast = ($ARGV[0] // "") eq '--fast';
+my $res = uniq_files(files=>\@files, check_content => !$fast);
+$res->[0] == 200 or die "Can't uniq_files(): $res->[0] - $res->[1]\n";
+my $uniq = $res->[2];
+
+for my $f (@files) {
+    next if $f ~~ @$uniq;
+    $log->info("Deleting duplicate file: $f");
+    unlink $f;
+}
