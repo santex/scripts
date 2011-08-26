@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+# this script will segment (insert spaces into) chinese text into words (e.g. '我
+# 好想病' -> '我 好想 病'). also will convert punctuations into latin ones
+# (because chinese punctuations don't have spaces). feed the output of this
+# script to generate-speed-reader-html-page.
+
+# created: 2011-08-26
+
+use 5.010;
+use strict;
+use warnings;
+use locale;
+use utf8;
+
+use Lingua::ZH::WordSegmenter;
+
+binmode STDOUT, ":utf8";
+#binmode STDIN , ":utf8";
+my $text = join "", <>;
+
+my $seg = Lingua::ZH::WordSegmenter->new;
+
+my $segmented = $seg->seg($text, 'utf8');
+
+my %latinpunc = (
+    "，" => ", ",
+    "、" => "、 ",
+    "。" => ". ",
+    "：" => ": ",
+    "；" => "; ",
+    "？" => "? ",
+    "！" => "! ",
+    "（" => "(",
+    "）" => ")",
+    "“" => "\"",
+    "”" => "\"",
+);
+my $latinre = "(?:".join("|", map { quotemeta } keys %latinpunc).")";
+$latinre =~ qr/$latinre/;
+
+$segmented =~ s/\s*($latinre)/$latinpunc{$1}/g;
+$segmented =~ s/\s{2}+/ /g;
+
+print $segmented;
+print "\n";
