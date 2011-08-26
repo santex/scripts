@@ -172,6 +172,8 @@ if (!$is_priv && (-d $hloc_dir) && !$exclude_hloc) {
         ($forumid, $topicid) = (51, 31300);
     } elsif ($repo_name eq 'scripts') {
         ($forumid, $topicid) = (51, 29724);
+    } elsif ($repo_name eq 'psgi') {
+        ($forumid, $topicid) = (51, 33905);
     } elsif ($is_spanel && $branch eq 'stable') {
         ($forumid, $topicid) = (28, 29723);
     } elsif ($is_spanel && $branch eq 'dev') {
