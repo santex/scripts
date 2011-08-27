@@ -1,2 +1,2 @@
 #!/bin/bash
-cd ~/.opera/cache && watch -n1 'ls -l --sort=s -r g_*/* *flv 2>/dev/null|tail -n10'
+cd ~/.opera/cache && watch -n1 'ls -l --sort=s -r g_*/* *flv 2>/dev/null|tail -n15'
