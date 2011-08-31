@@ -14,7 +14,8 @@ die "Usage: $0 <CPANID> ...\n" unless @ARGV;
 binmode STDOUT, ":utf8";
 
 for my $cpanid (@ARGV) {
-    my $dom = Mojo::DOM->new(get "http://search.cpan.org/~".lc($cpanid)."/");
+    my $dom = Mojo::DOM->new(get "http://search.cpan.org/~".lc($cpanid).
+                                 "/?.rand=".rand());
 
     my $e = $dom->at("div[class=t1]");
     my $name = $e ? $e->text : undef;
