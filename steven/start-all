@@ -1,7 +1,8 @@
 #!/bin/bash
 opera&
 #konsole&
-kopete&
+#kopete&
+pidgin&
 chrome&
 google-chrome&
 thunderbird&
