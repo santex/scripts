@@ -1,3 +1,2 @@
 #!/bin/bash
-dev=/dev/mapper/udisks-luks-uuid-09c975d6-aaf2-40bb-a189-aef253ae2213-uid1000
-sudo umount $dev && sudo cryptsetup remove $dev
+for i in 4 5; do umount /dev/mapper/$i && cryptsetup remove $i && losetup -d /dev/loop$i; done && umount /media/elements
