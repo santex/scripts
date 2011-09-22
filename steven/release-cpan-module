@@ -4,9 +4,17 @@ use 5.010;
 use strict;
 use warnings;
 
-@ARGV or die "Usage: $0 <version>";
+use File::Slurp;
 
-my $ver = $ARGV[0];
+my $ver;
+
+if (defined $ARGV[0]) {
+    $ver = $ARGV[0];
+} else {
+    ($ver) = read_file("dist.ini") =~ /^version\s*=\s*(.+?)\s*$/m;
+    defined $ver or die "Can't grep version from dist.ini";
+}
+
 $ver =~ s/^v//;
 
 system "dzil test && dzil release && git commit -am 'v$ver' && git tag 'v$ver'";
