@@ -142,6 +142,33 @@ if ($is_public && is_online()) {
     }
 }
 
+# push public repos to bitbucket.org, for backup of github, but only do this
+# when remote url has been set (manually).
+if ($is_public && is_online()) {
+    my $do_bitbucket = !is_false($ENV{BITBUCKET});
+    my $repo_name_lc = lc $repo_name;
+    {
+        if (!$do_bitbucket) {
+            $log->info("Skipping pushing to bitbucket (ENV)");
+            last;
+        }
+        $log->trace("Checking whether remote bitbucket has been added ...");
+        my $output = `git config --get remote.bitbucket.url`;
+        if ($?) {
+            #$log->debug("remote bitbucket doesn't seem be added yet, ".
+            #                "adding ...");
+            #_mysystem "git", "remote", "add", "bitbucket",
+            #    "git\@bitbucket.org:$repo_name_lc/$repo_name_lc.git";
+            $log->info("Skipping pushing to gitorious (no remote url set) ...");
+            last;
+        }
+        $log->info("Pushing to bitbucket ...");
+        _mysystem "git", "push", "bitbucket", "master";
+        $log->info("Pushing tags to bitbucket ...");
+        _mysystem "git", "push", "--tags", "bitbucket", "master";
+    }
+}
+
 # push all repos except private ones to hloc
 my $exclude_hloc =
     $repo_name =~ /^(lyrics|references|stardict|exploits|
