@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use autodie;
+
+use Log::Any::App -file=>0;
+use Setup::Multi qw(setup_multi);
+use Setup::File::Symlink qw(setup_symlink);
+use Setup::File::Dir qw(setup_dir);
+
+our %SPEC;
+$SPEC{setup} = {
+    args => {},
+};
+sub setup {
+    my %args = @_;
+    my $home = $ENV{HOME};
+
+    setup_multi(
+        subs => [
+            "setup_symlink" => [
+                {symlink=>"$home/notes"    , target=>"repos/priv-notes"},
+                {symlink=>"$home/n"        , target=>"notes"},
+                {symlink=>"$home/organizer", target=>"repos/priv-organizer"},
+                {symlink=>"$home/o"        , target=>"organizer"},
+                {symlink=>"$home/settings" , target=>"repos/priv-settings"},
+                {symlink=>"$home/finance"  , target=>"repos/priv-finance"},
+                {symlink=>"$home/f"        , target=>"finance"},
+                {symlink=>"$home/l"        , target=>"finance/steven/ledger"},
+                {symlink=>"$home/bin"      , target=>"repos/scripts"},
+
+                map({symlink=>"$home/.bash$_", target=>"settings/.bash$_"},
+                        qw(_aliases _history _path _prepend _profile startup vars rc)),
+                {symlink=>"$home/.emacs", target=>"settings/.emacs"},
+                {symlink=>"$home/.emacs.d", target=>"settings/.emacs.d"},
+                {symlink=>"$home/.gitconfig", target=>"settings/.gitconfig"},
+                {symlink=>"$home/.ssh", target=>"settings/.ssh"},
+            ],
+
+            setup_dir => [
+                {path=>"$home/proj", should_exist=>1},
+            ],
+
+            "setup_symlink" => [
+                {symlink=>"$home/proj/perl", target=>"../repos/priv-perl"},
+                {symlink=>"$home/proj/p"             , target=>"perl"},
+                {symlink=>"$home/proj/pd"            , target=>"perl/dists"},
+                {symlink=>"$home/proj/pr"            , target=>"perl/releases"},
+                {symlink=>"$home/proj/prp"           , target=>"perl/releases/.published"},
+                {symlink=>"$home/proj/spanel"        , target=>"../repos/spanel"},
+                {symlink=>"$home/proj/spanel-1315pre", target=>"../repos/spanel-1315pre"},
+            ],
+        ],
+        -undo_action=>'do',
+    );
+}
+
+use Sub::Spec::CmdLine qw(run);
+run(module=>"main", load=>0, sub=>"setup");
