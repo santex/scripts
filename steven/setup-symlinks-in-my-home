@@ -64,6 +64,7 @@ sub setup {
                 {symlink=>"$home/proj/prp"           , target=>"perl/releases/.published"},
                 {symlink=>"$home/proj/spanel"        , target=>"../repos/spanel"},
                 {symlink=>"$home/proj/spanel-1315pre", target=>"../repos/spanel-1315pre"},
+                {symlink=>"$home/proj/pspanel"       , target=>"../repos/priv-spanel"},
             ],
         ],
         -undo_action=>'do',
