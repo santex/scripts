@@ -43,13 +43,14 @@ sub setup {
                 {symlink=>"$home/l"        , target=>"finance/steven/ledger"},
                 {symlink=>"$home/bin"      , target=>"repos/scripts"},
 
-                map({symlink=>"$home/.bash$_", target=>"settings/.bash$_"},
+                map({symlink=>"$home/.bash$_"  , target=>"settings/.bash$_"},
                         qw(_aliases _path _prepend _profile startup vars rc)),
                 {symlink=>"$home/.bash_history", target=>"settings/.bash_history-$env"},
-                {symlink=>"$home/.emacs", target=>"settings/.emacs"},
-                {symlink=>"$home/.emacs.d", target=>"settings/.emacs.d"},
-                {symlink=>"$home/.gitconfig", target=>"settings/.gitconfig-$env"},
-                {symlink=>"$home/.ssh", target=>"settings/.ssh"},
+                {symlink=>"$home/.emacs"       , target=>"settings/.emacs"},
+                {symlink=>"$home/.emacs.d"     , target=>"settings/.emacs.d"},
+                {symlink=>"$home/.gitconfig"   , target=>"settings/.gitconfig-$env"},
+                {symlink=>"$home/.ssh"         , target=>"settings/.ssh"},
+                {symlink=>"$home/.gnupg"       , target=>"settings/.gnupg"},
             ],
 
             setup_dir => [
@@ -57,7 +58,7 @@ sub setup {
             ],
 
             "setup_symlink" => [
-                {symlink=>"$home/proj/perl", target=>"../repos/priv-perl"},
+                {symlink=>"$home/proj/perl"          , target=>"../repos/priv-perl"},
                 {symlink=>"$home/proj/p"             , target=>"perl"},
                 {symlink=>"$home/proj/pd"            , target=>"perl/dists"},
                 {symlink=>"$home/proj/pr"            , target=>"perl/releases"},
