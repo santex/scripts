@@ -42,6 +42,8 @@ sub setup {
                 {symlink=>"$home/f"        , target=>"finance"},
                 {symlink=>"$home/l"        , target=>"finance/steven/ledger"},
                 {symlink=>"$home/bin"      , target=>"repos/scripts"},
+                {symlink=>"$home/psgi"     , target=>"repos/psgi"},
+                {symlink=>"$home/ref"      , target=>"repos/references"},
 
                 map({symlink=>"$home/.bash$_"  , target=>"settings/.bash$_"},
                         qw(_aliases _path _prepend _profile startup vars rc)),
