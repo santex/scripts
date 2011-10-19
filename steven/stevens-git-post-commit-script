@@ -159,7 +159,7 @@ if ($is_public && is_online()) {
             #                "adding ...");
             #_mysystem "git", "remote", "add", "bitbucket",
             #    "git\@bitbucket.org:$repo_name_lc/$repo_name_lc.git";
-            $log->info("Skipping pushing to gitorious (no remote url set) ...");
+            $log->info("Skipping pushing to bitbucket (no remote url set) ...");
             last;
         }
         $log->info("Pushing to bitbucket ...");
