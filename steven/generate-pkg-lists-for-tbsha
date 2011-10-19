@@ -11,11 +11,12 @@ use File::chdir;
 my $repos = "$ENV{HOME}/repos";
 
 $CWD = $repos;
-for my $dir (grep {(-d) && /^perl-/} <*>) {
+for my $dir (grep {(-d) && /^perl-/} sort <*>) {
     my $mod = $dir;
     $mod =~ s/^perl-//;
     $mod =~ s/-/::/g;
     next if $mod =~ /^Task::/;
     next if (-f "$dir/.unreleased");
+    next if (-f "$dir/.obsolete");
     print "=pkg $mod\n\n";
 }
