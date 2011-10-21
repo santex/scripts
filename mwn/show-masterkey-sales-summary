@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ssh mwnwhmcs@xenon 'DEBUG=1 ~/wwwbin/set-invoice-sale-date; cd sites/masterkey.masterweb.net/www/bin && perl -I../lib/perl -MMasterkey::AdminArea -e'\''\'"''"' Masterkey::AdminArea::login(); $Masterkey::AdminArea::mech->get("$Masterkey::Config::conf->{CONFIG_ADMIN_URL}/fa-sales-journal.php?output_format=txtsummary1"); print $Masterkey::AdminArea::mech->content'\''\' | \
+ssh antimwnwhmcs@radon 'DEBUG=1 ~/mkey/app/bin/set-invoice-sale-date; cd ~/mkey/app/bin; perl -I../lib/perl -MMasterkey::AdminArea -e'\''\'"''"' Masterkey::AdminArea::login(); $Masterkey::AdminArea::mech->get("$Masterkey::Config::conf->{site_url}/admin/fa-sales-journal.php?output_format=txtsummary1"); print $Masterkey::AdminArea::mech->content'\''\' | \
   perl -MNumber::Format -MDateTime -MCalendar::ID::Holiday=count_id_workdays -ne'
     BEGIN {
         $now = DateTime->now;
