@@ -45,14 +45,14 @@ sub setup {
                 {symlink=>"$home/psgi"     , target=>"repos/psgi"},
                 {symlink=>"$home/ref"      , target=>"repos/references"},
 
-                map({symlink=>"$home/.bash$_"  , target=>"settings/.bash$_"},
-                        qw(_aliases _path _prepend _profile startup vars rc)),
-                {symlink=>"$home/.bash_history", target=>"settings/.bash_history-$env"},
-                {symlink=>"$home/.emacs"       , target=>"settings/.emacs"},
-                {symlink=>"$home/.emacs.d"     , target=>"settings/.emacs.d"},
-                {symlink=>"$home/.gitconfig"   , target=>"settings/.gitconfig-$env"},
-                {symlink=>"$home/.ssh"         , target=>"settings/.ssh"},
-                {symlink=>"$home/.gnupg"       , target=>"settings/.gnupg"},
+                map({symlink=>"$home/.bash$_"  , target=>"settings/.bash$_", replace_file=>1},
+                        qw(_aliases _path _prepend _profile _startup _vars rc)),
+                {symlink=>"$home/.bash_history", target=>"settings/.bash_history-$env", replace_file=>1},
+                {symlink=>"$home/.emacs"       , target=>"settings/.emacs", replace_file=>1},
+                {symlink=>"$home/.emacs.d"     , target=>"settings/.emacs.d", replace_dir=>1},
+                {symlink=>"$home/.gitconfig"   , target=>"settings/.gitconfig-$env", replace_file=>1},
+                {symlink=>"$home/.ssh"         , target=>"settings/.ssh", replace_dir=>1},
+                {symlink=>"$home/.gnupg"       , target=>"settings/.gnupg", replace_dir=>1},
             ],
 
             setup_dir => [

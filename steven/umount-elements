@@ -1,2 +1,2 @@
 #!/bin/bash
-for i in 4 5; do umount /dev/mapper/$i && cryptsetup remove $i && losetup -d /dev/loop$i; done && umount /media/elements
+for i in 4 5; do umount /dev/mapper/$i && cryptsetup remove $i && losetup -d /dev/loop$i; done && sleep 1 && umount /media/elements
