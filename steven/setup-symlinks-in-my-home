@@ -35,6 +35,7 @@ sub setup {
             "setup_symlink" => [
                 {symlink=>"$home/notes"    , target=>"repos/priv-notes"},
                 {symlink=>"$home/n"        , target=>"notes"},
+                {symlink=>"$home/coba"     , target=>"notes/coba"},
                 {symlink=>"$home/organizer", target=>"repos/priv-organizer"},
                 {symlink=>"$home/o"        , target=>"organizer"},
                 {symlink=>"$home/settings" , target=>"repos/priv-settings"},
@@ -64,10 +65,13 @@ sub setup {
                 {symlink=>"$home/proj/p"             , target=>"perl"},
                 {symlink=>"$home/proj/pd"            , target=>"perl/dists"},
                 {symlink=>"$home/proj/pr"            , target=>"perl/releases"},
+
                 {symlink=>"$home/proj/prp"           , target=>"perl/releases/.published"},
                 {symlink=>"$home/proj/spanel"        , target=>"../repos/spanel"},
                 {symlink=>"$home/proj/spanel-1315pre", target=>"../repos/spanel-1315pre"},
                 {symlink=>"$home/proj/pspanel"       , target=>"../repos/priv-spanel"},
+                {symlink=>"$home/proj/mkey"          , target=>"../repos/mwn-masterkey"},
+                {symlink=>"$home/proj/mwn"           , target=>"../repos/mwn"},
             ],
         ],
         -undo_action=>'do',
