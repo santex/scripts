@@ -9,6 +9,7 @@ use YAML::Syck;
 
 my $yaml = join "", <>;
 my $data = Load($yaml);
+$data = $data->[2]{stmt}{transactions};
 print format_pretty(
     $data,
     {interactive => 1,
