@@ -67,6 +67,9 @@ LOGDIE "Please specify topic_id OR forum_id"
 
 my $mech = new WWW::Mechanize;
 
+#eval to trap Mech exceptions
+eval {
+
 $mech->get("$App::options{base_url}/login.php");
 $mech->submit_form(
     form_number => 1,
@@ -76,6 +79,15 @@ $mech->submit_form(
     },
     button => 'login',
 );
+
+my $content = $mech->content;
+if ($content !~ /log\s*out/i) {
+    my $reason = "Mechanize doesn't return page with /logout/";
+    if ($content =~ m!<span class="gen">(.+?)<br /><br />Click <a href="login\.php\?redirect=">!) {
+        $reason = $1;
+    }
+    LOGDIE "Can't login: $reason";
+}
 
 #print $mech->content();
 
@@ -128,4 +140,14 @@ POST: for my $file (@ARGV) {
     unless ( $mech->content =~ /successfully/i ) {
         ERROR "Failed posting #$i!";
     }
+}
+
+}; #eval
+my $eval_err = $@;
+
+if ($eval_err) {
+    if ($eval_err =~ /Mechanize/) {
+        print STDERR "mech->content: ", $mech->content, "\n\n";
+    }
+    die $eval_err;
 }
