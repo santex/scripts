@@ -116,7 +116,8 @@ POST: for my $file (@ARGV) {
     $mesg =~ s/[\x80-\xff]/_/g; # XXX can't handle accented character right now
 
     # submit it
-    INFO "Posting #$i ...";
+    my $num = $ENV{POST_NUM} // "#$i";
+    INFO "Posting $num ...";
 
     if ($App::options{obfuscate_link}) {
         $mesg =~ s!\bhttp(s?)://!hxxp$1://!ig;
@@ -138,7 +139,7 @@ POST: for my $file (@ARGV) {
     #print $mech->content;
 
     unless ( $mech->content =~ /successfully/i ) {
-        ERROR "Failed posting #$i!";
+        ERROR "Failed posting $num!";
     }
 }
 

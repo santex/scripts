@@ -84,20 +84,21 @@ $log->infof("Number of commits to post: %d", scalar(@revs));
 
 my $fail = 0;
 my $i = 0;
+my $tot = @reves;
 for (@revs) {
     $i++;
     if ($App::options{dry_run}) {
-        $log->infof("DRYRUN: ($i/%d) Posting rev $_ to phpBB2 forum ...", scalar(@revs));
+        $log->info("DRYRUN: ($i/$tot) Posting rev $_ to phpBB2 forum ...");
         next;
     }
-    $log->infof("($i/%d) Posting rev $_ to phpBB2 forum ...", scalar(@revs));
+    $log->info("($i/$tot) Posting rev $_ to phpBB2 forum ...");
     system(
         join("",
              "( echo 'Subject: commit $repo_name ($branch:$_)'; ",
              "echo; echo -n '[code]'; ",
              "( git log -1 -p $_ | head -n$App::options{max_lines} ) ; ",
              "echo '[/code]' ) | ",
-             "'$phpbb2_post_path' ",
+             "POST_NUM=\"($i/$tot)\" '$phpbb2_post_path' ",
              ($App::options{phpbb2_post_profile} ?
                   "--profile=$App::options{phpbb2_post_profile} " :
                   "--forum_id=$App::options{phpbb2_post_forum_id} ".
