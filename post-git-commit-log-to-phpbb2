@@ -84,7 +84,7 @@ $log->infof("Number of commits to post: %d", scalar(@revs));
 
 my $fail = 0;
 my $i = 0;
-my $tot = @reves;
+my $tot = @revs;
 for (@revs) {
     $i++;
     if ($App::options{dry_run}) {
