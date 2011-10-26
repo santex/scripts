@@ -1,9 +1,0 @@
-#!/usr/bin/perl
-
-use YAML::Syck; $YAML::Syck::ImplicitTyping = 1;
-use JSON;
-
-undef $/;
-
-print to_json(Load(scalar <>));
-

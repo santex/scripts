@@ -1,9 +1,0 @@
-#!/usr/bin/perl
-
-use YAML::Syck; $YAML::Syck::ImplicitTyping = 1;
-use PHP::Serialization qw(serialize);
-
-undef $/;
-
-print serialize(Load(scalar <>));
-
