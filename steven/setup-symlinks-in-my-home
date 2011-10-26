@@ -13,6 +13,8 @@ use Setup::File::Symlink qw(setup_symlink);
 use Setup::File::Dir qw(setup_dir);
 use SHARYANTO::DetectEnv;
 
+BEGIN { $main::Log_Level = 'info' }
+
 our %SPEC;
 $SPEC{setup} = {
     args => {},
