@@ -13,17 +13,17 @@ use Setup::File::Symlink qw(setup_symlink);
 use Setup::File::Dir qw(setup_dir);
 use SHARYANTO::DetectEnv;
 
-BEGIN { $main::Log_Level = 'info' }
+BEGIN { no warnings; $main::Log_Level = 'info' }
 
 our %SPEC;
 $SPEC{setup} = {
+    features => {undo => 1, dry_run => 1},
     args => {},
 };
 sub setup {
     my %args = @_;
-    my $home = $ENV{HOME};
 
-    # detect environment
+    my $home = $ENV{HOME};
     my $env = $SHARYANTO::DetectEnv::env;
 
     setup_multi(
@@ -62,6 +62,8 @@ sub setup {
                 {symlink=>"$home/proj/pd"            , target=>"perl/dists"},
                 {symlink=>"$home/proj/pr"            , target=>"perl/releases"},
 
+                {symlink=>"$home/proj/ga"            , target=>"../repos/gudangapi"},
+                {symlink=>"$home/proj/pga"           , target=>"../repos/priv-gudangapi"},
                 {symlink=>"$home/proj/prp"           , target=>"perl/releases/.published"},
                 {symlink=>"$home/proj/spanel"        , target=>"../repos/spanel"},
                 {symlink=>"$home/proj/spanel-1315pre", target=>"../repos/spanel-1315pre"},
@@ -70,9 +72,11 @@ sub setup {
                 {symlink=>"$home/proj/mwn"           , target=>"../repos/mwn"},
             ],
         ],
-        -undo_action=>'do',
+        -undo_action => $args{-undo_action},
+        -undo_data   => $args{-undo_data},
+        -dry_run     => $args{-dry_run},
     );
 }
 
 use Sub::Spec::CmdLine qw(run);
-run(module=>"main", load=>0, sub=>"setup");
+run(module=>"main", sub=>"setup", load=>0, undo=>1);
