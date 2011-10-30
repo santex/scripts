@@ -15,13 +15,13 @@ p=builder.local
 if test -e /backup/mnt/NOT_MOUNTED; then
   echo "/backup/mnt partition not mounted, skipping"
 else
-  $exe --extra_rsync_opts "$rsync_opts" /mnt /backup/mnt/$p
+  $exe --extra_rsync_opts "$rsync_opts" /mnt/home /backup/mnt/$p/current/
 fi
 
 if test -e /backup/mnt2/NOT_MOUNTED; then
   echo "/backup/mnt2 partition not mounted, skipping"
 else
-  $exe --extra_rsync_opts "$rsync_opts" /mnt2 /backup/mnt2/$p
+  $exe --extra_rsync_opts "$rsync_opts" /mnt2/home /backup/mnt2/$p/current/
 fi
 
 for u in archive s1 s1t t1 t2 t3 t4; do
