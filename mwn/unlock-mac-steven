@@ -1,2 +1,2 @@
 #!/bin/bash
-ssh root@gateway 'for ip in 192.168.0.{104,106,182,184}; do arp -d $ip; done'
+ssh root@gateway 'for ip in 192.168.0.{104,106,181,182,183,184,185,186,187,188}; do arp -d $ip; done'
