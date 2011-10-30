@@ -1,0 +1,4 @@
+#!/bin/bash
+
+rsync -avz root@dns1:/etc/bind/db._manual.d/{db.localdomain,db.168.192.in-addr.arpa} /tmp/
+rsync -avz /tmp/{db.localdomain,db.168.192.in-addr.arpa} root@dns2:/etc/bind/db._manual.d/
