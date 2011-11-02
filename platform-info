@@ -1,0 +1,6 @@
+#!/usr/bin/perl
+
+use Data::Dump;
+use Devel::Platform::Info;
+
+dd(Devel::Platform::Info->new->get_info);

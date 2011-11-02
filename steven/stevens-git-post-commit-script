@@ -52,7 +52,7 @@ my $is_python  = $repo_name =~ /(^|-)python-/;
 my $is_php     = $repo_name =~ /(^|-)php-/;
 my $is_js      = $repo_name =~ /(^|-)js-/;
 my $is_media   = $repo_name =~ /(^|-)media-/;
-my $is_spanel  = $repo_name =~ /(^|-)spanel(-|$)/
+my $is_spanel  = $repo_name =~ /(^|-)spanel(13|2)?(-|$)/
     || (-e "$repo_dir/.git/.spanel") ? 1:0;
 my $is_public  = !$is_priv && !$is_mwn && !$is_spanel;
 
@@ -201,7 +201,7 @@ if (!$is_priv && (-d $hloc_dir) && !$exclude_hloc) {
         ($forumid, $topicid) = (51, 29724);
     } elsif ($repo_name eq 'psgi') {
         ($forumid, $topicid) = (51, 33905);
-    } elsif ($is_spanel && $branch eq 'stable') {
+    } elsif ($is_spanel && ($branch eq 'stable' || $branch eq 'squeeze')) {
         ($forumid, $topicid) = (28, 29723);
     } elsif ($is_spanel && $branch eq 'dev') {
         ($forumid, $topicid) = (28, 29718);

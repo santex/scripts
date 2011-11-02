@@ -28,6 +28,9 @@ for u in archive s1 s1t t1 t2 t3 t4; do
   $exe --extra_rsync_opts "$rsync_opts" /u/$u /backup/$p/backup-u-$u
 done
 
+# /u/s1/var dibackup terpisah, gak pakai history, soalnya virtualbox images gede2x
+  $exe --histories='[]' --extra_rsync_opts "$rsync_opts" /u/$u/var /backup/$p/backup-u-$u-var
+
 $exe --extra_rsync_opts="$rsync_opts" /etc /backup/$p/backup-etc
 
 $exe --extra_rsync_opts="$rsync_opts" /var/spool/cron /backup/$p/backup-var-spool-cron

@@ -2,14 +2,14 @@
 
 SRC=$HOME/repos/spanel-site
 USER=spsloki
-HOST1=spanel.sloki.com
-HOST2=us.spanel.sloki.com
+HOST1=spanel.info
+HOST2=us.spanel.info
 PATH_WWW=www
 PATH_BIN=bin
 
 for HOST in $HOST1 $HOST2; do
     echo "=> Deploying to $HOST ..."
-    rsync -avz --del --exclude '*~' $SRC/www/{.htaccess,check-license,admin} $USER@$HOST:$PATH_WWW/
+    rsync -avz --del --exclude '*~' $SRC/www/{install-spanel*,.htaccess,check-license,admin,pgp.txt} $USER@$HOST:$PATH_WWW/
     rsync -avz --del --exclude '*~' $SRC/lib/ $USER@$HOST:$PATH_WWW/lib/
     rsync -avz --del --exclude '*~' $SRC/bin/ $USER@$HOST:$PATH_BIN/
 done
