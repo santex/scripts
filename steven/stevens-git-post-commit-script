@@ -28,7 +28,12 @@ sub is_false {
 }
 
 if (is_false $ENV{POST_COMMIT}) {
-    $log->info("Skipping post-commit script");
+    $log->info("Skipping post-commit script (env)");
+    exit 0;
+}
+
+if ((-f ".git/no_post_commit") && !$ENV{FORCE}) {
+    $log->info("Skipping post-commit script (.git/no_post_commit)");
     exit 0;
 }
 
@@ -52,7 +57,7 @@ my $is_python  = $repo_name =~ /(^|-)python-/;
 my $is_php     = $repo_name =~ /(^|-)php-/;
 my $is_js      = $repo_name =~ /(^|-)js-/;
 my $is_media   = $repo_name =~ /(^|-)media-/;
-my $is_spanel  = $repo_name =~ /(^|-)spanel(13|2)?(-|$)/
+my $is_spanel  = $repo_name =~ /(^|-)spanel(13|2|c)?(-|$)/
     || (-e "$repo_dir/.git/.spanel") ? 1:0;
 my $is_public  = !$is_priv && !$is_mwn && !$is_spanel;
 

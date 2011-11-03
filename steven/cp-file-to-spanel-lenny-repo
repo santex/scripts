@@ -35,7 +35,7 @@ for my $f (@ARGV) {
     my $dir;
     if ($f =~ m!/!) { $dir = $f; $dir =~ s!(.+)/(.*)!$1! } else { $dir = "." }
     for my $h (@HOSTS) {
-        my $cmd = "scp ".shell_quote($f)." $USER\@$h:public/spanel/releases/*/$dir/";
+        my $cmd = "scp ".shell_quote($f)." $USER\@$h:public/spanel/releases/1.3-lenny/*/$dir/";
         print $cmd, "\n";
         system $cmd;
     }

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# don't fatpack script in /tmp
+
+if [[ "$1" == "" ]]; then echo "Usage: fatpack-script-in-one-step SCRIPT"; exit 1; fi
+
+mkdir -p lib
+
+rm -rf trace fatpacker.trace packlists fatlib fatpack.tmp
+
+fatpack trace "$1"
+fatpack packlists-for `cat fatpacker.trace` > packlists
+fatpack tree `cat packlists`
+(fatpack file; cat "$1") >"$1.fatpack.tmp"
+( echo "#!/usr/bin/perl"; cat "$1.fatpack.tmp" ) > "$1.fatpack"
+
+rm -rf trace fatpacker.trace packlists fatlib "$1.fatpack.tmp"
