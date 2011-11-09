@@ -71,6 +71,7 @@ sub setup {
                 {symlink=>"$home/proj/spanel-site"   , target=>"../repos/spanel-site"},
                 {symlink=>"$home/proj/mkey"          , target=>"../repos/mwn-masterkey"},
                 {symlink=>"$home/proj/mwn"           , target=>"../repos/mwn"},
+                {symlink=>"$home/proj/mwn-site"      , target=>"../repos/mwn-site"},
             ],
         ],
         -undo_action => $args{-undo_action},
