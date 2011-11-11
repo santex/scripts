@@ -41,6 +41,7 @@ sub setup {
                 {symlink=>"$home/bin"      , target=>"repos/scripts"},
                 {symlink=>"$home/psgi"     , target=>"repos/psgi-apps"},
                 {symlink=>"$home/ref"      , target=>"repos/references"},
+                {symlink=>"$home/logs"     , target=>"repos/priv-logs"},
 
                 map({symlink=>"$home/.bash$_"  , target=>"settings/.bash$_", replace_file=>1},
                         qw(_aliases _path _prepend _profile _startup _vars rc)),
