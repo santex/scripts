@@ -247,6 +247,8 @@ if (-d $media_dir) {
                   "--target", "$media_dir",
                   "--include-repos", "[$repo_name]");
     }
+} else {
+    $log->debug("Skipped pushing to media ($media_dir not available)");
 }
 
 # push from PC to laptop, if laptop is available
