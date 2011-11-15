@@ -279,18 +279,4 @@ if (-d $pc_dir) {
     }
 }
 
-# push to external hdd, if available
-my $exthdd_dir = "/media/elements/home/$ENV{USER}/repos";
-if (-d $exthdd_dir) {
-    {
-        $log->info("Pushing to external hdd ...");
-        local $CWD = $exthdd_dir;
-        _mysystem("gitbunch", "sync",
-                  "--exclude-files", "--exclude-non-git-dirs",
-                  "--source", "$repo_dir/..",
-                  "--target", "$exthdd_dir",
-                  "--include-repos", "[$repo_name]");
-    }
-}
-
 $log->debug("$0 ended");
