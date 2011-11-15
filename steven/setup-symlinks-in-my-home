@@ -35,6 +35,7 @@ sub setup {
                 {symlink=>"$home/organizer", target=>"repos/priv-organizer"},
                 {symlink=>"$home/o"        , target=>"organizer"},
                 {symlink=>"$home/settings" , target=>"repos/priv-settings"},
+                {symlink=>"$home/research" , target=>"repos/priv-research"},
                 {symlink=>"$home/finance"  , target=>"repos/priv-finance"},
                 {symlink=>"$home/f"        , target=>"finance"},
                 {symlink=>"$home/l"        , target=>"finance/steven/ledger"},
