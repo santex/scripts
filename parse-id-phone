@@ -1,0 +1,4 @@
+#!/usr/bin/perl
+
+use Sub::Spec::CmdLine qw(run);
+run(module => 'Parse::PhoneNumber::ID', sub => 'parse_id_phone');
