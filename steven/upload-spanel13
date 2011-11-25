@@ -2,13 +2,13 @@
 
 echo "============== Note: Saat ini hanya mengupload squeeze ===================="
 
-# upload spanel to spanel.sloki.com
+# upload spanel to master repo
 
 SRCREPO=$HOME/proj/spanel13
 SRC=$HOME/tmp/spanel13
 USER=spsloki
-HOST1=spanel.sloki.com
-HOST2=us.spanel.sloki.com
+HOST1=spanel.info
+HOST2=us.spanel.info
 PATH_RELEASES=/u/spsloki/public/spanel/releases/1.3-squeeze
 
 set -x
