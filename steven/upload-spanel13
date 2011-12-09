@@ -11,7 +11,7 @@ HOST1=spanel.info
 HOST2=us.spanel.info
 PATH_RELEASES=/u/spsloki/public/spanel/releases/1.3-squeeze
 
-set -x
+#set -x
 
 echo "==> Creating distribution ..."
 #$SRCREPO/devscripts/fast-sync-to-dist --dest=$SRC

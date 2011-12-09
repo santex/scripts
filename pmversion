@@ -1,8 +1,1 @@
-#!/usr/bin/perl
-
-for (@ARGV) {
-  #print qq(require $_; print \$${_}::VERSION;);
-  print "$_: ";
-  eval  qq(require $_; print \$${_}::VERSION;);
-  print "\n";
-}
+pminfo
