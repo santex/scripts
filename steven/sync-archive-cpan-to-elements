@@ -1,0 +1,3 @@
+#!/bin/bash
+sudo rsync -avz --del /u/archive/public/cpan/ /media/elements/archive/cpan/
+
