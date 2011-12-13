@@ -76,6 +76,9 @@ sub setup {
                 {symlink=>"$home/proj/mkey"          , target=>"../repos/mwn-masterkey"},
                 {symlink=>"$home/proj/mwn"           , target=>"../repos/mwn"},
                 {symlink=>"$home/proj/mwn-site"      , target=>"../repos/mwn-site"},
+
+                {symlink=>"$home/proj/gdint"         , target=>"../repos/gudang-data-interim"},
+                #{symlink=>"$home/proj/gdi"           , target=>"../repos/Gudang-Data-Indonesia"},
             ],
         ],
         -undo_action => $args{-undo_action},
