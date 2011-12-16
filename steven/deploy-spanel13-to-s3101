@@ -1,0 +1,9 @@
+#!/bin/bash
+
+SRC_DIR=$HOME/proj/spanel13
+DST_USER=root
+DST_HOST=3101.masterweb.net
+DST_DIR=/root/spanel
+
+rsync -avz --del --exclude '*~' --exclude '.git' $SRC_DIR/ $DST_USER@$DST_HOST:$DST_DIR/
+ssh $DST_USER@$DST_HOST $DST_DIR/sbin/spanel-install install -v

@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use Data::Dumper;
+use Text::CSV;
+
+unless (@ARGV == 1) {
+    die "Usage: $0 <filename.csv>\n";
+}
+my $fn = $ARGV[0];
+
+$Data::Dumper::Indent = 0;
+$Data::Dumper::Terse  = 1;
+
+my @rows;
+my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
+    or die "Cannot use CSV: ".Text::CSV->error_diag ();
+
+open my $fh, "<:encoding(utf8)", $fn or die "$fn: $!";
+while ( my $row = $csv->getline( $fh ) ) {
+    push @rows, $row;
+}
+$csv->eof or $csv->error_diag();
+close $fh;
+
+print "[\n";
+for (@rows) {
+    print "    ", Dumper($_), ",\n";
+}
+print "]\n";

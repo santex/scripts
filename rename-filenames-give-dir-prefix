@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+use Cwd qw(getcwd);
+use String::ShellQuote;
+
+my $cwd = getcwd;
+my $prefix = $cwd; $prefix =~ s!.+/!!;
+
+for (<*>) {
+    rename $_, "$prefix-$_";
+}
