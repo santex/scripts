@@ -184,10 +184,10 @@ my @Responses = (
              if ($res->responseStatus != 200) { $err = "gugel imejes return status http ".$res->responseStatus." han ...$add_info"; last SEARCH }
              sleep 2; # to avoid hitting google too often
              @pg_im = @{ $res->responseData->results };
-             $has_raw_result++;
-             @pg_im = grep { !/[%?]/ } map { $_->{url} } @pg_im; # phpbb2 sucks!
              if (!@pg_im) { last }
-             for (@pg_im) {
+             $has_raw_result++;
+             my @f_pg_im = grep { !/[%?]/ } map { $_->{url} } @pg_im; # phpbb2 sucks!
+             for (@f_pg_im) {
                  push @im, $_;
                  last SEARCH if @im >= $n;
              }
