@@ -35,7 +35,7 @@ finddepth sub {
         }
 
         # ext
-        if (/\.(url|nfo|m3u|sfv)$/i) {
+        if (/\.(lnk|url|nfo|m3u|sfv)$/i) {
             $delete++; last;
         }
     }
