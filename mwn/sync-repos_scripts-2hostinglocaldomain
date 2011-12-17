@@ -1,5 +1,5 @@
 #!/bin/sh
 
 rsync --del -e "ssh -c arcfour" -az --exclude '*~' \
-  $HOME/repo/scripts/ \
+  $HOME/repos/scripts/ \
   steven@hosting.localdomain:/u/steven/public/git/scripts/

@@ -4,7 +4,7 @@
 # /etc/spanel/plans.yaml-nya aja, kita harus membedakan antara yang
 # vps (plans-vps.yaml) dan shared hosting (plans-shared.yaml)
 
-cd $HOME/repo/mwn/spanel-configs
+cd $HOME/repos/mwn/spanel-configs
 
 # owner jangan dipreserve :)
 

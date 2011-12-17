@@ -1,5 +1,5 @@
 #!/bin/sh
 
 rsync --del -e "ssh -c arcfour" -az --exclude '*~' \
-  $HOME/repo/spanel-site \
+  $HOME/repos/spanel-site \
   steven@hosting.localdomain:/u/steven/public/git/
