@@ -167,6 +167,7 @@ my @Responses = (
          my @pg_im;
        SEARCH:
          while (1) {
+             last if $i > 20; # in any case, limit total number of queries to server, to avoid blocking
              eval {
                  my $start = $i*@pg_im+1;
                  $log->debugf("collected %d images, searching google (start=%d)...", scalar(@im), $start);
