@@ -9,9 +9,12 @@ use strict;
 use warnings;
 
 use DBI;
+use Email::Sender::Simple qw(sendmail);
+use Email::Simple;
+use Email::Sender::Transport::Sendmail qw();
 use Log::Any::App qw($log);
-use Mail::Sendmail;
-#use WWW::Mechanize;
+use Try::Tiny;
+
 use App::Options (
     option => {
         #forum_url      => { type => 'string', required => 1,
@@ -68,12 +71,8 @@ SET
   usergroup=(SELECT gid FROM mybb_usergroups WHERE title='Registered')
 WHERE uid=? LIMIT 1
 _
-            sendmail(
-                To      => $r->{email},
-                From    => 'steven2-admin-forum@masterweb.net',
-                Cc      => 'steven2-admin-forum@masterweb.net',
-                Subject => 'Akun Masterweb Community Forums telah diaktivasi',
-                Message => <<_,
+
+            my $body = <<_;
 User $r->{username} yth,
 
 Mohon maaf atas delay-nya. Kini akun Anda telah diaktivasi. Silakan login ke:
@@ -88,9 +87,20 @@ README dulu:
 Salam,
 admin
 _
-            ) or do {
+            my $from = 'steven2-admin-forum@masterweb.net';
+            my $subject = 'Akun Masterweb Community Forums telah diaktivasi';
+            my $email = Email::Simple->create(
+                header=>[To=>$r->{email}, From=>$from,
+                         Subject=>$subject],
+                body=>$body,
+            );
+            try {
+                sendmail($email,
+                         {from=>$from,
+                          transport=>Email::Sender::Transport::Sendmail->new});
+            } catch {
                 $log->errorf("Can't send mail to user ID %d (%s): %s",
-                             $r->{uid}, $r->{email}, $Mail::Sendmail::error);
+                             $r->{uid}, $r->{email}, $_);
             };
         }
     } else {
