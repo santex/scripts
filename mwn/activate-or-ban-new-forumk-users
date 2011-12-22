@@ -1,0 +1,114 @@
+#!/usr/bin/perl
+
+# created 2011-12-22. saat ini di form registrasi forumk dikasih pertanyaan
+# (custom profile fields) matematik dikit untuk membedakan manusia dan bot. lalu
+# skrip ini dijalankan via cron secara teratur untuk mengeban
+
+use 5.010;
+use strict;
+use warnings;
+
+use DBI;
+use Log::Any::App qw($log);
+use Mail::Sendmail;
+#use WWW::Mechanize;
+use App::Options (
+    option => {
+        #forum_url      => { type => 'string', required => 1,
+        #                    default => 'http://forums.masterweb.net' },
+        #forum_username => { type => 'string', required => 1, },
+        #forum_password => { type => 'string', required => 1, },
+        db_host        => { type => 'string', required => 1,
+                            default => 'localhost' },
+        db_name        => { type => 'string', required => 1 },
+        db_username    => { type => 'string', required => 1 },
+        db_password    => { type => 'string', required => 1 },
+    },
+);
+
+my $dry_run = $ENV{DRY_RUN} || $ENV{DRYRUN} || $ENV{DRY};
+
+$log->debug("Connecting to database ...");
+my $dbh = DBI->connect("DBI:mysql:database=$App::options{db_name};".
+                           "host=$App::options{db_host}",
+                       $App::options{db_username}, $App::options{db_password},
+                       {RaiseError=>1});
+
+$log->debug("Selecting unactivated users ...");
+my $sth = $dbh->prepare(<<_);
+SELECT
+  u.uid uid, u.email email, u.usergroup usergroup, u.username username,
+  u.regip regip,
+  (SELECT
+     fid4  -- yup, mybb is that shitty
+   FROM mybb_userfields uf WHERE uf.ufid=u.uid) answer
+FROM mybb_users u
+WHERE usergroup=(SELECT gid FROM mybb_usergroups
+                 WHERE title='Awaiting Activation')
+_
+
+$sth->execute;
+my @r;
+while (my $r = $sth->fetchrow_hashref) {
+    push @r, $r;
+}
+$log->debugf("Number of unactivated users: %d", scalar(@r));
+
+my $i = 0;
+for my $r (@r) {
+    $i++;
+    $log->infof("(#%d/%d) User: %s", $i, scalar(@r), $r);
+    if ($r->{answer} =~ /^\s*(17|tujuh\s?belas)\s*$/i) {
+        $log->infof("%sActivating user ID %s ...",
+                     ($dry_run ? "(DRY) " : ""), $r->{uid});
+        unless ($dry_run) {
+            $dbh->do(<<_, {}, $r->{uid});
+UPDATE mybb_users
+SET
+  usergroup=(SELECT gid FROM mybb_usergroups WHERE title='Registered')
+WHERE uid=? LIMIT 1
+_
+            sendmail(
+                To      => $r->{email},
+                From    => 'steven2-admin-forum@masterweb.net',
+                Cc      => 'steven2-admin-forum@masterweb.net',
+                Subject => 'Akun Masterweb Community Forums telah diaktivasi',
+                Message => <<_,
+User $r->{username} yth,
+
+Mohon maaf atas delay-nya. Kini akun Anda telah diaktivasi. Silakan login ke:
+
+ http://forums.masterweb.net/
+
+menggunakan password yang telah dipilih sewaktu mendaftar. Jangan lupa membaca
+README dulu:
+
+ http://forums.masterweb.net/showthread.php?tid=6452
+
+Salam,
+admin
+_
+            ) or do {
+                $log->errorf("Can't send mail to user ID %d (%s): %s",
+                             $r->{uid}, $r->{email}, $Mail::Sendmail::error);
+            };
+        }
+    } else {
+        $log->infof("%sBanning user ID %s ...",
+                     ($dry_run ? "(DRY) " : ""), $r->{uid});
+        unless ($dry_run) {
+            $dbh->do(<<_, {}, $r->{uid}, $r->{usergroup}, "spambot");
+INSERT IGNORE INTO mybb_banned
+(dateline, uid, bantime, oldgroup, admin, reason)
+VALUES
+(UNIX_TIMESTAMP(NOW()), ?, '---', ?, 1, ?)
+_
+            $dbh->do(<<_, {}, $r->{uid});
+UPDATE mybb_users
+SET
+  usergroup=(SELECT gid FROM mybb_usergroups WHERE title='Banned')
+WHERE uid=? LIMIT 1
+_
+        }
+    }
+}

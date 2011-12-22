@@ -1,0 +1,9 @@
+#!/bin/bash
+
+SRC=$HOME/repos/mwn-steven-website
+USER=steven
+HOST=gold
+DST=www
+
+# don't use --del, i have various other content in gold
+rsync -avz --exclude '*~' --exclude '.git' $SRC/ $USER@$HOST:$DST/
