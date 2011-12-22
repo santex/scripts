@@ -6,6 +6,8 @@ use strict;
 my $VERSION = 20070526;
 
 my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+[ www.Torrenting.com ] -
+[ www.Torrentday.com ] -
 [fk]
 [tvb]
 [qxtsr]
@@ -64,6 +66,15 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+ [HDTV]
+ (720p .mkv)
+ DvDrip-McTav
+ [DVDRip]-SAiNTS
+.DSR.XviD-QCF
+.HDTV.XviD-TLA
+-h33t-Braveheart2112
+.PROPER.HDTV.XviD-P0W4
+.DSR.XviD-FQM
 .720p.hdtv.x264-ctu
 .720p.hdtv.x264-immerse
 .webrip.p2pbitch
