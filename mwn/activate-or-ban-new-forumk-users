@@ -31,7 +31,10 @@ use App::Options (
     },
 );
 
-BEGIN { $main::Log_Level = 'info'; $main::Screen_Log_Level = 'off'; }
+BEGIN {
+    no warnings;
+    $main::Log_Level = 'info'; $main::Screen_Log_Level = 'off';
+}
 
 my $dry_run = $ENV{DRY_RUN} || $ENV{DRYRUN} || $ENV{DRY};
 
