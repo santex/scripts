@@ -28,7 +28,7 @@ rsync -az --del --force --delete-excluded --exclude /.git --exclude /.gitignore 
 if [[ "$UPLOAD" == "0" ]]; then echo "Skipping upload"; exit; fi
 
 echo "==> Uploading distribution ..."
-for HOST in $HOST1 $HOST2; do
+for HOST in $HOST1; do
     LAST_RELEASE=`ssh $USER@$HOST ls $PATH_RELEASES | sort | tail -1`
     NEW_RELEASE=`date +'%Y%m%d%H%M%S'`
     ssh $USER@$HOST "cd $PATH_RELEASES && cp -la $LAST_RELEASE .$NEW_RELEASE.rsync"
@@ -37,6 +37,6 @@ for HOST in $HOST1 $HOST2; do
 done
 
 echo "==> Updating release GUIDs ..."
-for HOST in $HOST1 $HOST2; do
+for HOST in $HOST1; do
     ssh root@$HOST "/u/$USER/home/bin/publish-spanel-releases"
 done
