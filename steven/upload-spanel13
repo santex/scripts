@@ -8,7 +8,8 @@ SRCREPO=$HOME/proj/spanel13
 SRC=$HOME/tmp/spanel13
 USER=spsloki
 HOST1=spanel.info
-HOST2=us.spanel.info
+# lagi didisable dulu, abis mesinnya lelet banget sih (load 80?! perlu mesin dedicated ke depannya)
+#HOST2=us.spanel.info
 PATH_RELEASES=/u/spsloki/public/spanel/releases/1.3-squeeze
 
 #set -x
