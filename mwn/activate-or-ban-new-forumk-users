@@ -2,7 +2,9 @@
 
 # created 2011-12-22. saat ini di form registrasi forumk dikasih pertanyaan
 # (custom profile fields) matematik dikit untuk membedakan manusia dan bot. lalu
-# skrip ini dijalankan via cron secara teratur untuk mengeban
+# skrip ini dijalankan via cron secara teratur untuk mengeban atau mengaktivasi
+# akun (sekalian ngirim email karena mybb gak ngirim email sama sekali),
+# tergantung dari jawabannya bener/salah.
 
 use 5.010;
 use strict;
