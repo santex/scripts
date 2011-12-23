@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SRC=/home/steven/proj/mwn-kb
+SRC=$HOME/repos/mwn-kb
 DEST=mwnkb@xenon:../sites/kb.masterweb.net/www/beta
 
 rsync -e ssh -Pavz --del \
