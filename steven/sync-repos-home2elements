@@ -1,2 +1,2 @@
 #!/bin/bash
-VERBOSE=1 gitbunch sync --source ~/repos --target /media/elements/mnt/repos --delete_branch "$@"
+VERBOSE=1 gitbunch sync --source ~/repos --target /media/elements/mnt/u1/repos --delete_branch "$@"
