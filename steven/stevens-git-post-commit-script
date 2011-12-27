@@ -27,7 +27,7 @@ sub is_false {
     defined($_[0]) && !$_[0];
 }
 
-if (is_false $ENV{POST_COMMIT}) {
+if (is_false($ENV{POST_COMMIT} // $ENV{PC})) {
     $log->info("Skipping post-commit script (env)");
     exit 0;
 }
