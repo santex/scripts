@@ -1,5 +1,0 @@
-#!/bin/bash
-
-for p in dns1 dns2; do ssh root@$p /etc/init.d/bind9 restart; done
-
-

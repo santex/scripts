@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# gak jalan euy, dah diginiin tetep #export HOME=/home/archive
-#sudo -u archive minicpan
-
-echo "belon jalan, jalanin sbg user 'archive' langsung aja ..."

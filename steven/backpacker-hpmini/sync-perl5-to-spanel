@@ -1,5 +1,0 @@
-#!/bin/bash
-arch=debian-squeeze-i386
-plarch=i486-linux-gnu-thread-multi
-rsync -avz --exclude "/lib/perl5/$plarch" $HOME/perl5/ $HOME/proj/spanel/perl5/
-rsync -avz $HOME/perl5/lib/perl5/$plarch $HOME/proj/spanel/arch/$arch/perl5/lib/perl5/

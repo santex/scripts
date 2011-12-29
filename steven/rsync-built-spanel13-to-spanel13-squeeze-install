@@ -1,2 +1,0 @@
-#!/bin/bash
-rsync -avz --del ~/tmp/spanel13 $sshspanel13_squeeze_install:

@@ -1,6 +1,0 @@
-#!/bin/sh
-
-rsync --delete -e "ssh -c arcfour" -Pavz \
-  /u/steven/home/.kde/share/apps/korganizer/steven-mwn-{architect,dev-masterkey,dev-spanel,neteng,tesu,webdev}.ics \
-  steven@hosting.localdomain:/u/steven/home/www/phpicalendar/calendars/
-

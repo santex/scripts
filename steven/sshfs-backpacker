@@ -1,5 +1,0 @@
-#!/bin/bash
-
-kill-sshfs-backpacker
-sshfs -o idmap=user -o default_permissions u1@backpacker.localdomain:/ /media/backpacker
-

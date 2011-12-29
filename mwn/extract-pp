@@ -1,9 +1,0 @@
-#!/bin/sh
-
-extract-mediawiki \
-  --wiki_url='http://steven:frenchestbon!@langman.gold.localdomain/wiki' \
-  --target_dir=/home/steven/mwn/pp/snapshot.`date +'%Y-%m-%d'` \
-  --regex='^(Peraturan_perusahaan|PP_.+|PPT_.+|SOP_.+)$' \
-  --header='<html><meta http-equiv="Content-Type" content="text/html; charset=utf8"><head>' \
-  --footer='</body></html>'
-

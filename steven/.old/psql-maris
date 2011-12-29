@@ -1,2 +1,0 @@
-#!/bin/sh
-exec /opt/pg84/bin/psql -h localhost -U maris maris $*

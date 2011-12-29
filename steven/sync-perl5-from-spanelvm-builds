@@ -1,5 +1,0 @@
-#!/bin/bash
-
-sync-perl5-from-spanelvm-build-lenny-i386
-sync-perl5-from-spanelvm-build-squeeze-i386
-sync-perl5-from-spanelvm-build-squeeze-amd64

@@ -1,5 +1,0 @@
-#!/bin/bash
-dir=/media/elements
-
-for i in 4 5; do umount /dev/mapper/$i && cryptsetup remove $i && losetup -d /dev/loop$i; done && sleep 1 && umount $dir
-if [[ -d $dir ]]; then rmdir $dir; fi

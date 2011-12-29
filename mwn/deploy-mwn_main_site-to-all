@@ -1,3 +1,0 @@
-#!/bin/sh
-deploy-mwn_main_site-to-id_masterweb_net $*
-deploy-mwn_main_site-to-us_masterweb_net $*

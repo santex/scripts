@@ -1,5 +1,0 @@
-#!/bin/bash
-
-for p in server{23,24,43,45,47,33,206,212,41,802,803}; do
-  scp do-remote-backup root@$p.masterwebnet.com:bin/
-done

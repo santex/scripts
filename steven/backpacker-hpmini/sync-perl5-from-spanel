@@ -1,4 +1,0 @@
-#!/bin/bash
-arch=debian-squeeze-i386
-rsync -avz $HOME/proj/spanel/perl5 $HOME/
-rsync -avz $HOME/proj/spanel/arch/$arch/perl5 $HOME/

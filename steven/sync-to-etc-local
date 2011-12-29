@@ -1,7 +1,0 @@
-#!/bin/sh
-
-rsync -av --force \
- --exclude '.svn' --exclude '.bzr' --exclude '.git' \
- --exclude '*~' \
- $HOME/bin/steven/ \
- /etc/local/

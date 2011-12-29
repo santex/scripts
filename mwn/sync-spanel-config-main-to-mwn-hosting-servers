@@ -1,2 +1,0 @@
-#!/bin/sh
-sync-spanel-config-main --all --has mwn --has hosting --lack intranet --lack demo --lack NOT-YET

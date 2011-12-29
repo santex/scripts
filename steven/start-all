@@ -1,9 +1,0 @@
-#!/bin/bash
-opera&
-#konsole&
-#kopete&
-pidgin&
-chrome&
-google-chrome&
-thunderbird&
-. set-zh; stardict&

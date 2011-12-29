@@ -1,5 +1,0 @@
-#!/bin/sh
-_proxy=proxy.localdomain
-_proxyport=8080
-
-exec socat STDIO PROXY:$_proxy:$1:$2,proxyport=$_proxyport

@@ -1,3 +1,0 @@
-#!/bin/sh
-rsync --exclude '.git' --exclude '*.psd' --exclude '*.counter' --exclude '*.rrd' --exclude '*~' --exclude 'www/tools' --delete \
--e ssh -Pavz $* $HOME/repos/mwn-site/ mwn@us.masterweb.net:/s/us.masterwebnet.com/www/

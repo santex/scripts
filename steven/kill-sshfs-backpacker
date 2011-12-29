@@ -1,3 +1,0 @@
-#!/bin/bash
-ps ax | grep sshfs | grep backpacker | grep -v sshfs- | perl -lne'/(\d+)/ and system "kill -9 $1"'
-fusermount -u /media/backpacker

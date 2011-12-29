@@ -1,6 +1,0 @@
-#!/bin/bash
-nice -n19 \
-  rsync -az --del -e "ssh -i /home/s1/.ssh/id_dsa -o StrictHostKeyChecking=no" --exclude '/*/hist*' \
-  root@server23.masterweb.net:/backup/server23.local/ \
-  /backup/remote-backups/server23 \
-  2>&1

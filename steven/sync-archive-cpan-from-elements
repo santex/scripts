@@ -1,2 +1,0 @@
-#!/bin/bash
-sudo rsync -avz --del /media/elements/archive/mirrors/minicpan/ /cpan/

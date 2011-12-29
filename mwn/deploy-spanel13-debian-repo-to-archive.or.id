@@ -1,9 +1,0 @@
-#!/bin/bash
-
-SRC=$HOME/repos/spanel13-debian
-RUSER=archive
-
-for h in {mwn-tlkm,mwn-dtp}.arsip.or.id; do
-    echo "Sync-ing to $h ..."
-    rsync -avz --del $SRC/repos/ $RUSER@$h:/home/$RUSER/mirrors/debian-spanel/
-done

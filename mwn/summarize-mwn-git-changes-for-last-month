@@ -1,4 +1,0 @@
-#!/bin/bash
-summarize-git-changes-for-last-month \
-  --software="MWN repository" \
-  --skip_files_re='^(masterkey/whmcs)'

@@ -1,8 +1,0 @@
-#!/bin/bash
-root=/media/elements
-mount | grep -qe $root; if [[ $? -ne 0 ]]; then echo "$root not mounted"; exit; fi
-
-echo "Mounting $root/.block ..."
-losetup /dev/loop4 $root/.block  && cryptsetup create 4 /dev/loop4 && mount /dev/mapper/4 $root/mnt
-echo "Mounting $root/.block2 ..."
-losetup /dev/loop5 $root/.block2 && cryptsetup create 5 /dev/loop5 && mount /dev/mapper/5 $root/mnt2

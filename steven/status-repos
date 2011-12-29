@@ -1,3 +1,0 @@
-#!/bin/bash
-LOG_LEVEL=warn gitbunch check ~/repos "$@"
-

@@ -1,2 +1,0 @@
-#!/bin/bash
-VERBOSE=1 gitbunch sync --source ~/repos --target ~/hbp/repos --delete_branch "$@"

@@ -1,8 +1,0 @@
-#!/bin/sh
-ROOTDIR=/home/steven/masterkey
-
-$ROOTDIR/bin/rebuilddb \
-  --pkg region-locality-id \
-  --pkg org-mwn \
-  $* \
-  -- --no-psqlrc -q -h localhost -U steven_masterkey steven_masterkey

@@ -1,5 +1,0 @@
-#!/bin/bash
-set -x
-download-mandiri
-download-bca --profile=sav
-download-bca --profile=privatemwn

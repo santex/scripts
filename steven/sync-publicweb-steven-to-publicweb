@@ -1,7 +1,0 @@
-#!/bin/sh
-
-rsync --del -e ssh -Pavz $* \
-  --exclude '*~' --exclude '.svn' --exclude '.bzr' \
-  --exclude '/XXXfiles/' --exclude '/tmp/' \
-  /home/steven/sites/publicweb.steven.builder.localdomain/www/ \
-  mwn-steven@people.masterwebnet.com:/u/mwn-steven/sites/steven.people.masterwebnet.com/www/

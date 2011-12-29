@@ -1,4 +1,0 @@
-#!/bin/bash
-set -x
-cd $HOME/repos/mwn && git pull /media/bismuthb/home/sloki/user/pian/public/git/mwn
-

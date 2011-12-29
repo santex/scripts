@@ -1,5 +1,0 @@
-#!/bin/sh
-
-rsync --del -e "ssh -c arcfour" -az --exclude '*~' \
-  $HOME/repos/mwn-webdev/ \
-  steven@hosting.localdomain:/u/steven/public/git/webdev/
