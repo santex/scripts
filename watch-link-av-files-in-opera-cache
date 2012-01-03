@@ -24,7 +24,7 @@ mkdir "_ln" unless -d "_ln";
 
 while (1) {
     $log->trace("Listing ...");
-    for my $f (`ls g*/*.tmp --sort=t -r`) {
+    for my $f (`ls g*/*.tmp --sort=t -r 2>/dev/null`) {
         chomp $f;
         my $fname = $f; $fname =~ s!.+/!!;
         next if $mem{$f}++;
