@@ -18,16 +18,13 @@ use File::MimeInfo;
 
 $CWD = "$ENV{HOME}/.opera/cache";
 
-my %last_sizes;
-my %sizes;
-my %last_increase_time;
-
 mkdir "_ln" unless -d "_ln";
 
 while (1) {
     for my $f (`ls g*/* --sort=t -r | tail -n 30`) {
         chomp $f;
-        next unless -f "_ln/$f";
+        my $fname = $f; $fname =~ s!.+/!!;
+        next unless -f "_ln/$fname";
         $log->trace("found new file $f");
         my $filetype = `file $f`;
         my $ext;
@@ -38,8 +35,8 @@ while (1) {
             next;
         }
         $log->trace("$f is $ext file");
-        $log->info("Linking $f to _ln/$f ...");
-        link $f, "_ln/$f";
+        $log->info("Linking $f to _ln/$fname ...");
+        link $f, "_ln/$fname";
     } # for $f
 
     sleep 5;
