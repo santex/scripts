@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+# created: 2012-01-03
+
+# tugas skrip ini adalah mengamati file audio/video baru yang terbentuk di
+# cache opera, lalu langsung meng-hardlinknya ke subdirektori _ln.  ini bisa
+# dipake utk file2x audio video yang langsung ngilang aja di cache dan gak
+# bisa disave oleh skrip watch-move-av-files-in-opera-cache
+
+use 5.010;
+use strict;
+#use warnings;
+use Log::Any::App '$log';
+
+use autodie;
+use File::chdir;
+use File::MimeInfo;
+
+$CWD = "$ENV{HOME}/.opera/cache";
+
+my %last_sizes;
+my %sizes;
+my %last_increase_time;
+
+mkdir "_ln" unless -d "_ln";
+
+while (1) {
+    for my $f (`ls g*/* --sort=t -r | tail -n 30`) {
+        chomp $f;
+        next unless -f "_ln/$f";
+        $log->trace("found new file $f");
+        my $filetype = `file $f`;
+        my $ext;
+        if ($filetype =~ /audio.+id3|mpeg.+layer iii/i) { $ext = "mp3" }
+        if ($filetype =~ /macromedia flash/i) { $ext = "flv" }
+        else {
+            $log->trace("type unknown, skipped");
+            next;
+        }
+        $log->trace("$f is $ext file");
+        $log->info("Linking $f to _ln/$f ...");
+        link $f, "_ln/$f";
+    } # for $f
+
+    sleep 5;
+}
