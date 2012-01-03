@@ -16,16 +16,19 @@ use autodie;
 use File::chdir;
 use File::MimeInfo;
 
+my %mem;
+
 $CWD = "$ENV{HOME}/.opera/cache";
 
 mkdir "_ln" unless -d "_ln";
 
 while (1) {
     $log->trace("Listing ...");
-    for my $f (`ls g*/* --sort=t -r | tail -n 30`) {
+    for my $f (`ls g*/*.tmp --sort=t -r`) {
         chomp $f;
         my $fname = $f; $fname =~ s!.+/!!;
-        next unless -f "_ln/$fname";
+        next if $mem{$f}++;
+        next if -f "_ln/$fname";
         $log->trace("found new file $f");
         my $filetype = `file $f`;
         my $ext;
@@ -40,5 +43,5 @@ while (1) {
         link $f, "_ln/$fname";
     } # for $f
 
-    sleep 5;
+    sleep 3;
 }
