@@ -32,8 +32,9 @@ while (1) {
         $log->trace("found new file $f");
         my $filetype = `file $f`;
         my $ext;
-        if ($filetype =~ /audio.+id3|mpeg.+layer iii/i) { $ext = "mp3" }
-        if ($filetype =~ /macromedia flash/i) { $ext = "flv" }
+        if    ($filetype =~ /audio.+id3|mpeg.+layer iii/i) { $ext = "mp3" }
+        elsif ($filetype =~ /macromedia flash/i) { $ext = "flv" }
+        elsif ($filetype =~ /mpeg v4/i) { $ext = "mp4" }
         else {
             $log->trace("type unknown, skipped");
             next;
