@@ -4,6 +4,7 @@ $debug = $ENV{DEBUG};
 $stdout_instead = 1;
 #($day_now,$mon_now,$year_now)=(29,3,2003);
 
+#use Carp::Always;
 use Mail::Sendmail;
 use REST::Google::Search::Images;
 use YAML::Syck;
@@ -41,7 +42,11 @@ while (<>) {
   }
   if ($opts) {
       for ($opts) { if (/^'/) { s/^'//; s/'$//; } else { s/^"//; s/"$//; } }
-      $opts = Load($opts);
+      eval { $opts = Load($opts) };
+      if ($@) {
+          warn "YAML error in line $. ($opts), ignored";
+          $opts = {};
+      }
   }
   #print "DEBUG: opts = ".Dump($opts) if $debug;
   $done=0;
