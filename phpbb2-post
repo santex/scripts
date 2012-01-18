@@ -32,6 +32,9 @@ use App::Options (
         log_level => { type => 'string', required => 0, default => 'DEBUG' },
         bbcode => { type => 'bool', required => 0, default => 0, },
         obfuscate_link => { type => 'bool', require => 0, default => 0, },
+        https_proxy          => {type=>'string'},
+        https_proxy_username => {type=>'string'},
+        https_proxy_password => {type=>'string'},
     },
 );
 
@@ -65,7 +68,10 @@ _
 LOGDIE "Please specify topic_id OR forum_id"
     unless $App::options{topic_id} || $App::options{forum_id};
 
-my $mech = new WWW::Mechanize;
+for (qw/https_proxy https_proxy_username https_proxy_password/) {
+    $ENV{uc $_} = $App::options{$_} if defined $App::options{$_};
+}
+my $mech = WWW::Mechanize->(noproxy=>defined($App::options{https_proxy}));
 
 #eval to trap Mech exceptions
 eval {
