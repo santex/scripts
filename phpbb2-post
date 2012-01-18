@@ -71,7 +71,7 @@ LOGDIE "Please specify topic_id OR forum_id"
 for (qw/https_proxy https_proxy_username https_proxy_password/) {
     $ENV{uc $_} = $App::options{$_} if defined $App::options{$_};
 }
-my $mech = WWW::Mechanize->(noproxy=>defined($App::options{https_proxy}));
+my $mech = WWW::Mechanize->new(noproxy=>defined($App::options{https_proxy}));
 
 #eval to trap Mech exceptions
 eval {
