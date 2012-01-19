@@ -90,7 +90,7 @@ my @Responses = (
               "* [i]katakunci[/i] [b]itu[/b] [i]fakta[/i] -> mengeset fakta terhadap sebuah kata kunci\n",
               "* [i]katakunci[/i] [b]itu juga[/b] [i]fakta[/i] -> menambah fakta terhadap sebuah kata kunci\n",
               "* [i]katakunci[/i] [b]itu sekarang[/b] [i]fakta[/i] -> mengganti fakta terhadap sebuah kata kunci\n",
-              "* [b]apa/siapa[/b] [i]katakunci[/i] -> merequest fakta yang sudah disimpan untuk sebuah kata kunci\n",
+              "* [i]katakunci[/i] [b]itu?[/b] -> merequest fakta yang sudah disimpan untuk sebuah kata kunci\n",
           );
      }},
 
@@ -374,16 +374,14 @@ my @Responses = (
              $Db->do("DELETE FROM facts WHERE keyword=?", {}, $kwl);
          }
 
-         $Db->do("INSERT IGNORE INTO facts (keyword,fact) VALUES (?,?)", {}, $kwl, $fact);
+         $Db->do("INSERT INTO facts (keyword,fact) VALUES (?,?)", {}, $kwl, $fact); # IGNORE kok gak diuspport ya, katanya support
 
          return pick("oce bos...", "siap kak!", "sip...", "ho oh",
                      "iye deeee...");
      }},
 
     # taruh di akhir aja sebelum default, ini agak loose re-nya
-    {pat => qr/^(?: (?:siapa|apa(?:kah)?) \s+ (?: (?:sic?h) \s+ ) )?
-               (\S+|"[.+?]") \s+
-               itu $/ix,
+    {pat => qr/^(\S+|"[.+?]") \s+ itu $/ix,
      name => 'FACT QUERY',
      handler => sub {
          my (%args) = @_;
