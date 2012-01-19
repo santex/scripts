@@ -346,8 +346,7 @@ my @Responses = (
 
     {pat => qr/^(\S+|"[.+?]")\s+
                (itu|itu \s+ (?:sekarang|skr|juga|jg)) \s+ (?: (?:adalah|adl) \s+)?
-               (\S.*)
-               !\s*$/ix,
+               (\S.*) $/ix,
      name => 'FACT STORE',
      handler => sub {
          my (%args) = @_;
@@ -382,10 +381,9 @@ my @Responses = (
      }},
 
     # taruh di akhir aja sebelum default, ini agak loose re-nya
-    {pat => qr/^(?: (?:siapa|apa) \s+ (?: (?:sic?h) \s+ ) )?
-               (\S+|"[.+?]")\s+
-               (?: (?:itu) )?
-               \?s*$/ix,
+    {pat => qr/^(?: (?:siapa|apa(?:kah)?) \s+ (?: (?:sic?h) \s+ ) )?
+               (\S+|"[.+?]") \s+
+               itu $/ix,
      name => 'FACT QUERY',
      handler => sub {
          my (%args) = @_;
