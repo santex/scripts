@@ -422,7 +422,7 @@ my @Responses = (
          my $kwl = lc($kw);
 
          my ($found) = $Db->selectrow_array("SELECT 1 FROM facts WHERE keyword=? ",
-                                            {}, $kwl, $fact);
+                                            {}, $kwl);
          if (!$found) {
              return "memang daku gak pernah mengingat $kw kok :)";
          }
