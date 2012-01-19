@@ -452,9 +452,23 @@ my @Responses = (
              return $ans;
          }
 
-         return pick("ga tau ya kak?", "meneketehe cuii!?",
-                     "mangap, daku tak tau...", "hm???",
-                     "entahlah", "tanyakan pada rumput bergoyang");
+         return pick(
+             "ga tau ya kak?",
+             "meneketehe cuii!?",
+             "mangap, daku tak tau...",
+             "hm???",
+             "entahlah",
+             "tanyakan pada rumput bergoyang",
+             "dulu gak tau, sekarang lupa :)",
+             "samar2x nih di otak, coba ingatkan aku lagi say?",
+             "hiks... ga tauuuuu sayyyyy :(",
+             "hehehe... apa yah?",
+             "hehehe... siapa yah?",
+             "i dunno",
+             "apa?!",
+             "siapa!?",
+             "kayaknya sih... ga tau deh, hehe",
+         );
      }},
 
     {pat => qr//,
