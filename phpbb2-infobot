@@ -361,7 +361,7 @@ my @Responses = (
          my $kw   = $args{match}[1];
          my $fact = $args{match}[2];
 
-         for ($kw, $fact) { if (/^"/) { s/^"//; s/"$// } }
+         for ($kw, $fact) { if (/^"/) { s/^"//; s/"$//; s/\s+\z//s } }
          my $kwl = lc($kw);
 
          $log->debug("kw=>$kw<, kwl=>$kwl<, fact=>$fact<");
@@ -388,7 +388,7 @@ my @Responses = (
          my $replace = $cmd =~ /sekarang|skr/;
          my $add     = $cmd =~ /juga|jg/;
 
-         for ($kw, $fact) { if (/^"/) { s/^"//; s/"$// } }
+         for ($kw, $fact) { if (/^"/) { s/^"//; s/"$//; s/\s+\z//s } }
          my $kwl = lc($kw);
 
          $log->debug("kw=$kw, add=$add, replace=$replace, fact=$fact");
