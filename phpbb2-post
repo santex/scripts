@@ -32,6 +32,7 @@ use App::Options (
         log_level => { type => 'string', required => 0, default => 'DEBUG' },
         bbcode => { type => 'bool', required => 0, default => 0, },
         obfuscate_link => { type => 'bool', require => 0, default => 0, },
+        http_proxy           => {type=>'string'},
         https_proxy          => {type=>'string'},
         https_proxy_username => {type=>'string'},
         https_proxy_password => {type=>'string'},
@@ -72,6 +73,10 @@ for (qw/https_proxy https_proxy_username https_proxy_password/) {
     $ENV{uc $_} = $App::options{$_} if defined $App::options{$_};
 }
 my $mech = WWW::Mechanize->new(noproxy=>defined($App::options{https_proxy}));
+
+if (defined $App::options{http_proxy}) {
+    $mech->proxy(['http'], $App::options{http_proxy});
+}
 
 #eval to trap Mech exceptions
 eval {
