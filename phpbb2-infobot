@@ -360,6 +360,8 @@ my @Responses = (
          for ($kw, $fact) { if (/^"/) { s/^"//; s/"$// } }
          my $kwl = lc($kw);
 
+         $log->debug("kw=$kw, add=$add, replace=$replace, fact=$fact");
+
          my $facts = $Db->selectall_arrayref("SELECT * FROM facts WHERE keyword=?", {}, $kwl);
          #$log->debugf("facts=%s", $facts);
 
