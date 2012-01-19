@@ -364,6 +364,8 @@ my @Responses = (
          for ($kw, $fact) { if (/^"/) { s/^"//; s/"$// } }
          my $kwl = lc($kw);
 
+         $log->debug("kw=>$kw<, kwl=>$kwl<, fact=>$fact<");
+
          my ($found) = $Db->selectrow_array("SELECT 1 FROM facts WHERE keyword=? AND fact=?",
                                             {}, $kwl, $fact);
          if (!$found) {
