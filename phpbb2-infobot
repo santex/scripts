@@ -359,7 +359,7 @@ my @Responses = (
          my $add     = $cmd =~ /juga|jg/;
 
          for ($kw, $fact) { if (/^"/) { s/^"//; s/"$// } }
-         my $kwl = $lc($kw);
+         my $kwl = lc($kw);
 
          my $facts = $Db->selectall_arrayref("SELECT * FROM facts WHERE keyword=?", {}, $kwl);
 
@@ -392,7 +392,7 @@ my @Responses = (
          my $kw   = $args{match}[1];
 
          for ($kw) { if (/^"/) { s/^"//; s/"$// } }
-         my $kwl = $lc($kw);
+         my $kwl = lc($kw);
 
          my $facts = $Db->selectall_arrayref("SELECT * FROM facts WHERE keyword=?", {}, $kwl);
 
