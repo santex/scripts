@@ -87,6 +87,10 @@ my @Responses = (
               "* [b]exit[/b] / [b]quit[/b] -> bunuh proses bot\n",
               "* [b]avatars[/b] -> tampilkan avatar semua user aktif saat ini\n",
               "* [b]ekstrak gambar dari [/b][i]URL[/i] -> ambil dan tampilkan semua gambar dari halaman web\n",
+              "* [i]katakunci[/i] [b]itu[/b] [i]fakta[/i]! -> mengeset fakta terhadap sebuah kata kunci\n",
+              "* [i]katakunci[/i] [b]itu juga[/b] [i]fakta[/i]! -> menambah fakta terhadap sebuah kata kunci\n",
+              "* [i]katakunci[/i] [b]itu sekarang[/b] [i]fakta[/i]! -> mengganti fakta terhadap sebuah kata kunci\n",
+              "* [b]apa/siapa [i]katakunci[/i] -> merequest fakta yang sudah disimpan untuk sebuah kata kunci\n",
           );
      }},
 
@@ -340,6 +344,71 @@ my @Responses = (
          }
      }},
 
+    {pat => qr/^(\S+|"[.+?]")\s+
+               (itu|itu \s+ (?:sekarang|skr|juga|jg)) \s+ (?: (?:adalah|adl) \s+)?
+               (\S.*)
+               !\s*$/ix,
+     name => 'FACT STORE',
+     handler => sub {
+         my (%args) = @_;
+         my $kw   = $args{match}[1];
+         my $cmd  = $args{match}[2];
+         my $fact = $args{match}[3];
+
+         my $replace = $cmd =~ /sekarang|skr/;
+         my $add     = $cmd =~ /juga|jg/;
+
+         for ($kw, $fact) { if (/^"/) { s/^"//; s/"$// } }
+         my $kwl = $lc($kw);
+
+         my $facts = $Db->selectall_arrayref("SELECT * FROM facts WHERE keyword=?", {}, $kwl);
+
+         if (@$facts && !$replace && !$add) {
+             my $ans = "";
+             for (@$facts) {
+                 $ans .= $ans ? "$kw juga adalah $_->{fact}.\n" : "Tapi $kw adalah $_->{fact}.\n";
+             }
+             return $ans;
+         }
+
+         if ($replace) {
+             $Db->do("DELETE FROM facts WHERE keyword=?", {}, $kwl);
+         }
+
+         $Db->do("INSERT IGNORE INTO facts (keyword,fact) VALUES (?,?)", {}, $kwl, $fact);
+
+         return pick("oce bos...", "siap kak!", "sip...", "ho oh",
+                     "iye deeee...");
+     }},
+
+    # taruh di akhir aja sebelum default, ini agak loose re-nya
+    {pat => qr/^(?: (?:siapa|apa) \s+ (?: (?:sic?h) \s+ ) )?
+               (\S+|"[.+?]")\s+
+               (?: (?:itu) )?
+               \?s*$/ix,
+     name => 'FACT QUERY',
+     handler => sub {
+         my (%args) = @_;
+         my $kw   = $args{match}[1];
+
+         for ($kw) { if (/^"/) { s/^"//; s/"$// } }
+         my $kwl = $lc($kw);
+
+         my $facts = $Db->selectall_arrayref("SELECT * FROM facts WHERE keyword=?", {}, $kwl);
+
+         if (@$facts) {
+             my $ans = "";
+             for (@$facts) {
+                 $ans .= $ans ? "$kw juga adalah $_->{fact}.\n" : "Tapi $kw adalah $_->{fact}.\n";
+             }
+             return $ans;
+         }
+
+         return pick("ga tau ya kak?", "meneketehe cuii!?",
+                     "mangap, daku tak tau...", "hm???",
+                     "entahlah", "tanyakan pada rumput bergoyang");
+     }},
+
     {pat => qr//,
      name => 'DEFAULT',
      handler => sub {
@@ -411,6 +480,12 @@ sub init_db {
     $Db->do("CREATE TABLE IF NOT EXISTS viewed_posts (
                post_id INTEGER PRIMARY KEY,
                ctime BIGINT NOT NULL)");
+    # 2012-01-19, the core of infobot, finally added :)
+    $Db->do("CREATE TABLE IF NOT EXISTS facts (
+               keyword TEXT NOT NULL,
+               fact TEXT NOT NULL,
+               ctime BIGINT NOT NULL)");
+    # XXX create unique index on (keyword,fact)
 }
 
 sub add_sig {
