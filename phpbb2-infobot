@@ -345,7 +345,7 @@ my @Responses = (
          }
      }},
 
-    {pat => qr/^(\S+|"[.+?]")\s+
+    {pat => qr/^(\S.*?|".+?")\s+
                (itu (?: \s+ (?:sekarang|juga) )?) \s+ (?: (?:adalah|adl) \s+)?
                (\S.*) $/ix,
      name => 'FACT STORE',
@@ -385,7 +385,7 @@ my @Responses = (
                      "iye deeee...");
      }},
 
-    {pat => qr/^lupa(?:kan|in) \s+ (\S+|"[.+?]") $/ix,
+    {pat => qr/^lupa(?:kan|in) \s+ (\S.*?|".+?") $/ix,
      name => 'FACT DELETE',
      handler => sub {
          my (%args) = @_;
@@ -401,7 +401,7 @@ my @Responses = (
      }},
 
     # taruh di akhir aja sebelum default, ini agak loose re-nya
-    {pat => qr/^(\S+|"[.+?]") \s+ itu $/ix,
+    {pat => qr/^(\S.*+|".+?") \s+ itu $/ix,
      name => 'FACT QUERY',
      handler => sub {
          my (%args) = @_;
