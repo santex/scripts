@@ -346,7 +346,7 @@ my @Responses = (
      }},
 
     {pat => qr/^(\S+|"[.+?]")\s+
-               (itu|itu \s+ (?:sekarang|skr|juga|jg)?) \s+ (?: (?:adalah|adl) \s+)?
+               (itu|itu (?: \s+ (?:sekarang|skr|juga|jg) )?) \s+ (?: (?:adalah|adl) \s+)?
                (\S.*) $/ix,
      name => 'FACT STORE',
      handler => sub {
