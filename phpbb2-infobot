@@ -46,8 +46,8 @@ use App::Options (
         db_path => { type => 'string', required => 1, default => "$ENV{HOME}/phpbb2-infobot.db", },
 
         run_spelling_nazi => { type=>'boolean', default=>1 },
-        mispelled_words => { type => 'string', required => 1, description => 'mispelled words that wants to be reminded, in this format: bad=>good, anotheur=>another, ...' },
-        mispelled_batch => { type => 'string', required => 1, description => 'how many words should be searched at once', default=>20 },
+        mispelled_words => { type => 'string', required => 0, description => 'mispelled words that wants to be reminded, in this format: bad=>good, anotheur=>another, ...' },
+        mispelled_batch => { type => 'string', required => 0, description => 'how many words should be searched at once', default=>20 },
 
         sigs_file => { type=>'string' },
 
@@ -466,7 +466,7 @@ sub run {
     while (1) {
         find_new_commands();
         respond_command(unreplied_commands());
-        spelling_nazi();
+        spelling_nazi() if $App::options{run_spelling_nazi};
 
         if ($quit) {
             $log->infof("Exiting because instructed to ...");
