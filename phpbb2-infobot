@@ -86,7 +86,7 @@ my @Responses = (
               "* [b]thanks[/b] -> ucapkan terima kasih pada bot\n",
               "* [b]exit[/b] / [b]quit[/b] -> bunuh proses bot\n",
               "* [b]avatars[/b] -> tampilkan avatar semua user aktif saat ini\n",
-              "* [b]ekstrak gambar dari [/b][i]URL[/b] -> ambil dan tampilkan semua gambar dari halaman web\n",
+              "* [b]ekstrak gambar dari [/b][i]URL[/i] -> ambil dan tampilkan semua gambar dari halaman web\n",
           );
      }},
 
