@@ -352,6 +352,26 @@ my @Responses = (
          }
      }},
 
+    {pat => qr/^lupa(?:kan|in) (?: \s+ (?:kalo|kalau|bahwa|bhw) )? \s+
+               (\S.*?|".+?") itu (.+) $/ix,
+     name => 'FACT DELETE ONE',
+     handler => sub {
+         my (%args) = @_;
+         my $kw   = $args{match}[1];
+         my $fact = $args{match}[2];
+
+         for ($kw, $fact) { if (/^"/) { s/^"//; s/"$// } }
+         my $kwl = lc($kw);
+
+         my ($found) = $Db->selectrow_array("SELECT 1 FROM facts WHERE keyword=? AND fact=?",
+                                            {}, $kwl, $fact);
+         if (!$found) {
+             return "memang gak pernah ".pick(qw/tau ngeh nyadar/)." kalo $kw itu $fact tuh...";
+         }
+         $Db->do("DELETE FROM facts WHERE keyword=? AND fact=?", {}, $kwl, $fact);
+         return pick("ok", "okeh", "baiklah", "baik", "oke deh");
+     }},
+
     {pat => qr/^(\S.*?|".+?")\s+
                (itu (?: \s+ (?:sekarang|skr|juga|jg) )?) \s+ (?: (?:adalah|adl) \s+)?
                (\S.*) $/ix,
@@ -390,26 +410,6 @@ my @Responses = (
 
          return pick("oce bos...", "siap kak!", "sip...", "ho oh",
                      "iye deeee...");
-     }},
-
-    {pat => qr/^lupa(?:kan|in) (?: \s+ (?:kalo|kalau|bahwa|bhw) )? \s+
-               (\S.*?|".+?") itu (.+) $/ix,
-     name => 'FACT DELETE ONE',
-     handler => sub {
-         my (%args) = @_;
-         my $kw   = $args{match}[1];
-         my $fact = $args{match}[2];
-
-         for ($kw, $fact) { if (/^"/) { s/^"//; s/"$// } }
-         my $kwl = lc($kw);
-
-         my ($found) = $Db->selectrow_array("SELECT 1 FROM facts WHERE keyword=? AND fact=?",
-                                            {}, $kwl, $fact);
-         if (!$found) {
-             return "memang gak pernah ".pick(qw/tau ngeh nyadar/)." kalo $kw itu $fact tuh...";
-         }
-         $Db->do("DELETE FROM facts WHERE keyword=? AND fact=?", {}, $kwl, $fact);
-         return pick("ok", "okeh", "baiklah", "baik", "oke deh");
      }},
 
     {pat => qr/^lupa(?:kan|in) \s+ (\S.*?|".+?") $/ix,
