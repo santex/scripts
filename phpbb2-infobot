@@ -353,7 +353,7 @@ my @Responses = (
      }},
 
     {pat => qr/^lupa(?:kan|in) (?: \s+ (?:kalo|kalau|bahwa|bhw) )? \s+
-               (\S.*?|".+?") itu (.+) $/ix,
+               (\S.*?|".+?") \s+ itu \s+ (.+) $/ix,
      name => 'FACT DELETE ONE',
      handler => sub {
          my (%args) = @_;
