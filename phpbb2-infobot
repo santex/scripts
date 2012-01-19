@@ -58,6 +58,8 @@ use App::Options (
         # for now is to exit after a predefined period and let
         # run-phpbb2-infobot script restart this script.
         suicide_after => { type=>'int', default => 86400 },
+
+        max_commands_per_post => { type=>'string', default=>10 },
     },
 );
 
@@ -698,7 +700,7 @@ sub find_new_commands {
         }
         @cmds = grep { $_ eq '' || /\w/ } @cmds;
         next unless @cmds;
-        if (@cmds > 5) {
+        if (@cmds > $App::options{max_commands_per_post}) {
             $log->warn("Too many commands (".scalar(@cmds).", will only process 5");
             splice @cmds, 5;
         }
