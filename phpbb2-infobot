@@ -90,7 +90,8 @@ my @Responses = (
               "* [i]katakunci[/i] [b]itu[/b] [i]fakta[/i] -> mengeset fakta terhadap sebuah kata kunci\n",
               "* [i]katakunci[/i] [b]itu juga[/b] [i]fakta[/i] -> menambah fakta terhadap sebuah kata kunci\n",
               "* [i]katakunci[/i] [b]itu sekarang[/b] [i]fakta[/i] -> mengganti fakta terhadap sebuah kata kunci\n",
-              "* [i]katakunci[/i] [b]itu?[/b] -> merequest fakta yang sudah disimpan untuk sebuah kata kunci\n",
+              "* [i]katakunci[/i] [b]itu?[/b] -> meminta fakta yang sudah disimpan untuk sebuah kata kunci\n",
+              "* [b]lupakan[/b] [i]katakunci[/i] -> menghapus fakta yang sudah disimpan untuk sebuah kata kunci\n",
           );
      }},
 
@@ -382,6 +383,21 @@ my @Responses = (
 
          return pick("oce bos...", "siap kak!", "sip...", "ho oh",
                      "iye deeee...");
+     }},
+
+    {pat => qr/^lupa(?:kan|in) (\S+|"[.+?]")\s+ $/ix,
+     name => 'FACT DELETE',
+     handler => sub {
+         my (%args) = @_;
+         my $kw   = $args{match}[1];
+
+         for ($kw) { if (/^"/) { s/^"//; s/"$// } }
+         my $kwl = lc($kw);
+
+         $Db->do("DELETE FROM facts WHERE keyword=?", {}, $kwl);
+
+         return pick("ok", "okeh", "baiklah", "baik", "oke deh");
+
      }},
 
     # taruh di akhir aja sebelum default, ini agak loose re-nya
