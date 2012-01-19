@@ -145,7 +145,7 @@ my @Responses = (
           );
          $ans .= "\n\nkidding :)\n\n";
          $ans .= sprintf("Real status: Uptime: %.1f jam\nHost: %s\nUser: %s\nPID: %d\nDatabase path: %s\n",
-                      (time - $^T) / 3600, $VERSION, ($ENV{HOSTNAME} || "?"), $ENV{USER}, $$, $App::options{db_path});
+                      (time - $^T) / 3600, ($ENV{HOSTNAME} || "?"), $ENV{USER}, $$, $App::options{db_path});
          my ($nf) = $Db->selectrow_array("SELECT COUNT(*) FROM facts");
          my ($nk) = $Db->selectrow_array("SELECT COUNT(DISTINCT keyword) FROM facts");
          $ans .= "Number of facts: $nf (for $nk unique keywords)\n";
