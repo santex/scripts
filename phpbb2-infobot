@@ -369,7 +369,7 @@ my @Responses = (
          if (@$facts && !$replace && !$add) {
              my $ans = "";
              for (@$facts) {
-                 $ans .= $ans ? "$kw juga adalah $_->[1].\n" : "Tapi $kw kan $_->[1]?\n";
+                 $ans .= $ans ? "$kw juga $_->[1].\n" : "Tapi $kw kan $_->[1]?\n";
              }
              return $ans;
          }
@@ -415,7 +415,7 @@ my @Responses = (
          if (@$facts) {
              my $ans = "";
              for (@$facts) {
-                 $ans .= $ans ? "$kw juga adalah $_->[1].\n" : "$kw adalah $_->[1].\n";
+                 $ans .= $ans ? "$kw juga $_->[1].\n" : "$kw itu $_->[1].\n";
              }
              return $ans;
          }
