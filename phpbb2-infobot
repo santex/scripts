@@ -385,7 +385,7 @@ my @Responses = (
                      "iye deeee...");
      }},
 
-    {pat => qr/^lupa(?:kan|in) (\S+|"[.+?]")\s+ $/ix,
+    {pat => qr/^lupa(?:kan|in) \s+ (\S+|"[.+?]") $/ix,
      name => 'FACT DELETE',
      handler => sub {
          my (%args) = @_;
