@@ -361,11 +361,12 @@ my @Responses = (
          my $kwl = lc($kw);
 
          my $facts = $Db->selectall_arrayref("SELECT * FROM facts WHERE keyword=?", {}, $kwl);
+         $log->debugf("facts=%s", $facts);
 
          if (@$facts && !$replace && !$add) {
              my $ans = "";
              for (@$facts) {
-                 $ans .= $ans ? "$kw juga adalah $_->{fact}.\n" : "Tapi $kw adalah $_->{fact}.\n";
+                 $ans .= $ans ? "$kw juga adalah $_->{fact}.\n" : "$kw adalah $_->{fact}.\n";
              }
              return $ans;
          }
