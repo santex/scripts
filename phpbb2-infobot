@@ -90,7 +90,7 @@ my @Responses = (
               "* [i]katakunci[/i] [b]itu[/b] [i]fakta[/i] -> mengeset fakta terhadap sebuah kata kunci\n",
               "* [i]katakunci[/i] [b]itu juga[/b] [i]fakta[/i] -> menambah fakta terhadap sebuah kata kunci\n",
               "* [i]katakunci[/i] [b]itu sekarang[/b] [i]fakta[/i] -> mengganti fakta terhadap sebuah kata kunci\n",
-              "* [b]apa/siapa [i]katakunci[/i] -> merequest fakta yang sudah disimpan untuk sebuah kata kunci\n",
+              "* [b]apa/siapa[/b] [i]katakunci[/i] -> merequest fakta yang sudah disimpan untuk sebuah kata kunci\n",
           );
      }},
 
