@@ -421,9 +421,14 @@ my @Responses = (
          for ($kw) { if (/^"/) { s/^"//; s/"$// } }
          my $kwl = lc($kw);
 
-         $Db->do("DELETE FROM facts WHERE keyword=?", {}, $kwl);
+         my ($found) = $Db->selectrow_array("SELECT 1 FROM facts WHERE keyword=? ",
+                                            {}, $kwl, $fact);
+         if (!$found) {
+             return "memang daku gak pernah mengingat $kw kok :)";
+         }
 
-         return pick("ok", "okeh", "baiklah", "baik", "oke deh");
+         $Db->do("DELETE FROM facts WHERE keyword=?", {}, $kwl);
+         return pick("sudah kak", "done cui");
 
      }},
 
