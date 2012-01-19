@@ -93,7 +93,8 @@ my @Responses = (
               "* [i]katakunci[/i] [b]itu juga[/b] [i]fakta[/i] -> menambah fakta terhadap sebuah kata kunci\n",
               "* [i]katakunci[/i] [b]itu sekarang[/b] [i]fakta[/i] -> mengganti fakta terhadap sebuah kata kunci\n",
               "* [i]katakunci[/i] [b]itu?[/b] -> meminta fakta yang sudah disimpan untuk sebuah kata kunci\n",
-              "* [b]lupakan[/b] [i]katakunci[/i] -> menghapus fakta yang sudah disimpan untuk sebuah kata kunci\n",
+              "* [b]lupakan[/b] [i]katakunci[/i] [b]itu[/b] [i]fakta[/i] -> menghapus sebuah fakta yang sudah disimpan untuk sebuah kata kunci\n",
+              "* [b]lupakan[/b] [i]katakunci[/i] -> menghapus semua fakta yang sudah disimpan untuk sebuah kata kunci\n",
           );
      }},
 
