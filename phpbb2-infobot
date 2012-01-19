@@ -374,7 +374,7 @@ my @Responses = (
              $Db->do("DELETE FROM facts WHERE keyword=?", {}, $kwl);
          }
 
-         $Db->do("INSERT INTO facts (keyword,fact,ctime) VALUES (?,?)",
+         $Db->do("INSERT INTO facts (keyword,fact,ctime) VALUES (?,?,?)",
                  {}, $kwl, $fact, time()); # IGNORE kok gak diuspport ya, katanya support
 
          return pick("oce bos...", "siap kak!", "sip...", "ho oh",
