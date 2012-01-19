@@ -136,15 +136,20 @@ my @Responses = (
     {pat => qr/^status(-?(ka)?mu)?$/,
      name => 'STATUS',
      handler => sub {
-         pick("single",
+         my $ans = pick("single",
               "single and looking",
               "masih jomlo nih",
               "janda beranak satu",
               "baru putus",
               "available",
-          ) . "\n\nkidding :)\n\n" .
-              sprintf("Real status: Uptime: %.1f jam, Versi skrip: %s, Host: %s, User: %s, PID: %d, Database path: %s",
+          );
+         $ans .= "\n\nkidding :)\n\n";
+         $ans .= sprintf("Real status: Uptime: %.1f jam\nHost: %s\nUser: %s\nPID: %d\nDatabase path: %s\n",
                       (time - $^T) / 3600, $VERSION, ($ENV{HOSTNAME} || "?"), $ENV{USER}, $$, $App::options{db_path});
+         my ($nf) = $Db->selectrow_array("SELECT COUNT(*) FROM facts");
+         my ($nk) = $Db->selectrow_array("SELECT COUNT(DISTINCT keyword) FROM facts");
+         $ans .= "Number of facts: $nf (for $nk unique keywords)\n";
+         $ans;
      }},
 
     {pat => qr/^(exit|quit)?$/,
