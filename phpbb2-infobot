@@ -352,7 +352,7 @@ my @Responses = (
          }
      }},
 
-    {pat => qr/^lupa(?:kan|in) (?: \s+ (?:kalo|kalau|bahwa|bhw) )? \s+
+    {pat => qr/^lupa(?: (?:kan|in) (?:lah)? ) (?: \s+ (?:kalo|kalau|bahwa|bhw) )? \s+
                (\S.*?|".+?") \s+ itu \s+ (.+) $/ix,
      name => 'FACT DELETE ONE',
      handler => sub {
@@ -412,7 +412,7 @@ my @Responses = (
                      "iye deeee...");
      }},
 
-    {pat => qr/^lupa(?:kan|in) \s+ (\S.*?|".+?") $/ix,
+    {pat => qr/^lupa(?: (?:kan|in) (?:lah)? ) \s+ (\S.*?|".+?") $/ix,
      name => 'FACT DELETE ALL',
      handler => sub {
          my (%args) = @_;
