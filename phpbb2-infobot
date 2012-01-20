@@ -95,6 +95,8 @@ my @Responses = (
               "* [i]katakunci[/i] [b]itu?[/b] -> meminta fakta yang sudah disimpan untuk sebuah kata kunci\n",
               "* [b]lupakan[/b] [i]katakunci[/i] [b]itu[/b] [i]fakta[/i] -> menghapus sebuah fakta yang sudah disimpan untuk sebuah kata kunci\n",
               "* [b]lupakan[/b] [i]katakunci[/i] -> menghapus semua fakta yang sudah disimpan untuk sebuah kata kunci\n",
+              "* [b]eja[/b] [i]kata[/i] -> eja kata dengan alfabet fonetik (mis: ADI jadi alfa delta india)\n",
+              "* [b]eja versi (bences/...)[/b] [i]kata[/i] -> eja kata dengan alfabet fonetik dengan ejaan nonstandar\n",
           );
      }},
 
@@ -152,6 +154,142 @@ my @Responses = (
          my ($nf) = $Db->selectrow_array("SELECT COUNT(*) FROM facts");
          my ($nk) = $Db->selectrow_array("SELECT COUNT(DISTINCT keyword) FROM facts");
          $ans .= "Number of facts: $nf (for $nk unique keywords)\n";
+         $ans;
+     }},
+
+    {pat => qr/^eja (\s+ versi \s+ (?:bences|mwn) )? \s+ (.+) ?$/,
+     name => 'PHONETIC ALPHABET',
+     handler => sub {
+         my $v = $1;
+         my $word = lc($2);
+
+         my %alpha;
+
+         if (!$v) {
+             %alpha = (
+                 0 => 'nol',
+                 1 => 'satu',
+                 2 => 'dua',
+                 3 => 'tiga',
+                 4 => 'empat',
+                 5 => 'lima',
+                 6 => 'enam',
+                 7 => 'tujuh',
+                 8 => 'delapan',
+                 9 => 'sembilan',
+                 a => 'alfa',
+                 b => 'bravo',
+                 c => 'charlie',
+                 d => 'delta',
+                 e => 'echo',
+                 f => 'foxtrot',
+                 g => 'golf',
+                 h => 'hotel',
+                 i => 'india',
+                 j => 'juliet',
+                 k => 'kilo',
+                 l => 'lima',
+                 m => 'mike',
+                 n => 'november',
+                 o => 'oscar',
+                 p => 'papa',
+                 q => 'quebec',
+                 r => 'romeo',
+                 s => 'sierra',
+                 t => 'tango',
+                 u => 'uniform',
+                 v => 'victor',
+                 w => 'whiskey',
+                 x => 'x-ray',
+                 y => 'yankee',
+                 z => 'zulu',
+             );
+         } elsif ($v =~ /xxxbences/i) {
+             %alpha = (
+                 0 => 'nol',
+                 1 => 'satu',
+                 2 => 'dua',
+                 3 => 'tiga',
+                 4 => 'empat',
+                 5 => 'lima',
+                 6 => 'enam',
+                 7 => 'tujuh',
+                 8 => 'delapan',
+                 9 => 'sembilan',
+                 a => 'akika',
+                 b => '',
+                 c => '',
+                 d => '',
+                 e => '',
+                 f => '',
+                 g => '',
+                 h => '',
+                 i => '',
+                 j => '',
+                 k => '',
+                 l => '',
+                 m => '',
+                 n => '',
+                 o => '',
+                 p => '',
+                 q => '',
+                 r => '',
+                 s => '',
+                 t => '',
+                 u => '',
+                 v => '',
+                 w => 'waria',
+                 x => '',
+                 y => '',
+                 z => '',
+             );
+         } elsif ($v =~ /mwn/i) {
+             %alpha = (
+                 0 => 'nol',
+                 1 => 'satu',
+                 2 => 'dua',
+                 3 => 'tiga',
+                 4 => 'empat',
+                 5 => 'lima',
+                 6 => 'enam',
+                 7 => 'tujuh',
+                 8 => 'delapan',
+                 9 => 'sembilan',
+                 a => 'alfa',
+                 b => 'bravo',
+                 c => 'charlie',
+                 d => 'delta',
+                 e => 'echo',
+                 f => 'foxtrot',
+                 g => 'golf',
+                 h => 'hotel',
+                 i => 'india',
+                 j => 'juliet',
+                 k => 'kilo',
+                 l => 'lima',
+                 m => 'mama',
+                 n => 'november',
+                 o => 'oscar',
+                 p => 'papa',
+                 q => 'quebec',
+                 r => 'romeo',
+                 s => 'sierra',
+                 t => 'tango',
+                 u => 'uniform',
+                 v => 'victor',
+                 w => 'whiskey',
+                 x => 'x-ray',
+                 y => 'yamaha',
+                 z => 'zebra',
+             );
+         }
+
+         $word =~ s/[^a-z0-9]+//g;
+         return "gak ada yg bisa dieja, hun" unless length $word;
+         my $ans = "";
+         for (split //, $word) {
+             $ans .= ($ans ? " " : "") . $alpha{$_};
+         }
          $ans;
      }},
 
