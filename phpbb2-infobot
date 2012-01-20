@@ -157,7 +157,7 @@ my @Responses = (
          $ans;
      }},
 
-    {pat => qr/^eja (\s+ versi \s+ (?:bences|mwn) )? \s+ (.+) ?$/,
+    {pat => qr/^eja \s (versi \s+ (?:bences|mwn) )? (.+) $/,
      name => 'PHONETIC ALPHABET',
      handler => sub {
          my $v = $1;
