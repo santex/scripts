@@ -1,0 +1,2 @@
+#!/bin/bash
+cd ~/.opera/cache && ls -r g_*/* *.* 2>/dev/null
