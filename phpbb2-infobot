@@ -484,7 +484,7 @@ my @Responses = (
      handler => sub {
          my (%args) = @_;
          my ($by, $target, $n, $unit, $reason) = ($args{cmd}{username}, $args{match}[1],
-                                                  $args{match}[2], $args{match}[13],
+                                                  $args{match}[2], $args{match}[3],
                                                   $args{match}[4] // "");
          $log->debugf("Match ignore command: target=%s, n=%s, unit=%s, reason=%s", $target, $n, $unit, $reason);
          if (!is_admin($by)) {
