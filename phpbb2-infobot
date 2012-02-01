@@ -7,6 +7,9 @@
 # if a command is found, it will try to reply to the same topic with
 # the answer.
 
+# known bugs:
+# - ignore belum mengecek keabsahan username forum
+
 use 5.010;
 use strict;
 use Log::Any::App '$log',
@@ -483,6 +486,7 @@ my @Responses = (
          my ($by, $target, $n, $unit, $reason) = ($args{cmd}{username}, $args{match}[1],
                                                   $args{match}[2], $args{match}[13],
                                                   $args{match}[4] // "");
+         $log->debugf("Match ignore command: target=%s, n=%s, unit=%s, reason=%s", $target, $n, $unit, $reason);
          if (!is_admin($by)) {
              return pick(
                  "mangap, kamu bukan admin say",
