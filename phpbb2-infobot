@@ -858,10 +858,12 @@ sub respond_command {
             }
             do { $log->fatal("Command not handled: $cmd->{raw_command}"); die } unless $handled;
         }
-        add_sig(\$overall_resp);
-        forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
-                   bbcode=>1,
-                   message => $overall_resp);
+        if (length $overall_resp) {
+            add_sig(\$overall_resp);
+            forum_post(forum_id=>$cmd->{forum_id}, topic_id=>$cmd->{topic_id},
+                       bbcode=>1,
+                       message => $overall_resp);
+        }
     }
 }
 
