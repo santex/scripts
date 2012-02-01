@@ -102,7 +102,7 @@ my @Responses = (
               "* [b]lupakan[/b] [i]katakunci[/i] -> menghapus semua fakta yang sudah disimpan untuk sebuah kata kunci\n",
               "* [b]eja[/b] [i]kata[/i] -> eja kata dengan alfabet fonetik (mis: ADI jadi alfa delta india)\n",
               "* [b]eja versi (bences/sunda/mwn/...)[/b] [i]kata[/i] -> eja kata dengan alfabet fonetik dengan ejaan nonstandar\n",
-              "* [b]ignore[/b] [i]user[/i] [b]selama[/b] [i]waktu[/i] ([i]alasan[/i]) -> ignore seorang user (admin only)\n",
+              "* [b]cuekin[/b] [i]user[/i] [b]selama[/b] [i]waktu[/i] ([i]alasan[/i]) -> ignore seorang user (admin only)\n",
           );
      }},
 
@@ -477,7 +477,7 @@ my @Responses = (
          }
      }},
 
-    {pat => qr/^ignore \s+ (\S+) \s+
+    {pat => qr/^cuekin \s+ (\S+) \s+
                (?:selama) \s+ (?:(\d+)\s*(menit|jam|hari)) \s*
                (?:\((.*)\))?$/ix,
      name => 'IGNORE',
@@ -504,7 +504,7 @@ my @Responses = (
          $Db->do("REPLACE INTO ignored_users (username,until,ctime,by,reason) VALUES (?,?,?,?,?)",
                  {}, $target, $until, $now, $args{cmd}{username}, $reason);
          return pick(
-             "sukses, $target di-ignore sampe ".scalar(localtime $until)
+             "sukses, $target dicuekin sampe ".scalar(localtime $until)
          );
      }},
 
