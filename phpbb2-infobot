@@ -60,6 +60,8 @@ use App::Options (
         suicide_after => { type=>'int', default => 86400 },
 
         max_commands_per_post => { type=>'string', default=>10 },
+
+        admins => { type=>'string' },
     },
 );
 
@@ -154,6 +156,15 @@ my @Responses = (
          my ($nf) = $Db->selectrow_array("SELECT COUNT(*) FROM facts");
          my ($nk) = $Db->selectrow_array("SELECT COUNT(DISTINCT keyword) FROM facts");
          $ans .= "Number of facts: $nf (for $nk unique keywords)\n";
+
+         $ans .= "Currently ignored users:";
+         my $sth = $Db->prepare("SELECT * FROM ignored_users ORDER BY until");
+         $sth->execute;
+         while (my $row = $sth->fetchrow_hashref) {
+             $ans .= " $row->{username} (until ".scalar(localtime $row->{until}).")";
+         }
+         $ans .= "\n";
+
          $ans;
      }},
 
@@ -462,6 +473,36 @@ my @Responses = (
          }
      }},
 
+    {pat => qr/^ignore \s+ (\S+) \s+
+               (?:selama) \s+ (?:(\d+)\s*(menit|jam|hari)) \s*
+               (?:\((.*)\))?$/ix,
+     name => 'IGNORE',
+     handler => sub {
+         my (%args) = @_;
+         my ($by, $target, $n, $unit, $reason) = ($args{cmd}{username}, $args{match}[1],
+                                                  $args{match}[2], $args{match}[13],
+                                                  $args{match}[4] // "");
+         if (!is_admin($by)) {
+             return pick(
+                 "mangap, kamu bukan admin say",
+                 "maaph, admin only han",
+             );
+         }
+         my $factor =
+             $unit =~ /hari/i ? 86400 :
+                 $unit =~ /jam/i ? 3600 :
+                     $unit =~ /menit/i ? 60 : 1;
+         my $period = $n * $factor;
+         my $now = time();
+         my $until = $now + $period;
+         clean_ignored_table();
+         $Db->do("REPLACE INTO ignored_users (username,until,ctime,by,reason) VALUES (?,?,?,?,?)",
+                 {}, $target, $until, $now, $args{cmd}{username}, $reason);
+         return pick(
+             "sukses, $target di-ignore sampe ".scalar(localtime $until)
+         );
+     }},
+
     {pat => qr/^karma\s+(?:dari|oleh)\s+(\S+)$/i,
      name => 'KARMA GIVING LIST',
      handler => sub {
@@ -721,11 +762,13 @@ sub init_db {
                status TEXT NOT NULL DEFAULT 'new',
                raw_command TEXT NOT NULL,
                note TEXT)");
+
     # to avoid viewing a post multiple times and bubbling view count [noticed by
     # bayo, 2011-01-04]
     $Db->do("CREATE TABLE IF NOT EXISTS viewed_posts (
                post_id INTEGER PRIMARY KEY,
                ctime BIGINT NOT NULL)");
+
     # 2012-01-19, the core of infobot, finally added :)
     $Db->do("CREATE TABLE IF NOT EXISTS facts (
                keyword TEXT NOT NULL,
@@ -733,6 +776,34 @@ sub init_db {
                ctime BIGINT NOT NULL,
                username TEXT NOT NULL)");
     # XXX create unique index on (keyword,fact)
+
+    # 2012-02-01, budy, budy...
+    $Db->do("CREATE TABLE IF NOT EXISTS ignored_users (
+               username TEXT PRIMARY KEY,
+               until BIGINT NOT NULL,
+               ctime BIGINT NOT NULL,
+               by TEXT NOT NULL,  -- username yang ngasih
+               reason TEXT NOT NULL DEFAULT '')"
+           );
+
+}
+
+sub is_admin {
+    my ($username) = @_;
+    my $admins = $App::options{admins};
+    return 0 unless $admins;
+    my @admins = split /\s*[,;]\s*/, $admins;
+    return $username ~~ @admins;
+}
+
+sub clean_ignored_table {
+    $Db->do("DELETE FROM ignored_users WHERE until < ?", {}, time());
+}
+
+sub is_ignored {
+    my ($username) = @_;
+    my $row = $Db->selectrow_arrayref("SELECT * FROM ignored_users WHERE username=? AND until >= ?", {}, $username, time());
+    $row ? 1:0;
 }
 
 sub add_sig {
@@ -757,9 +828,17 @@ sub respond_command {
     for my $post_id (keys %cmds_by_post_id) {
         my $overall_resp = "";
         my $cmd;
+      CMD:
         for (@{ $cmds_by_post_id{$post_id} }) {
             $cmd = $_;
             $log->info("Parsing command: $cmd->{raw_command} ...");
+
+            if (is_ignored($cmd->{username})) {
+                $log->infof("User %s is currently ignored, ignoring command", $cmd->{username});
+                $Db->do("UPDATE cmds SET status='ignored' WHERE id=?", {}, $cmd->{id});
+                next CMD;
+            }
+
             my $handled;
             for my $r (@Responses) {
                 if ($cmd->{raw_command} =~ $r->{pat}) {
