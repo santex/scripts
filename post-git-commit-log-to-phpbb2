@@ -64,7 +64,7 @@ if ($App::options{author_re}) {
 
 my @revs0;
 my @revs;
-$output = `git log --abbrev=40 --reverse -$max_look_behind`;
+$output = `git log --abbrev-commit --reverse -$max_look_behind`;
 die "Failed doing 'git log: $!" if $?;
 push @revs0, [$1, $2] while $output =~ /^commit ([0-9a-f]+)\nAuthor: (.+)/mg;
 for (@revs0) {
