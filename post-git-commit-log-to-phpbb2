@@ -64,7 +64,7 @@ if ($App::options{author_re}) {
 
 my @revs0;
 my @revs;
-$output = `git log --abbrev-commit --reverse -$max_look_behind`;
+$output = `git log --noabbrev-commit --reverse -$max_look_behind`;
 die "Failed doing 'git log: $!" if $?;
 push @revs0, [$1, $2] while $output =~ /^commit ([0-9a-f]+)\nAuthor: (.+)/mg;
 for (@revs0) {
@@ -96,7 +96,7 @@ for (@revs) {
         join("",
              "( echo 'Subject: commit $repo_name ($branch:$_)'; ",
              "echo; echo -n '[code]'; ",
-             "( git log -1 -p $_ | head -n$App::options{max_lines} ) ; ",
+             "( git log --abbrev-commit -1 -p $_ | head -n$App::options{max_lines} ) ; ",
              "echo '[/code]' ) | ",
              "POST_NUM=\"($i/$tot)\" '$phpbb2_post_path' ",
              ($App::options{phpbb2_post_profile} ?
