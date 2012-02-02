@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+die "Usage: $0 <filename>\n" if @ARGV != 1;
+
+my $ccdir = "$ENV{HOME}/.cache/google-chrome/Default/Cache";
+chdir $ccdir or die "Can't chdir to $ccdir: $!\n";
+
+my @files = sort {(-s $b)<=>(-s $a)} glob "f_*";
+die "Can't find any files in cache?\n" unless @files;
+
+print "$files[0] -> $ARGV[0] ...\n";
+rename $files[0], $ARGV[0] or die "Can't rename: $!\n";

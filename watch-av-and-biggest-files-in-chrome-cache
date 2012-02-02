@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# but the problem is, chrome only saves around 25MB, after that everything is in
+# memory?
+
+cd ~/.cache/google-chrome/Default/Cache && watch -n1 'ls -l --sort=s -r f_* *flv 2>/dev/null|tail -n15'
