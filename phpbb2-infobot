@@ -355,7 +355,7 @@ my @Responses = (
      }},
 
     {pat => [qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(?:(\d+)(!)?\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
-             qr/^!gi \s+ (\d+)(!)? \s+ (.+)$/x],
+             qr/^!i \s+ (\d+)(!)? \s+ (.+)$/x],
      name => 'SEARCH IMAGE',
      handler => sub {
          my (%args) = @_;
