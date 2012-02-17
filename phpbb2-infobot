@@ -85,7 +85,7 @@ my @Responses = (
          join("",
               "Bantuan: beberapa perintah yang saat ini dikenali:\n\n",
               "* [b]bantuan[/b] / [b]help[/b] -> pesan ini\n",
-              "* [b]tampilkan[/b] [i]N[/i] [b]gambar [/b][i]KATAKUNCI[/i] (shortcut: [b]!i[/b] [i]N[/i] [i]KATAKUNCI[/i])-> cari gambar di google images\n",
+              "* [b]tampilkan[/b] [i]N[/i] [b]gambar [/b][i]KATAKUNCI[/i] (shortcut: [b]/i[/b] [i]N[/i] [i]KATAKUNCI[/i])-> cari gambar di google images\n",
               "* [b]status[/b] -> tampilkan uptime, hostname, pid, dll\n",
               "* [i]USERNAME[/i][b]++ ([/b][i]ALASAN[/i][b])[/b] / [i]USERNAME[/i][b]-- ([/b][i]ALASAN[/i][b])[/b] -> beri karma positif/negatif\n",
               "* [b]karma dari [/b][i]USERNAME[/i] -> tampilkan daftar karma yang diberikan seorang user\n",
@@ -355,7 +355,7 @@ my @Responses = (
      }},
 
     {pat => [qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(?:(\d+)(!)?\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
-             qr/^!i \s+ (\d+)(!)? \s+ (.+)$/x],
+             qr#^/i \s+ (\d+)(!)? \s+ (.+)$#x],
      name => 'SEARCH IMAGE',
      handler => sub {
          my (%args) = @_;
