@@ -354,7 +354,8 @@ my @Responses = (
          "exiting ...";
      }},
 
-    {pat => qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(?:(\d+)(!)?\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
+    {pat => [qr/^(?:tampil|cari|tonjol|tongol|muncul|ambil|liat)(?:in|kan)\s+(?:(\d+)(!)?\s+)?(?:(?:buah|biji|bh|bj)\s+)?(?:gambar|gbr|ph?oto|foto|pict?|picture|pikcer|image|imej)\s+(.+)$/i,
+             qr/^!gi \s+ (\d+)(!)? \s+ (.+)$/x],
      name => 'SEARCH IMAGE',
      handler => sub {
          my (%args) = @_;
@@ -845,15 +846,20 @@ sub respond_command {
             }
 
             my $handled;
+          RESP:
             for my $r (@Responses) {
-                if ($cmd->{raw_command} =~ $r->{pat}) {
-                    $log->info("Command matches $r->{name}");
-                    my $resp = $r->{handler}->(r=>$r, match=>[$0, $1, $2, $3, $4, $5, $6, $7, $8, $9], cmd=>$cmd);
-                    $overall_resp .= "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp;
+                for my $pat (ref($r->{pat}) eq 'ARRAY' ? @{$r->{pat}} : $r->{pat}) {
+                    if ($cmd->{raw_command} =~ $pat) {
+                        $log->info("Command matches $r->{name}");
+                        my @m = ($0, $1, $2, $3, $4, $5, $6, $7, $8, $9);
+                        my %m = %+;
+                        my $resp = $r->{handler}->(r=>$r, match=>\@m, named_match=>\%m, cmd=>$cmd);
+                        $overall_resp .= "[quote=\"$cmd->{username}\"]".$cmd->{raw_command}."[/quote]\n\n".$resp;
 
-                    $Db->do("UPDATE cmds SET status='replied' WHERE id=?", {}, $cmd->{id});
-                    $handled++;
-                    last;
+                        $Db->do("UPDATE cmds SET status='replied' WHERE id=?", {}, $cmd->{id});
+                        $handled++;
+                        last RESP;
+                    }
                 }
             }
             do { $log->fatal("Command not handled: $cmd->{raw_command}"); die } unless $handled;
