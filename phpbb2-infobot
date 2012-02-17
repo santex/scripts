@@ -1014,11 +1014,10 @@ sub find_new_commands {
             push @cmds, $1;
         }
         $log->tracef("Number of commands found: %d", scalar(@cmds));
-        $log->trace("Found Too many commands (".scalar(@cmds).", will only process 5");
         next unless @cmds;
         if (@cmds > $App::options{max_commands_per_post}) {
-            $log->warn("Too many commands (".scalar(@cmds).", will only process 5");
-            splice @cmds, 5;
+            $log->warn("Too many commands (".scalar(@cmds).", will only process $App::options{max_commands_per_post}");
+            splice @cmds, $App::options{max_commands_per_post};
         }
         $log->debugf("Found command(s) in post #$r->{post_id}: %s", \@cmds);
         $log->debug("Message is (quotes cleaned): $r->{message}");
