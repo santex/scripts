@@ -1049,6 +1049,7 @@ sub login {
 }
 
 sub forum_post {
+    state $last_post_time = 0;
     my (%args) = @_;
 
     $log->info("Posting to forum (forum #$args{forum_id}".($args{topic_id} ? ", topic #$args{topic_id}" : "").") ...");
@@ -1082,7 +1083,9 @@ sub forum_post {
     unless ( $Mech->content =~ /successfully/i ) {
         $log->error("Failed posting!");
     }
-    sleep $App::options{post_delay};
+    my $time = time;
+    sleep $App::options{post_delay} if $time-$last_post_time <= $App::options{post_delay};
+    $last_post_time = $time;
 }
 
 sub pick {
