@@ -1006,7 +1006,10 @@ sub spelling_nazi {
 sub find_new_commands {
     my $n = join " ", split /,\s*/, $App::options{botname};
     my $res = forum_search(keywords=>$n);
-    return unless $res->[0] == 200;
+    unless ($res->[0] == 200) {
+        $log->warnf("Error in forum_search: %s", $res);
+        return;
+    }
     my $now = time;
     for my $r (@{ $res->[2] }) {
         my @cmds;
