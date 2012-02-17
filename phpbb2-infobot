@@ -1013,7 +1013,8 @@ sub find_new_commands {
         while ($r->{message} =~ /^$Botname_Regex\s*[:,]\s*(\b.*?)(?:[.?!]+)?$/mg) {
             push @cmds, $1;
         }
-        @cmds = grep { $_ eq '' || /\w/ } @cmds;
+        $log->tracef("Number of commands found: %d", scalar(@cmds));
+        $log->trace("Found Too many commands (".scalar(@cmds).", will only process 5");
         next unless @cmds;
         if (@cmds > $App::options{max_commands_per_post}) {
             $log->warn("Too many commands (".scalar(@cmds).", will only process 5");
