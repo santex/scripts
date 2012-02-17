@@ -883,6 +883,7 @@ sub unreplied_commands {
 }
 
 sub forum_search {
+    state $last_search_time = 0;
     my %args = @_;
     $log->debug("Searching for $args{keywords} ...");
     # by default search one-day worth of posts (well, only 1st page)
@@ -946,7 +947,9 @@ sub forum_search {
         };
     }
     $log->debug("Found ".scalar(@res)." result(s)");
-    sleep $App::options{search_delay};
+    my $time = time;
+    sleep $App::options{search_delay} if $time-$last_search_time <= $App::options{search_delay};
+    $last_search_time = $time;
     [200, "OK", \@res];
 }
 
