@@ -85,7 +85,7 @@ my @Responses = (
          join("",
               "Bantuan: beberapa perintah yang saat ini dikenali:\n\n",
               "* [b]bantuan[/b] / [b]help[/b] -> pesan ini\n",
-              "* [b]tampilkan gambar [/b][i]KATAKUNCI[/i] -> cari gambar di google images\n",
+              "* [b]tampilkan[/b] [i]N[/i] [b]gambar [/b][i]KATAKUNCI[/i] -> cari gambar di google images\n",
               "* [b]status[/b] -> tampilkan uptime, hostname, pid, dll\n",
               "* [i]USERNAME[/i][b]++ ([/b][i]ALASAN[/i][b])[/b] / [i]USERNAME[/i][b]-- ([/b][i]ALASAN[/i][b])[/b] -> beri karma positif/negatif\n",
               "* [b]karma dari [/b][i]USERNAME[/i] -> tampilkan daftar karma yang diberikan seorang user\n",
