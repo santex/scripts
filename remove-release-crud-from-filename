@@ -66,6 +66,18 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.en
+.HDTV.POW4
+.HDTV.P0W4
+.HDTV.FQM
+.720p HDTV.DIMENSION
+.HDTV.PropER-NoTV
+.HDTV.NoTV
+.HDTV.LOL
+.HDTV.2HD
+.HDTV
+.720p HDTV.CTU
+.DVDRip.CLERKS
  - 480p hdtv x264 immerse
  - 720p hdtv x264-immerse
  - 720p hdtv x264-orenji
