@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Module::List qw(list_modules);
+
+if (!@ARGV) {
+    die "Usage: $0 <pat>\n";
+}
+
+my $res = list_modules($ARGV[0], {list_modules=>1, recurse=>1});
+for my $k (sort keys %$res) {
+    print "$k\n";
+}

@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use CDB_File;
+use Data::Dump;
+
+die "$0 - Dump a CDB file (or a single key)into Perl\n\nUsage: $0 <filename> [key]\n" unless @ARGV;
+tie %h, 'CDB_File', $ARGV[0];
+
+if (defined $ARGV[1]) {
+    dd $h{$ARGV[1]};
+} else {
+    dd \%h;
+}
+
