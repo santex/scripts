@@ -1,8 +1,6 @@
-#!/bin/bash
-if [[ "$1" == "" ]]; then
-  echo "Usage: $0 <module-name>"
-  exit 1
-fi
+#!/usr/bin/perl
 
-perl -Ilib -MDevel::EndStats=verbose,1 -M$1 -e1
+die "Usage: $0 <module-name>\n" unless @ARGV;
+system "perl -Ilib -MDevel::EndStats=verbose,1 ".
+    join(" ", map {"-M$_"} @ARGV)." -e1";
 
