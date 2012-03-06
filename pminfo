@@ -16,9 +16,9 @@ for my $mod (@ARGV) {
         print " (can't load, skipped)\n";
         next;
     }
-    print " version=", ${"$mod\::VERSION"} // "(no version)";
+    print " version: ", ${"$mod\::VERSION"} // "(no version)";
 
-    print " path=$INC{$modp}";
+    print "   path: $INC{$modp}";
 
     print "\n";
 }
