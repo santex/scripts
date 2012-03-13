@@ -88,7 +88,8 @@ for my $item (reverse @{ $rss->{item} }) {
     print $fh "\n\n";
     if ($item->{'media:content'}) {
         #DEBUG "Item #$i has media content";
-        for my $m (@{ $item->{'media:content'} }) {
+        my $mm = $item->{'media:content'};
+        for my $m (ref($mm) eq 'ARRAY' ? @$mm : $mm) {
             if ($m->{medium} eq 'image') {
                 print $fh "[img]".$m->{url}."[/img]\n\n";
             }
