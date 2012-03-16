@@ -22,6 +22,7 @@ use App::Options (
         password => { type => 'string', required => 1 },
         delay => { type => 'int', required => 0, default => 15 }, # default phpbb3
         bbcode => { type => 'bool', required => 0, default => 0 },
+        html => { type => 'bool', required => 0, default => 0 },
         dry_run => { type => 'bool', required => 0, default => 0 },
         log_level => { type => 'string', required => 0, default => 'DEBUG' },
         obfuscate_link => { type => 'bool', required => 0, default => 0, },
@@ -110,6 +111,7 @@ if (@files) {
         " --topic_id=".esc($App::options{topic_id}).
         " --log_level=".esc($App::options{log_level}).
         " --bbcode=".esc($App::options{bbcode}).
+        " --html=".esc($App::options{html}).
         " --obfuscate_link=".esc($App::options{obfuscate_link}).
         " ".join(" ", @files);
     DEBUG "cmd: $cmd";

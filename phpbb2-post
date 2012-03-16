@@ -140,7 +140,7 @@ POST: for my $file (@ARGV) {
         fields      => {
             subject         => $subj,
             message         => $mesg,
-            disable_html    => "on",
+            disable_html    => ($App::options{html}   ? "off" : "on"),
             disable_bbcode  => ($App::options{bbcode} ? "off" : "on"),
             disable_smilies => "on",
         },
