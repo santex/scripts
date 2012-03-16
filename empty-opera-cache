@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cd ~/.opera/cache && rm -f g_*/*.tmp && rmdir g_* 2>/dev/null
