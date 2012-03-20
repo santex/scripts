@@ -31,7 +31,7 @@ while (1) {
         next if $mem{$f}++;
         next if -f "_ln/$fname";
         $log->trace("found new file $f");
-        if ((-s _) < $min_size) {
+        if ((-s $f) < $min_size) {
             $log->trace("skipped $f because size < $min_size");
             next;
         }
