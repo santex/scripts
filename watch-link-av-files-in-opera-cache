@@ -28,13 +28,13 @@ while (1) {
     for my $f (`ls g*/*.tmp --sort=t -r 2>/dev/null`) {
         chomp $f;
         my $fname = $f; $fname =~ s!.+/!!;
-        next if $mem{$f}++;
-        next if -f "_ln/$fname";
         $log->trace("found new file $f");
         if ((-s $f) < $min_size) {
             $log->trace("skipped $f because size < $min_size");
             next;
         }
+        next if $mem{$f}++;
+        next if -f "_ln/$fname";
         my $filetype = `file $f`;
         my $ext;
         if    ($filetype =~ /audio.+id3|mpeg.+layer iii/i) { $ext = "mp3" }
