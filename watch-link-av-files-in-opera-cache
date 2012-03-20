@@ -17,6 +17,7 @@ use File::chdir;
 use File::MimeInfo;
 
 my %mem;
+my $min_size = 1024*1024;
 
 $CWD = "$ENV{HOME}/.opera/cache";
 
@@ -30,6 +31,10 @@ while (1) {
         next if $mem{$f}++;
         next if -f "_ln/$fname";
         $log->trace("found new file $f");
+        if ((-s _) < $min_size) {
+            $log->trace("skipped $f because size < $min_size");
+            next;
+        }
         my $filetype = `file $f`;
         my $ext;
         if    ($filetype =~ /audio.+id3|mpeg.+layer iii/i) { $ext = "mp3" }
