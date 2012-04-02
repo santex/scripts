@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+
+use 5.010;
+use autodie;
+use strict;
+use warnings;
+
+use File::chdir;
+use Log::Any::App '$log';
+use Sort::Versions;
+
+my $cpan = $ARGV[0] // '/cpan';
+
+$CWD = "$cpan/authors/id";
+
+for my $author (<*/*/**>) {
+    $log->debug("Entering author dir $author ...");
+    local $CWD = $author;
+    my %dist;
+    for my $tarball (<*.tar.gz>, <*.zip>) {
+        $log->trace("Found tarball $tarball");
+        my ($dist, $ver) = $tarball =~ /(.+)-(.+)/ or do {
+            $log->debug("Tarball name doesn't contain version, ".
+                          "skipped: $tarball");
+            next;
+        };
+        push @{ $dist{$dist} }, $tarball;
+    }
+    for my $dist (keys %dist) {
+        my @rel = sort {versioncmp($a, $b)} @{$dist{$dist}};
+        next unless @rel > 1;
+        $log->infof("%s has >1 releases: %s", $dist, \@rel);
+        pop @rel;
+        $log->infof("Deleting older releases: %s ...", \@rel);
+        unlink @rel;
+    }
+}
