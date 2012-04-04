@@ -1,0 +1,105 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Cwd;
+use Builtin::Logged qw(system);
+use Perinci::CmdLine;
+use POSIX;
+#use String::ShellQuote;
+
+our %SPEC;
+
+$SPEC{archive_perl_release} = {
+    v => 1.1,
+    summary => 'Archive Perl release tarball',
+    description => <<'_',
+
+Copy tarball to perl release archive directory. The perl release archive
+directory is structured into TARGET/STATE/ (or TARGET/STATE/YEAR for published
+state).
+
+_
+    args => {
+        tarball => {
+            schema => 'str*',
+            req => 1,
+            pos => 0,
+            summary => 'Path of tarball to archive',
+        },
+        archive_dir => {
+            schema => 'str*',
+            summary => 'Archive directory',
+            description => <<'_',
+
+Defaults to ~/proj/perl/releases.
+
+_
+        },
+        target => {
+            schema => ['str*'=>{match=>'\A[\w-]+\z'}],
+            summary => 'Target',
+            description => <<'_',
+
+Defaults to 'cpan', but if run in the (repo) dir whose name starts with 'priv-'
+will default to 'private'.
+
+_
+        },
+        state => {
+            schema => ['str*'=>{
+                in=>[qw/published pending cancelled/],
+                default=>'published',
+            }],
+            summary => 'State',
+            description => <<'_',
+
+Defaults to 'cpan', but if run in the (repo) dir whose name starts with 'priv-'
+will default to 'private'.
+
+_
+        },
+    },
+};
+sub archive_perl_release {
+    my %args = @_;
+
+    my $tarball = $args{tarball};
+    (defined $tarball) or return [400, "Please specify tarball"];
+    (-f $tarball)
+        or return [412, "Tarball files does not exist or is not a file: ".
+                       "$tarball"];
+
+    my $archive_dir = $args{archive_dir} // "$ENV{HOME}/proj/perl/releases";
+    (-d $archive_dir)
+        or return [412, "Archive directory does not exist: $archive_dir"];
+
+    my $cwd = getcwd;
+    my $repo_name = $cwd; $repo_name =~ s!.+/!!;
+    my $is_private = $repo_name =~ /^priv-/;
+    my $target = $args{target} // ($is_private ? 'private' : 'cpan');
+    (-d "$archive_dir/$target")
+        or return [412, "Target directory does not exist under archive: ".
+                       "$archive_dir/$target"];
+
+    my $state = $args{state} // 'published';
+    my $dir = "$archive_dir/$target/$state";
+    (-d $dir)
+        or return [412, "State directory does not exist under archive/target: ".
+                       "$dir"];
+
+    my $cur_year = POSIX::strftime("%Y", localtime);
+    if ($state eq 'published') {
+        $dir .= "/$cur_year";
+        mkdir $dir unless (-d $dir);
+    }
+
+    system "cp", "-av", $tarball, $dir;
+    return [500, "Can't copy: $! ($?)"] if $?;
+
+    [200, "OK"];
+}
+
+Perinci::CmdLine->new(url=>'/main/archive_perl_release')->run;
