@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+# created: 2011-06-14
+
+use 5.010;
+use strict;
+use warnings;
+
+use LWP::Simple;
+use Mojo::DOM;
+
+die "Usage: $0 <CPANID> ...\n" unless @ARGV;
+
+binmode STDOUT, ":utf8";
+
+for my $cpanid (@ARGV) {
+    my $dom = Mojo::DOM->new(get "http://metacpan.org/author/".uc($cpanid).
+                                 "/?.rand=".rand());
+
+    my $e = $dom->at("head title");
+    my $name = $e ? $e->text : undef;
+    ($name) = $name =~ /(.+?) \(/ if $name;
+
+    my $trs = $dom->find('tr a[href*="/release/"]');
+    my $numdists = @$trs;
+
+    printf "%s has %d distributions on CPAN\n",
+        (defined($name) ? "$name ($cpanid)" : $cpanid), $numdists;
+}
