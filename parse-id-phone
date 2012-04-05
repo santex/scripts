@@ -1,4 +1,4 @@
 #!/usr/bin/perl
 
-use Sub::Spec::CmdLine qw(run);
-run(module => 'Parse::PhoneNumber::ID', sub => 'parse_id_phone');
+use Perinci::CmdLine;
+Perinci::CmdLine->new(url=>'/Parse/PhoneNumber/ID/parse_id_phone')->run;
