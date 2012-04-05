@@ -103,6 +103,10 @@ my @Responses = (
               "* [b]eja[/b] [i]kata[/i] -> eja kata dengan alfabet fonetik (mis: ADI jadi alfa delta india)\n",
               "* [b]eja versi (bences/sunda/mwn/...)[/b] [i]kata[/i] -> eja kata dengan alfabet fonetik dengan ejaan nonstandar\n",
               "* [b]cuekin[/b] [i]user[/i] [b]selama[/b] [i]waktu[/i] ([i]alasan[/i]) -> ignore seorang user (admin only)\n",
+              "* [b]buat poll[/b] [i]nama_poll[/i] [i]pilihan ...[/i] -> buat poll, minimal harus ada 2+ pilihan\n",
+              "* [b]tutup poll[/b] [i]nama_poll[/i] -> tutup poll (hanya bisa dilakukan oleh pembuat poll)\n",
+              "* [b]buka poll[/b] [i]nama_poll[/i] -> buka ulang sebuah poll (hanya bisa dilakukan oleh pembuat poll)\n",
+              "* [b]vote[/b] [i]nama_poll[/i] [i]pilihan[/i] -> vote\n",
           );
      }},
 
@@ -662,6 +666,85 @@ my @Responses = (
 
      }},
 
+    {pat => qr/^buat \s+ poll \s+
+               (\S+) \s
+               (\S+ (?:\s+ \S+)+) $/ix,
+     name => 'POLL CREATE',
+     handler => sub {
+         my (%args) = @_;
+         my $name    = lc($args{match}[1]);
+         my $choices = lc($args{match}[2]);
+
+         my $poll = $Db->selectrow_hashref("SELECT * FROM polls WHERE name=?", {}, $name);
+         if ($poll) {
+             return "Gagal: Poll dengan nama '$name' udah ada sebelumnya gan";
+         }
+
+         $Db->do("INSERT INTO polls (name,ctime,creator,choices,state) VALUES (?,?,?,?,?)",
+                 {}, $name, time(), $args{cmd}{username}, $choices, 'open');
+
+         return "Poll berhasil dibuat gan";
+     }},
+
+    {pat => qr/^(buka|tutup) \s+ poll \s+
+               (\S+) $/ix,
+     name => 'POLL OPEN_CLOSE',
+     handler => sub {
+         my (%args) = @_;
+         my $action  = lc($args{match}[1]);
+         my $name    = lc($args{match}[2]);
+         my $answer  = "";
+
+         my $poll = $Db->selectrow_hashref("SELECT * FROM polls WHERE name=?", {}, $name);
+         if (!$poll) {
+             return "Gagal: Poll dengan nama '$name' gak ada gan";
+         }
+         if ($poll->{creator} ne $args{cmd}{username}) {
+             return "Gagal: Bukan ente pembuat pollnya gan, tapi $poll->{creator}";
+         }
+
+         $Db->do("UPDATE polls SET state=? WHERE id=?",
+                 {}, $action eq 'buka' ? 'open' : 'closed', $poll->{id});
+
+         if ($action eq 'tutup') {
+             $answer .= display_poll_votes($poll->{id});
+         }
+
+         $answer .= "Status poll '$name' sekarang: ter$action";
+         return $answer;
+     }},
+
+    {pat => qr/^vote (?:\s+ poll)? \s+
+               (\S+) \s+
+               (\S+) $/ix,
+     name => 'POLL VOTE',
+     handler => sub {
+         my (%args) = @_;
+         my $name    = lc($args{match}[1]);
+         my $choice  = lc($args{match}[2]);
+
+         my $poll = $Db->selectrow_hashref("SELECT * FROM polls WHERE name=?", {}, $name);
+         if (!$poll) {
+             return "Gagal: Poll dengan nama '$name' gak ada gan";
+         }
+         if ($poll->{state} eq 'closed') {
+             return "Gagal: Poll dengan nama '$name' sudah ditutup gan";
+         }
+         my $vote = $Db->selectrow_hashref("SELECT * FROM poll_votes WHERE poll_id=? AND username=?", {}, $poll->{id}, $args{cmd}{username});
+         if ($vote) {
+             return "Gagal: Ente sudah pernah nge-vote gan (vote ente: '$vote->{choice}')";
+         }
+         my @choices = map {lc} split /\s+|\s*[,;]\s*/, $poll->{choices};
+         unless ($choice ~~ @choices) {
+             return "Gagal: Pilihannya kagak termasuk gan, pilih di antara: ".join(", ", @choices);
+         }
+
+         $Db->do("INSERT INTO poll_votes (poll_id,username,ctime,choice) VALUES (?,?,?,?)",
+                 {}, $poll->{id}, $args{cmd}{username}, time(), $choice);
+
+         return "Berhasil memvote.\n\n".display_poll_votes($poll->{id});
+     }},
+
     # taruh di akhir aja sebelum default, ini agak loose re-nya
     {pat => qr/^(\S.*?|".+?") \s+ itu $/ix,
      name => 'FACT QUERY',
@@ -792,6 +875,25 @@ sub init_db {
                reason TEXT NOT NULL DEFAULT '')"
            );
 
+    # 2012-04-05
+    $Db->do("CREATE TABLE IF NOT EXISTS polls (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               name TEXT NOT NULL,
+               ctime BIGINT NOT NULL,
+               state TEXT NOT NULL,
+               creator TEXT NOT NULL, -- username
+               choices TEXT NOT NULL, -- separated by space
+               UNIQUE (name)
+             )"
+           );
+    $Db->do("CREATE TABLE IF NOT EXISTS poll_votes (
+               poll_id INT NOT NULL,
+               ctime BIGINT NOT NULL,
+               username TEXT NOT NULL,
+               choice TEXT NOT NULL,
+               UNIQUE (poll_id,username)
+             )"
+           );
 }
 
 sub is_admin {
@@ -1091,3 +1193,23 @@ sub forum_post {
 sub pick {
     $_[rand @_];
 }
+
+sub display_poll_votes {
+    my ($id) = @_;
+    my $res = "";
+
+    my $poll = $Db->selectrow_hashref("SELECT * FROM polls WHERE id=?", {}, $id);
+    {
+        last unless $poll;
+
+        $res .= "Hasil terakhir poll $poll->{name}:\n";
+
+        my $choices = $Db->selectall_arrayref("SELECT choice, COUNT(*) AS n FROM poll_votes WHERE poll_id=? GROUP BY choice ORDER BY n DESC", {}, $poll->{id});
+        for (@$choices) {
+            $res .= "$_->[0] = $_->[1]\n";
+        }
+        $res .= "\n";
+    }
+    $res;
+}
+
