@@ -17,7 +17,7 @@ while (<>) {
   my ($host, $rest) = $url =~ m!https?://([^/]+)(.*)!i or next;
   my ($site, $query);
   my $x;
-  
+
   if ($host =~ /google/i) {
     $rest =~ m!/(images|search|videosearch|news|maps|blogsearch|books|groups)!i or next;
     $x = $1;
@@ -67,8 +67,28 @@ while (<>) {
     $site = "baidu";
     $rest =~ /(?:wd|word)=(.+?)(?:&|\z)/ or next;
     $query = unesc($1);
+  # 2012-04-06
+  } elsif ($host =~ /youtube\.com/i) {
+    $site = "youtube";
+    $rest =~ /search_query=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  # 2012-04-06
+  } elsif ($host =~ /search\.cpan\.org/i) {
+    $site = "searchcpan";
+    $rest =~ /q=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  # 2012-04-06
+  } elsif ($host =~ /metacpan\.org/i) {
+    $site = "metacpan";
+    $rest =~ /q=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
+  # 2012-04-06
+  } elsif ($host =~ /duckduckgo\.com/i) {
+    $site = "ddg";
+    $rest =~ /q=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
   }
-  
+
   next unless $site;
   printf "%-15s %s\n", $site, uri_unescape($query);
 }
