@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use 5.010001;
+use strict;
+use warnings;
+use DateTime;
+use DateTime::Format::Natural;
+
+my $parser = DateTime::Format::Natural->new(time_zone=>'Asia/Jakarta');
+
+for my $s (@ARGV) {
+    my $dt = $parser->parse_datetime($s);
+    say "$s\t", $parser->success ? "$dt" : "can't parse";
+}
