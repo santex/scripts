@@ -1,0 +1,27 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use Perinci::CmdLine;
+
+our %SPEC;
+
+$SPEC{sc1} = {
+    v => 1.1,
+    args => {},
+};
+sub sc1 { [200, "OK", "This is sc1"] }
+
+$SPEC{sc2} = {
+    v => 1.1,
+    args => {},
+};
+sub sc2 { [200, "OK", "This is sc2"] }
+
+Perinci::CmdLine->new(
+    subcommands=>{
+        sc1 => {url=>"/main/sc1"},
+        sc2 => {url=>"/main/sc2", log_any_app=>0},
+    },
+)->run;
