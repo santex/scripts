@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Finance::Currency::Convert::WebserviceX;
+
+die "Usage: $0 <FROM> <TO>, e.g. '$0 USD IDR'\n" unless @ARGV == 2;
+
+my $cc = Finance::Currency::Convert::WebserviceX->new;
+say $cc->convert(1, $ARGV[0], $ARGV[1]);

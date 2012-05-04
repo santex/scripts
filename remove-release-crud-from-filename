@@ -66,6 +66,20 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.LOL.English.HI.C.orig.Addic7ed.com
+.HDTV.x264-LOL
+ DVDRIP XVID-FwD
+.DVDRIP.XViD-FiCTiON
+{h33t}{raththaran}
+ DVDRIP XVID-FwD
+.BDRip.XviD-AYMO
+.WEBRIP.Wmv-Didi83 Up.by.vincc54
+.DVDRip.XviD-AYMO
+.BDRip.XviD-NERD
+.XViD-EXTREME
+.DVD-Rip
+.DVDRip.XviD-NERD
+.BRRiP.XviD.AC3-AUTOPSiE
 .en
 .HDTV.POW4
 .HDTV.P0W4
