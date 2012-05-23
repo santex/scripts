@@ -68,7 +68,7 @@ my $new_latest_time = $latest_time;
 my $i = 0;
 for my $item (reverse @{ $rss->{item} }) {
     my $status = 'new';
-    my $time = str2time($item->{pubDate});
+    my $time = str2time($item->{pubDate}) // 0;
     DEBUG "Timestamp: latest=$latest_time vs item=$time ($item->{pubDate})";
     if ($latest_time >= $time) {
         $status = 'old';
