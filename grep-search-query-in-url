@@ -40,6 +40,10 @@ while (<>) {
     $site = "mininova";
     $rest =~ m!/search/([^/]+)/! or next;
     $query = unesc($1);
+  } elsif ($host =~ /kat\.ph/i) {
+    $site = "kat";
+    $rest =~ m!/search/([^/]+)/! or next;
+    $query = unesc($1);
   } elsif ($host =~ /filedonkey\.com/i) {
     $site = "filedonkey";
     $rest =~ m!/search\.html! or next;

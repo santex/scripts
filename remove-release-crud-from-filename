@@ -66,6 +66,7 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+-caheso
 .LOL.English.HI.C.orig.Addic7ed.com
 .HDTV.x264-LOL
  DVDRIP XVID-FwD
