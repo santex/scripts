@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use JSON;
+use Perinci::CmdLine;
+
+our %SPEC;
+
+$SPEC{json2pretty} = {
+    v => 1.1,
+    summary => 'Parse JSON and display it',
+    description => <<'_',
+_
+    args => {
+        json => {
+            schema => 'str*',
+            req => 1,
+            pos => 0,
+            summary => 'JSON string to parse',
+        },
+    },
+};
+sub json2pretty {
+    my %args = @_;
+
+    my $json = $args{json};
+    length($json) or return [400, "Please specify json"];
+
+    [200, "OK", from_json($json)];
+}
+
+Perinci::CmdLine->new(url=>'/main/json2pretty')->run;

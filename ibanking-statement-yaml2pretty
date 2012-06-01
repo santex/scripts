@@ -9,6 +9,12 @@ use YAML::Syck;
 
 my $yaml = join "", <>;
 my $data = Load($yaml);
+
+# strip envelope
+if (ref($data) eq 'ARRAY' && $data->[0]+0 == 200) {
+    $data = $data->[2];
+}
+
 print format_pretty(
     $data->{transactions},
     {interactive => 1,

@@ -32,6 +32,8 @@ while (<$log>) {
 
 if ($rec{$label}{$date}) { exit 99 }
 
+# XXX add locking or something, if command takes a long time and this script is
+# run again, there will be many invocation
 system @cmd;
 
 if ($? == 0) {
