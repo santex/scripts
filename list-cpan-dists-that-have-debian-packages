@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+# created: 2012-06-12
+
+use 5.010;
+use strict;
+use warnings;
+
+use Data::Dump;
+use LWP::Simple;
+use Mojo::DOM;
+
+sub dist2deb {
+    my ($dist) = @_;
+    "lib".lc($dist)."-perl";
+}
+
+die "Usage: $0 <CPANID> ...\n" unless @ARGV;
+
+binmode STDOUT, ":utf8";
+
+my @dists;
+for my $cpanid (@ARGV) {
+    my $dom = Mojo::DOM->new(get "http://metacpan.org/author/".uc($cpanid).
+                                 "/?.rand=".rand());
+
+    my $e = $dom->at("head title");
+    my $name = $e ? $e->text : undef;
+    ($name) = $name =~ /(.+?) \(/ if $name;
+
+    my $trs = $dom->find('tr a[href*="/release/"]');
+    for my $tr (@$trs) {
+        my $dist = $tr->text;
+        $dist =~ s/-\d.+//;
+        push @dists, $dist;
+    }
+}
+
+for my $dist (@dists) {
+    my $cmd = "apt-cache show '".dist2deb($dist)."' >/dev/null 2>/dev/null";
+    say "DEBUG: system(): $cmd" if $ENV{DEBUG};
+    system $cmd;
+    say $dist unless $?;
+}
