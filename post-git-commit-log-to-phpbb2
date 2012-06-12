@@ -17,6 +17,8 @@ use App::Options (
             description => 'Only post commits with author matching this regex',
         },
         dry_run => { type => 'boolean', required => 0, default => 0 },
+        # no support for array, so for now can only skip 1 commit ID
+        skip_commit_id => { type => 'string', required => 0 },
     },
 );
 use Cwd qw(getcwd);
@@ -46,6 +48,12 @@ my $memory_path = $App::options{memory_path} //
 $log->debug("memory_path = $memory_path");
 my %memory;
 tie %memory, 'GDBM_File', $memory_path, &GDBM_WRCREAT, 0640;
+
+if ($App::options{skip_commit_id}) {
+    for my $cid ($App::options{skip_commit_id}) {
+        $memory{$cid} //= time;
+    }
+}
 
 my $phpbb2_post_path = $App::options{phpbb2_post_path} // which("phpbb2-post");
 die "Can't find phpbb2-post" unless $phpbb2_post_path;
