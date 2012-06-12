@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Data::Dump;
+use GDBM_File;
+
+die "Usage: $0 <gdbm-file>\n" unless @ARGV == 1;
+
+tie my %h, 'GDBM_File', $ARGV[0], GDBM_READER, 0644;
+dd \%h;
