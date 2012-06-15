@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Perinci::CmdLine;
+
+our %SPEC;
+
+$SPEC{format_uuid} = {
+    v => 1.1,
+    summary => 'Change 1dde05aea2624c69a12db461afb00a6b to 1dde05ae-a262-4c69-a12d-b461afb00a6b',
+    args => {
+        uuid => {
+            schema => 'str*',
+            req => 1,
+            pos => 0,
+        },
+    },
+};
+sub format_uuid {
+    my %args = @_;
+    my $uuid = $args{uuid} or return [400, "Please specify uuid"];
+
+    $uuid = lc($uuid);
+    $uuid =~ s/[^0-9a-f]+//g;
+
+    return [400, "Invalid uuid, not 32 chars long: $uuid"] unless length($uuid) == 32;
+
+    $uuid =~ s/(.{8})(.{4})(.{4})(.{4})(.{12})/$1-$2-$3-$4-$5/;
+
+    [200, "OK", $uuid];
+}
+
+Perinci::CmdLine->new(url=>'/main/format_uuid')->run;
