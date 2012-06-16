@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+use Perinci::CmdLine::Easy qw(run_cmdline_app);
+
+run_cmdline_app(
+    sub => sub {
+        my $url = shift or die "Please specify url";
+        $url =~ /peid=(\w+)1d/ or die "No peid in url";
+        my $uuid = $1;
+        $uuid =~ s/(.{8})(.{4})(.{4})(.{4})(.{12})/$1-$2-$3-$4-$5/;
+        $url = "http://video.ics.uwex.edu/$uuid";
+        system "mplayer", $url;
+    },
+    argv => [qw/url*/],
+);

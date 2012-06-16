@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Perinci::Access;
+use Perinci::CmdLine;
+
+our %SPEC;
+$SPEC{request} = {
+    v => 1.1,
+    summary => 'Perinci::Access->request',
+    args => {
+        riap_action => {schema=>"str*",  req=>1, pos=>0}, # 'action' trapped by Perinci::CmdLine
+        uri         => {schema=>"str*",  req=>1, pos=>1},
+        other       => {schema=>"hash*", pos=>2, default=>{}},
+    },
+};
+sub request {
+    my %args = @_;
+    state $pa = Perinci::Access->new;
+
+    my $act = $args{riap_action} or return [400, "Please specify riap_action"];;
+    my $uri = $args{uri} or return [400, "Please specify uri"];
+    $pa->request($act => $uri, $args{other} // {});
+}
+
+Perinci::CmdLine->new(url=>'/main/request')->run;
