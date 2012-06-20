@@ -1,0 +1,9 @@
+#!/usr/bin/perl -n -0777
+
+use 5.010;
+use strict;
+use warnings;
+
+use Text::Markdown 'markdown';
+
+print markdown($_);

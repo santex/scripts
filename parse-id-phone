@@ -1,4 +1,3 @@
-#!/usr/bin/perl
+#!/bin/bash
+peri-run /Parse/PhoneNumber/ID/parse_id_phone "$@"
 
-use Perinci::CmdLine;
-Perinci::CmdLine->new(url=>'/Parse/PhoneNumber/ID/parse_id_phone')->run;

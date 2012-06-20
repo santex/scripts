@@ -1,0 +1,34 @@
+#!/usr/bin/perl -0777
+
+use 5.010;
+use strict;
+use warnings;
+
+package MyHandler;
+
+use Moose;
+with 'Markdent::Role::EventsAsMethods';
+
+use Data::Dump::OneLine qw(dump1);
+use vars qw($AUTOLOAD);
+
+sub AUTOLOAD {
+    my $self = shift;
+    dump1([$AUTOLOAD, @_]);
+}
+
+__PACKAGE__->meta->make_immutable;
+no Moose;
+
+package main;
+
+use Markdent::Parser;
+
+my $handler = MyHandler->new();
+
+my $parser = Markdent::Parser->new(
+    dialect => 'Standard',
+    handler => $handler,
+);
+
+$parser->parse(markdown => scalar(<>));

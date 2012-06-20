@@ -1,0 +1,14 @@
+#!/usr/bin/perl -n -0777
+
+use 5.010;
+use strict;
+use warnings;
+
+use Markdent::Simple::Document;
+
+my $parser = Markdent::Simple::Document->new();
+my $html   = $parser->markdown_to_html(
+    title    => 'My Document',
+    markdown => $_,
+);
+print $html;
