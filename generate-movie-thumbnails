@@ -289,7 +289,11 @@ MOVIE: for my $movie (@ARGV) {
   # compress jpeg. dari 1MB bisa jadi 150k jika q=50, output dari ImageMagick gak optimized
   INFO "Compressing JPEG ...";
   mysystem "mv $output_esc $output_esc.tmp && ( jpegtopnm $output_esc.tmp | cjpeg -optimize -quality $Opt{quality} > $output_esc ) && rm -f $output_esc.tmp";
+
 }
+
+# so tmpdir can be removed
+chdir "/";
 
 sub sec2hms {
     my ($secs) = @_;
