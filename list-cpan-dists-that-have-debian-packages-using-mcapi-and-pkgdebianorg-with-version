@@ -1,0 +1,64 @@
+#!/usr/bin/env perl
+
+# from https://gist.github.com/2999516
+
+use 5.010;
+use strict;
+use warnings;
+
+use Data::Dump qw(dump);
+use File::Slurp;
+use IO::Uncompress::Gunzip qw(gunzip $GunzipError);
+use JSON;
+use LWP::Simple;
+
+my $cachef = "/tmp/allpackages.cache";
+
+my $json = JSON->new->allow_nonref;
+my $debug = $ENV{DEBUG};
+my $res;
+
+sub dist2deb {
+    my ($dist) = @_;
+    "lib".lc($dist)."-perl";
+}
+
+die "Usage: $0 <CPANID> ...\n" unless @ARGV;
+
+binmode STDOUT, ":utf8";
+
+my %pkgs;
+unless ((-f $cachef) && (-M _) < 7) {
+    say "DBG: Downloading Debian packages list to $cachef ..." if $debug;
+    $res = get "http://packages.debian.org/unstable/allpackages?format=txt.gz";
+    gunzip(\$res => $cachef) or die "gunzip failed: $GunzipError\n";
+}
+for (read_file $cachef) {
+    next unless /^(lib\S+-perl) \((.+?)\)/;
+    $pkgs{$1} = $2;
+}
+
+say "DBG: Querying MetaCPAN ..." if $debug;
+$res = get "http://api.metacpan.org/v0/release/_search?q=author:".
+    uc($ARGV[0])."%20AND%20status:latest&fields=name&size=5000";
+$res = $json->decode($res);
+die "MetaCPAN timed out" if $res->{timed_out};
+my %dists;
+for my $hit (@{ $res->{hits}{hits} }) {
+    my $dist = $hit->{fields}{name};
+    $dist =~ s/-(\d.+)//;
+    $dists{$dist} = $1;
+}
+
+for my $dist (sort keys %dists) {
+    my $pkg = dist2deb($dist);
+    next unless $pkg ~~ %pkgs;
+    (my $pkg_ver = $pkgs{$pkg}) =~ s/[-].+//;
+    printf(
+        "%-40s%15s%15s %s\n",
+        $dist,
+        $dists{$dist},
+        $pkgs{$pkg},
+        ($pkg_ver eq $dists{$dist} ? ' ' : '!'),
+    );
+}

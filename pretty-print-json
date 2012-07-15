@@ -1,0 +1,9 @@
+#!/usr/bin/perl -0777
+
+use JSON;
+my $json = JSON->new->allow_nonref;
+
+my $data = $json->decode(scalar <>);
+print $json->pretty->encode($data);
+
+

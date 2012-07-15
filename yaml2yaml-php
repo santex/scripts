@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# damn you php, i want my dl()
+
+php -d 'extension=yaml.so' -r'
+if (count($argv) > 1) die("Usage: $argv[0] < yaml\n");
+$yaml = file_get_contents("php://stdin");
+$data = yaml_parse($yaml);
+echo yaml_emit($data);' "$*"
