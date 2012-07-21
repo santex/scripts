@@ -1,0 +1,2 @@
+#!/bin/bash
+prove -T $(echo $PERL5LIB | tr ":" "\n" | sed 's/^/-I/') -Ilib "$@"
