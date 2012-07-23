@@ -1,0 +1,2 @@
+#!/bin/bash
+RELEASE_TESTING=1 prove "$@"
