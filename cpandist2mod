@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+use 5.010;
+use LWP::Simple;
+use JSON;
+use URI::Escape;
+
+die "Usage: $0 <dist>, e.g. $0 App-OrgUtils\n" unless @ARGV == 1;
+
+my $data = from_json get sprintf "http://api.metacpan.org/v0/module/_search?q=distribution:%s+AND+module.indexed:true+AND+status:latest&fields=release,path,module&size=5000",
+    uri_escape $ARGV[0];
+say for map { sprintf "%s %s", $_->{name}, $_->{version} }
+    map { @{$_->{fields}{module}} } @{$data->{hits}{hits}};

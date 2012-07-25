@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+use 5.010;
+use LWP::Simple;
+use JSON;
+use URI::Escape;
+
+die "Usage: $0 <module> ... e.g. $0 App::ListOrgTodos\n" unless @ARGV;
+
+for my $arg (@ARGV) {
+    my $data = from_json(get(sprintf "http://api.metacpan.org/v0/module/%s?fields=release&size=1", uri_escape $arg) || '{}');
+    if ($data->{release}) {
+        printf "%s is in %s\n", $arg, $data->{release};
+    } elsif ($data->{hits}{hits}) {
+        printf "%s is in %s\n", $arg, $_->{fields}{release} for @{ $data->{hits}{hits} };
+    } else {
+        printf "%s is NOT in any distributions\n", $arg, $data->{distribution}, $data->{release};
+    }
+}
