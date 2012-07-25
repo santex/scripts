@@ -14,6 +14,6 @@ for my $arg (@ARGV) {
     } elsif ($data->{hits}{hits}) {
         printf "%s is in %s\n", $arg, $_->{fields}{release} for @{ $data->{hits}{hits} };
     } else {
-        printf "%s is NOT in any distributions\n", $arg, $data->{distribution}, $data->{release};
+        printf "%s is NOT in any distributions\n";
     }
 }
