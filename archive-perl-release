@@ -54,12 +54,6 @@ _
                 default=>'published',
             }],
             summary => 'State',
-            description => <<'_',
-
-Defaults to 'cpan', but if run in the (repo) dir whose name starts with 'priv-'
-will default to 'private'.
-
-_
         },
     },
 };
