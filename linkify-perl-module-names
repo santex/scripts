@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+my $re;
+if ($ENV{SINGLE_WORD}) {
+    $re = qr/(?:\w+(?:::\w+)*)/;
+} else {
+    $re = qr/(?:\w+(?:::\w+)+)/;
+}
+
+while (<>) {
+    s!($re)!<a href="http://metacpan.org/module/$1">$1</a>!g;
+    print;
+}
