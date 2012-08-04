@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use autodie;
+
+use CPAN::Changes;
+use Data::Dump::Color;
+
+my $changes = CPAN::Changes->load("Changes");
+dd $changes;
+

@@ -14,7 +14,7 @@ $SPEC{request} = {
     args => {
         riap_action => {schema=>"str*",  req=>1, pos=>0}, # 'action' trapped by Perinci::CmdLine
         uri         => {schema=>"str*",  req=>1, pos=>1},
-        other       => {schema=>"hash*", pos=>2, default=>{}},
+        other       => {schema=>["hash*" => {default=>{}}], pos=>2},
     },
 };
 sub request {
