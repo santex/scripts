@@ -3,6 +3,9 @@
 use 5.010;
 
 for my $mod (@ARGV) {
+    # allow Foo-Bar to mean Foo::Bar
+    $mod =~ s/-/::/g;
+
     print "$mod:";
     unless ($mod =~ /\A(\w+::)*\w+\z/) {
         print " (invalid syntax, skipped)\n";

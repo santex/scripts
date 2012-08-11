@@ -61,11 +61,20 @@ HDTV.
 [Documentaire]
 dich-
 aaf-
+[ www.Speed.Cd ] -
 EOF
 
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+ HDTV XviD-LOL[ettv]
+ HDTV x264-LOL[ettv]
+ HDTV.XviD-LOL[ettv]
+[ettv]
+ HDTV XviD-2HD[ettv]
+ HDTV XviD-FQM[ettv]
+.HDTV.XviD-AFG
+
 [www.lokotorrents.com][mp3]
 .iNTERNAL.DVDRip.XviD-8BaLLRiPS
 -Mantesh

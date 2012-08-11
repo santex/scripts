@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Lingua::Identify qw(:language_identification);
+
+{
+    local $/;
+    my @a = langof(scalar <>);
+    use Data::Dump; dd \@a;
+}

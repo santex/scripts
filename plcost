@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+use File::Which;
+die "Usage: $0 <perl-script-name>\n" unless @ARGV;
+my $prog  = shift @ARGV;
+my $prog = which($prog) || $prog;
+system "perl", "-Ilib", "-MDevel::EndStats=verbose,1", $prog, "--", @ARGV;
