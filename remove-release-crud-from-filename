@@ -67,12 +67,17 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
- HDTV XviD-LOL[ettv]
- HDTV x264-LOL[ettv]
- HDTV.XviD-LOL[ettv]
+[www.lokotorrents.com]
+ by Juledj77
+ vtwin88cube
+[Bubanee]
+[CD+3 SkidVid_XviD+Cov]
+HDTV XviD-LOL[ettv]
+HDTV x264-LOL[ettv]
+HDTV.XviD-LOL[ettv]
 [ettv]
- HDTV XviD-2HD[ettv]
- HDTV XviD-FQM[ettv]
+HDTV XviD-2HD[ettv]
+HDTV XviD-FQM[ettv]
 .HDTV.XviD-AFG
 
 [www.lokotorrents.com][mp3]
@@ -81,7 +86,7 @@ my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/
 -caheso
 .LOL.English.HI.C.orig.Addic7ed.com
 .HDTV.x264-LOL
- DVDRIP XVID-FwD
+DVDRIP XVID-FwD
 .DVDRIP.XViD-FiCTiON
 {h33t}{raththaran}
  DVDRIP XVID-FwD
