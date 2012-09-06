@@ -6,6 +6,7 @@ use strict;
 my $VERSION = 20070526;
 
 my $re_prefix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+[ www.TorrentDay.com ] -
 [ www.Torrenting.com ] -
 [ www.Torrentday.com ] -
 [fk]

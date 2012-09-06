@@ -30,7 +30,7 @@ finddepth sub {
         }
 
         # filename pattern
-        if (/(demonoid.*\.txt)$/i) {
+        if (/(?:torrent downloaded|demonoid).*\.txt$/i) {
             $delete++; last;
         }
 
