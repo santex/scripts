@@ -6,24 +6,26 @@ use 5.010;
 use strict;
 use warnings;
 
+use JSON;
 use LWP::Simple;
-use Mojo::DOM;
+
+my $json = JSON->new->allow_nonref;
 
 die "Usage: $0 <CPANID> ...\n" unless @ARGV;
 
 binmode STDOUT, ":utf8";
 
 for my $cpanid (@ARGV) {
-    my $dom = Mojo::DOM->new(get "http://metacpan.org/author/".uc($cpanid).
-                                 "/?.rand=".rand());
+    my $res = get "http://api.metacpan.org/v0/release/_search?q=author:".
+        uc($ARGV[0])."%20AND%20status:latest&fields=name&size=5000";
+    $res = $json->decode($res);
+    die "MetaCPAN timed out" if $res->{timed_out};
+    my @dists;
+    for my $hit (@{ $res->{hits}{hits} }) {
+        my $dist = $hit->{fields}{name};
+        $dist =~ s/-\d.+//;
+        push @dists, $dist;
+    }
 
-    my $e = $dom->at("head title");
-    my $name = $e ? $e->text : undef;
-    ($name) = $name =~ /(.+?) \(/ if $name;
-
-    my $trs = $dom->find('tr a[href*="/release/"]');
-    my $numdists = @$trs;
-
-    printf "%s has %d distributions on CPAN\n",
-        (defined($name) ? "$name ($cpanid)" : $cpanid), $numdists;
+    printf "%s has %d distributions on CPAN\n", $cpanid, scalar(@dists);
 }
