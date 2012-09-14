@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Perl::Strip;
+
+my $transform = Perl::Strip->new(keep_nl=>1, cache=>"$ENV{HOME}/tmp");
+local $/;
+print $transform->strip(~~<>);
