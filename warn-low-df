@@ -32,11 +32,11 @@ for (`df -h`) {
     next unless $i++;
     chomp;
     my ($fs, $blocks, $used, $avail, $pctuse, $mp) = split /\s+/, $_;
-    next if $fs =~ /^(tmpfs)$/;
-    if (!$opts{all}) {
-        next unless $mp ~~ $opts{parts};
-    }
     $pctuse =~ s/%//;
+    #say "DEBUG: mp=$mp, pctuse=$pctuse";
+
+    next if $fs =~ /^(tmpfs)$/;
+    if (!$opts{all}) { next unless $mp ~~ $opts{parts} }
     next unless $pctuse >= $opts{percent_used};
     say "Disk usage in $mp has exceeded $pctuse% (only $avail left)!";
 }
