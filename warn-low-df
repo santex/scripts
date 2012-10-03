@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+my %opts = (parts => ["/backup"], all=>0, percent_used=>95);
+
+GetOptions(
+    "part=s"         => $opts{parts},
+    "all"            => \$opts{all},
+    "percent-used=i" => \$opts{percent_used},
+    "help"           => \$opts{help},
+);
+
+if ($opts{help}) {
+    print <<_;
+Usage: $0 [opts]
+Options:
+  --part=S  Add partition S to warn, eg. --part=/home --part=/
+  --all     Warn all partitions (except tmpfs)
+  --percent-used=N  Warn if percentage of usage exceeds N (default: 95)
+
+_
+    exit 0;
+}
+
+my $i;
+for (`df -h`) {
+    next unless $i++;
+    chomp;
+    my ($fs, $blocks, $used, $avail, $pctuse, $mp) = split /\s+/, $_;
+    next if $fs =~ /^(tmpfs)$/;
+    if (!$opts{all}) {
+        next unless $mp ~~ $opts{parts};
+    }
+    $pctuse =~ s/%//;
+    next unless $pctuse >= $opts{percent_used};
+    say "Disk usage in $mp has exceeded $pctuse% (only $avail left)!";
+}
