@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+# created: 2012-10-04
+
+use 5.010;
+use strict;
+use warnings;
+
+use JSON;
+use LWP::Simple;
+
+my $debug;
+my $json = JSON->new->allow_nonref;
+my $res;
+
+die "Usage: $0 <CPANID>\n" unless @ARGV==1;
+
+say "DBG: Querying MetaCPAN ..." if $debug;
+$res = get "http://api.metacpan.org/v0/release/_search?q=author:".
+    uc($ARGV[0])."%20AND%20status:latest&fields=name&size=5000";
+$res = $json->decode($res);
+die "MetaCPAN timed out" if $res->{timed_out};
+my @dists;
+for my $hit (@{ $res->{hits}{hits} }) {
+    my $dist = $hit->{fields}{name};
+    $dist =~ s/-\d.+//;
+    push @dists, $dist;
+}
+say for @dists;
