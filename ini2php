@@ -1,0 +1,7 @@
+#!/usr/bin/php
+<?php
+
+if (count($argv) > 2) die("Usage: $argv[0] < \n");
+$ini = file_get_contents(count($argv) > 1 ? $argv[1] : "php://stdin");
+$data = parse_ini_string($ini, true);
+print_r($data);
