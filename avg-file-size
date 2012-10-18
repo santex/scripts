@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use 5.010;
+
+my $n = 0;
+my $totsize = 0;
+
+for (@ARGV) {
+    $n++;
+    $totsize += -s;
+}
+
+if ($n) {
+    say sprintf("%0.1f", $totsize/$n);
+} else {
+    say 0;
+}
