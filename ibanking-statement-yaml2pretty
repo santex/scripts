@@ -4,6 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 
+use DateTime;
 use Data::Format::Pretty::Console qw(format_pretty);
 use YAML::Syck;
 
@@ -17,6 +18,8 @@ if (ref($data) eq 'ARRAY' && $data->[0]+0 == 200) {
 
 print format_pretty(
     $data->{transactions},
-    {interactive => 1,
-     table_column_orders => [[qw/date seq description amount/]]}
+    {
+        interactive          => 1,
+        table_column_orders  => [[qw/date seq description amount/]],
+    }
 );
