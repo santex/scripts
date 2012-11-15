@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+# copy-pasted from WWW::PAUSE::CleanUpHomeDir's Synopsis, with hardcoded
+# password changed to using INI
+
+use strict;
+use warnings;
+
+use Config::IniFiles;
+use WWW::PAUSE::CleanUpHomeDir;
+
+my ($userid, $password);
+for my $cfgpath ("$ENV{HOME}/.cleanup-pause-homedir.rc") {
+    my $ini = Config::IniFiles->new(-file => $cfgpath)
+        or die join("", @Config::IniFiles::errors);
+    $userid   = $ini->val('PAUSE', 'userid');
+    $password = $ini->val('PAUSE', 'password');
+}
+
+my $pause = WWW::PAUSE::CleanUpHomeDir->new($userid, $password);
+
+$pause->fetch_list
+    or die $pause->error;
+
+my @old_files = $pause->list_old;
+die "No old files were found\n"
+    unless @old_files;
+
+print @old_files . " old files were found:\n" .
+    join "\n", @old_files, '';
+
+print "\nEnter dist names you want to delete or just hit ENTER to delete"
+    . " delete all of them\n";
+
+my @to_delete = split ' ', <STDIN>;
+my $deleted_ref = $pause->clean_up(\@to_delete)
+    or die $pause->error;
+
+print "Deleted:\n" . join "\n", @$deleted_ref, '';
+
+print "\nWould you like to undelete any of these files? "
+    . "If not, just hit ENTER\n";
+
+my @to_undelete = split ' ', <STDIN>;
+die "Terminating..\n"
+    unless @to_undelete;
+
+$pause->undelete(\@to_undelete)
+    or die $pause->error;
+
+print "Success..\n";

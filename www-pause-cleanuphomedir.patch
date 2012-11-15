@@ -1,0 +1,32 @@
+--- perl5/lib/perl5/WWW/PAUSE/CleanUpHomeDir.pm.orig	2012-11-14 14:08:38.000000000 +0700
++++ perl5/lib/perl5/WWW/PAUSE/CleanUpHomeDir.pm	2012-11-14 14:56:08.000000000 +0700
+@@ -11,6 +11,7 @@
+ use HTML::TokeParser::Simple;
+ use File::Basename;
+ use Devel::TakeHashArgs;
++use Sort::Versions;
+ use base 'Class::Data::Accessor';
+ __PACKAGE__->mk_classaccessors qw(
+     error
+@@ -97,7 +98,11 @@
+                         and $list_ref->{$_}{status} !~ /$scheduled_re/
+                     } keys %$list_ref;
+ 
+-    my @files = sort keys %files;
++    my @files = sort {
++        my ($na, $va) = $a =~ /(.+)-(\d.+)/;
++        my ($nb, $vb) = $b =~ /(.+)-(\d.+)/;
++        $na cmp $nb || versioncmp($va, $vb);
++    } keys %files;
+ 
+     my @old;
+     my $re = qr/([^.]+)-/;
+@@ -138,7 +143,7 @@
+     return $self->_set_error('No files to delete')
+         unless @files;
+ 
+-    my $mech = $self->_mech; 
++    my $mech = $self->_mech;
+     $mech->form_number(1); # we already loaded the page from ->list_old
+ 
+     $mech->tick('pause99_delete_files_FILE', $_ )
