@@ -68,7 +68,12 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
- (musicfromrizzo)
+.hdtv.x264-2hd
+.HDTV.x264-KILLERS
+.HDTV.x264-ASAP
+.PROPER.HDTV.x264-2HD
+.HDTV.x264-EVOLVE
+(musicfromrizzo)
 IDN.CREW
  Nlt-release
 .by.chuska.{www.cantabriatorrent.net}
