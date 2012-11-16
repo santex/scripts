@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+
+# espeak multilingual tapi suaranya jelek. kita pake diphone voice database dari
+# proyek mbrola utk menghasilkan suara yg lebih bagus.
+
+use 5.010;
+use autodie;
+use strict;
+use warnings;
+
+use File::Slurp qw(edit_file);
+use File::Temp qw(tempfile);
+use Perinci::CmdLine;
+use String::ShellQuote;
+use Log::Any::For::Builtins qw(system);
+
+our %SPEC;
+
+$SPEC{tts} = {
+    v => 1.1,
+    args => {
+        speed => {
+            schema => ["int*", min=>0, default=>160],
+            cmdline_aliases => {s=>{}},
+        },
+        mbrola_voice => {
+            schema => ["str*", match=>qr/\A\w+\z/, default=>'fr4'],
+            # -v belum bisa dioverride, bug
+            #cmdline_aliases => {v=>{}},
+            cmdline_aliases => {mv=>{}},
+        },
+        text => {
+            schema => ['str*', min_len => 1],
+            req => 1,
+            pos => 0,
+        },
+    },
+};
+sub tts {
+    my %args = @_;
+
+    my ($fh, $filename) = tempfile();
+
+    my $mv = $args{mbrola_voice};
+    return [400, "Unknown mrola voice '$mv', ".
+                "check /usr/share/mbrola for available voices"]
+        unless -d "/usr/share/mbrola/$mv";
+
+    system "espeak 2>/dev/null -s $args{speed} -x -v mb/mb-$mv --pho ".
+        shell_quote($args{text})." --phonout=".shell_quote($filename);
+
+    edit_file { s/^\s.+//mg } $filename;
+
+    system "mbrola /usr/share/mbrola/$mv/$mv ".shell_quote($filename).
+        " -.au | aplay 2>/dev/null";
+
+    [200, "OK"];
+}
+
+Perinci::CmdLine->new(url => '/main/tts')->run;

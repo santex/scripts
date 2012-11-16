@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Lingua::FR::Numbers qw(number_to_fr);
+use String::ShellQuote;
+
+binmode STDOUT, ":utf8";
+
+sub gen {
+    my %args = @_;
+
+    my $n   = $args{n}   // 5;
+    my $min = $args{min} // 10000000;
+    my $max = $args{max} // 99999999;
+
+    for my $i (1..$n) {
+        my $num   = int($min + ($max-$min+1)*rand());
+        my $words = join(
+            ", ",
+            number_to_fr(substr($num, 0, 2)),
+            number_to_fr(substr($num, 2, 2)),
+            number_to_fr(substr($num, 4, 2)),
+            number_to_fr(substr($num, 6, 2)),
+        );
+        printf("%8d    = %s\n", $num, $words);
+        system "espeak-mbrola 2>/dev/null --mv fr4 ".shell_quote($words);
+        sleep 5;
+    }
+}
+
+sleep 2;
+gen();

@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use JSON          ;
+use JSON::Color 0.03 ();
+
+my $data = do { local $/; decode_json(~~<>) };
+say JSON::Color::encode_json($data, {pretty=>1, linum=>1});

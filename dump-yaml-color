@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use YAML::Syck          ;
+use YAML::Tiny::Color ();
+
+my $data = do { local $/; Load(~~<>) };
+$YAML::Tiny::Color::LineNumber = 1;
+say YAML::Tiny::Color::Dump($data);

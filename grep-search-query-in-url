@@ -79,7 +79,7 @@ while (<>) {
   # 2012-04-06
   } elsif ($host =~ /search\.cpan\.org/i) {
     $site = "searchcpan";
-    $rest =~ /q=(.+?)(?:&|\z)/ or next;
+    $rest =~ /query=(.+?)(?:&|\z)/ or next;
     $query = unesc($1);
   # 2012-04-06
   } elsif ($host =~ /metacpan\.org/i) {
