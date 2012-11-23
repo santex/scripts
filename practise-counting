@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use Perinci::CmdLine;
+use Log::Any::For::Builtins qw(system);
 
 binmode STDOUT, ":utf8";
 
