@@ -18,10 +18,10 @@ sub num2word {
         require Lingua::FR::Numbers;
         if ($pho) {
             $words = join(
-                " ",
-                Lingua::FR::Numbers::number_to_fr(substr($num, 0, 2)),
-                Lingua::FR::Numbers::number_to_fr(substr($num, 2, 2)),
-                Lingua::FR::Numbers::number_to_fr(substr($num, 4, 2)),
+                "",
+                Lingua::FR::Numbers::number_to_fr(substr($num, 0, 2)), ", ",
+                Lingua::FR::Numbers::number_to_fr(substr($num, 2, 2)), ", ",
+                Lingua::FR::Numbers::number_to_fr(substr($num, 4, 2)), ", ",
                 Lingua::FR::Numbers::number_to_fr(substr($num, 6, 2)),
             );
         } else {
@@ -30,7 +30,12 @@ sub num2word {
     } elsif ($lang eq 'id') {
         require Lingua::ID::Nums2Words;
         if ($pho) {
-            $words = Lingua::ID::Nums2Words::nums2words_simple($num);
+            $words = join(
+                "",
+                Lingua::ID::Nums2Words::nums2words_simple(substr($num, 0, 4)),
+                ", ",
+                Lingua::ID::Nums2Words::nums2words_simple(substr($num, 4, 4)),
+            );
         } else {
             $words = Lingua::ID::Nums2Words::nums2words($num);
         }
@@ -38,7 +43,16 @@ sub num2word {
         require Lingua::EN::Numbers;
         if ($pho) {
             $words = join(
-                " ", map {Lingua::EN::Numbers::num2en($_)} split //, $num);
+                "",
+                Lingua::EN::Numbers::num2en(substr($num, 0, 1)), " ",
+                Lingua::EN::Numbers::num2en(substr($num, 1, 1)), " ",
+                Lingua::EN::Numbers::num2en(substr($num, 2, 1)), " ",
+                Lingua::EN::Numbers::num2en(substr($num, 3, 1)), ", ",
+                Lingua::EN::Numbers::num2en(substr($num, 4, 1)), " ",
+                Lingua::EN::Numbers::num2en(substr($num, 5, 1)), " ",
+                Lingua::EN::Numbers::num2en(substr($num, 6, 1)), " ",
+                Lingua::EN::Numbers::num2en(substr($num, 7, 1)),
+            );
         } else {
             $words = Lingua::EN::Numbers::num2en($num);
         }
@@ -49,10 +63,10 @@ sub num2word {
             # groups or two or more. i'll choose grouping by 2 for more
             # practice.
             $words = join(
-                " ",
-                Lingua::IT::Numbers::number_to_it(substr($num, 0, 2)),
-                Lingua::IT::Numbers::number_to_it(substr($num, 2, 2)),
-                Lingua::IT::Numbers::number_to_it(substr($num, 4, 2)),
+                "",
+                Lingua::IT::Numbers::number_to_it(substr($num, 0, 2)), ", ",
+                Lingua::IT::Numbers::number_to_it(substr($num, 2, 2)), ", ",
+                Lingua::IT::Numbers::number_to_it(substr($num, 4, 2)), ", ",
                 Lingua::IT::Numbers::number_to_it(substr($num, 6, 2)),
             );
         } else {
@@ -64,15 +78,16 @@ sub num2word {
 
     if ($spk) {
         require String::ShellQuote;
+        # * = suka mati di tengah
         # fr: fr1 fr4
         # id: id1
         # en: en1 us1 us2 us3
-        # it: it3 it4
+        # it: it3* it4*
         my $mv =
             $lang eq 'fr' ? 'fr4' :
             $lang eq 'id' ? 'id1' :
             $lang eq 'en' ? 'us2' :
-            $lang eq 'it' ? 'it3' : '';
+            $lang eq 'it' ? 'it4' : '';
         sleep 2;
         system "espeak-mbrola 2>/dev/null --mv $mv ".
             String::ShellQuote::shell_quote($words);
