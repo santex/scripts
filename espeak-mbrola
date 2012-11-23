@@ -24,7 +24,8 @@ $SPEC{tts} = {
             cmdline_aliases => {s=>{}},
         },
         mbrola_voice => {
-            schema => ["str*", match=>qr/\A\w+\z/, default=>'fr4'],
+            req => 1,
+            schema => ["str*", match=>qr/\A\w+\z/],
             # -v belum bisa dioverride, bug
             #cmdline_aliases => {v=>{}},
             cmdline_aliases => {mv=>{}},
