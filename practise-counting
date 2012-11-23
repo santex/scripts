@@ -13,6 +13,7 @@ our %SPEC;
 sub num2word {
     my ($num, $lang, $pho, $spk) = @_;
 
+    my $mbrola=1;
     my $words;
     if ($lang eq 'fr') {
         require Lingua::FR::Numbers;
@@ -72,25 +73,51 @@ sub num2word {
         } else {
             $words = Lingua::IT::Numbers::number_to_it($num);
         }
+    } elsif ($lang eq 'zh') {
+        require Lingua::ZH::Numbers;
+        Lingua::ZH::Numbers->charset("simplified");
+        $mbrola=0;
+        if ($pho) {
+            $words = join(
+                "",
+                Lingua::ZH::Numbers::number_to_zh(substr($num, 0, 1)), "",
+                Lingua::ZH::Numbers::number_to_zh(substr($num, 1, 1)), "",
+                Lingua::ZH::Numbers::number_to_zh(substr($num, 2, 1)), "",
+                Lingua::ZH::Numbers::number_to_zh(substr($num, 3, 1)), ", ",
+                Lingua::ZH::Numbers::number_to_zh(substr($num, 4, 1)), "",
+                Lingua::ZH::Numbers::number_to_zh(substr($num, 5, 1)), "",
+                Lingua::ZH::Numbers::number_to_zh(substr($num, 6, 1)), "",
+                Lingua::ZH::Numbers::number_to_zh(substr($num, 7, 1)),
+            );
+        } else {
+            $words = Lingua::ZH::Numbers::number_to_zh($num);
+        }
     } else {
         die "Unsupported language $lang";
     }
 
     if ($spk) {
         require String::ShellQuote;
-        # * = suka mati di tengah
-        # fr: fr1 fr4
-        # id: id1
-        # en: en1 us1 us2 us3
-        # it: it3* it4*
-        my $mv =
-            $lang eq 'fr' ? 'fr4' :
-            $lang eq 'id' ? 'id1' :
-            $lang eq 'en' ? 'us2' :
-            $lang eq 'it' ? 'it4' : '';
+        my $cmd;
+        if ($mbrola) {
+            # * = suka mati di tengah
+            # fr: fr1 fr4
+            # id: id1
+            # en: en1 us1 us2 us3
+            # it: it3* it4*
+            my $mv =
+                $lang eq 'fr' ? 'fr4' :
+                $lang eq 'id' ? 'id1' :
+                $lang eq 'en' ? 'us2' :
+                $lang eq 'it' ? 'it4' : '';
+            $cmd = "espeak-mbrola 2>/dev/null --mv $mv ".
+                String::ShellQuote::shell_quote($words);
+        } else {
+            $cmd = "espeak 2>/dev/null -v $lang ".
+                String::ShellQuote::shell_quote($words);
+        }
         sleep 2;
-        system "espeak-mbrola 2>/dev/null --mv $mv ".
-            String::ShellQuote::shell_quote($words);
+        system $cmd;
         sleep 3;
     }
     return $words;
@@ -135,4 +162,5 @@ sub gen {
     [200];
 }
 
+binmode(STDOUT, ":utf8");
 Perinci::CmdLine->new(url=>'/main/gen')->run;
