@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use Log::Any::App '$log';
+
+use Log::Any::For::Builtins qw(system);
+use Perinci::CmdLine;
+
+our %SPEC;
+
+$SPEC{create_ssl_cert} = {
+    v => 1.1,
+    args => {
+        hostname => {
+            schema => ['str*' => match => qr/\A\w+(\.\w+)*\z/],
+            req => 1,
+            pos => 0,
+        },
+        # wildcard - bool - if 1 then Common Name is set to *.hostname
+    },
+    deps => {
+        exec => 'openssl',
+    },
+};
+sub create_ssl_cert {
+    my %args = @_;
+
+    my $h = $args{hostname};
+
+    system("openssl genrsa 2048 > $h.key");
+    system("openssl req -new -x509 -nodes -sha1 -days 3650 -key $h.key > $h.crt"); # interactive
+    system("openssl x509 -noout -fingerprint -text < $h.crt > $h.info");
+    system("cat $h.crt $h.key > $h.pem");
+    system("chmod 400 $h.pem");
+
+    [200];
+}
+
+Perinci::CmdLine->new(url => '/main/create_ssl_cert')->run;

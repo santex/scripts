@@ -19,47 +19,44 @@ sub num2word {
     if ($lang eq 'fr') {
         require Lingua::FR::Numbers;
         if ($pho) {
-            $words = join(
-                "",
-                Lingua::FR::Numbers::number_to_fr(substr($num, 0, 2)), ", ",
-                Lingua::FR::Numbers::number_to_fr(substr($num, 2, 2)), ", ",
-                Lingua::FR::Numbers::number_to_fr(substr($num, 4, 2)), ", ",
-                Lingua::FR::Numbers::number_to_fr(substr($num, 6, 2)),
-            );
+            my @p;
+            while (length($num)) {
+                push @p, Lingua::FR::Numbers::number_to_fr(substr($num, 0, 2));
+                substr($num, 0, 2) = "";
+            }
+            $words = join ", ", @p;
         } else {
             $words = Lingua::FR::Numbers::number_to_fr($num);
         }
     } elsif ($lang eq 'id') {
         require Lingua::ID::Nums2Words;
         if ($pho) {
-            $words = join(
-                "",
-                Lingua::ID::Nums2Words::nums2words_simple(substr($num, 0, 4)),
-                ", ",
-                Lingua::ID::Nums2Words::nums2words_simple(substr($num, 4, 4)),
-            );
+            my @p;
+            while (length($num)) {
+                push @p, Lingua::ID::Nums2Words::nums2words_simple(substr($num, 0, 4));
+                substr($num, 0, 4) = "";
+            }
+            $words = join ", ", @p;
         } else {
             $words = Lingua::ID::Nums2Words::nums2words($num);
         }
     } elsif ($lang eq 'en') {
         require Lingua::EN::Numbers;
         if ($pho) {
-            $words = join(
-                "",
-                Lingua::EN::Numbers::num2en(substr($num, 0, 1)), " ",
-                Lingua::EN::Numbers::num2en(substr($num, 1, 1)), " ",
-                Lingua::EN::Numbers::num2en(substr($num, 2, 1)), " ",
-                Lingua::EN::Numbers::num2en(substr($num, 3, 1)), ", ",
-                Lingua::EN::Numbers::num2en(substr($num, 4, 1)), " ",
-                Lingua::EN::Numbers::num2en(substr($num, 5, 1)), " ",
-                Lingua::EN::Numbers::num2en(substr($num, 6, 1)), " ",
-                Lingua::EN::Numbers::num2en(substr($num, 7, 1)),
-            );
+            my @p;
+            my $i;
+            while (length($num)) {
+                push @p, Lingua::EN::Numbers::num2en(substr($num, 0, 1));
+                substr($num, 0, 1) = "";
+                if (++$i % 3 == 0) { push @p, ", " } else { push @p, " " }
+            }
+            $words = join "", @p;
         } else {
             $words = Lingua::EN::Numbers::num2en($num);
         }
     } elsif ($lang eq 'it') {
         require Lingua::IT::Numbers;
+        $mbrola=0; # suara mbrolanya pada jelek/putus (diphone ga lengkap?)
         if ($pho) {
             # actually in italian you can sometimes pronounce per-digit, or by
             # groups or two or more. i'll choose grouping by 2 for more
@@ -102,14 +99,15 @@ sub num2word {
         my $cmd;
         if ($mbrola) {
             # * = suka mati di tengah
+            # # = kualitas gak bagus, suka gak jelas diphonenya
             # fr: fr1 fr4
-            # id: id1
-            # en: en1 us1 us2 us3
+            # id: id1*
+            # en: en1 us1 us2# us3
             # it: it3* it4*
             my $mv =
                 $lang eq 'fr' ? 'fr4' :
                 $lang eq 'id' ? 'id1' :
-                $lang eq 'en' ? 'us2' :
+                $lang eq 'en' ? 'en1' :
                 $lang eq 'it' ? 'it4' : '';
             $cmd = "espeak-mbrola 2>/dev/null --mv $mv ".
                 String::ShellQuote::shell_quote($words);
@@ -127,12 +125,13 @@ sub num2word {
 $SPEC{gen} = {
     v => 1.1,
     args => {
-        lang  => {req=>1, schema=>[str => {req=>1, len=>2}]},
-        n     => {schema=>[int => {min=>0, default=>5}]},
-        min   => {schema=>[int => {default=>100}]},
-        max   => {schema=>[int => {default=>1000000}]},
-        phone => {schema=>'bool'},
-        speak => {schema=>'bool'},
+        lang    => {req=>1, schema=>[str => {req=>1, len=>2}]},
+        n       => {schema=>[int => {min=>0, default=>5}]},
+        min     => {schema=>[int => {default=>100}]},
+        max     => {schema=>[int => {default=>1000000}]},
+        phwidth => {schema=>[int => {default=>8}]},
+        phone   => {schema=>'bool'},
+        speak   => {schema=>'bool'},
     },
     # depends on espeak-mbrola *if* speak=>1
 };
@@ -145,20 +144,21 @@ sub gen {
     my $min = $args{min} // 100;
     my $max = $args{max} // 1000000;
     my $pho = $args{phone};
+    my $phwidth = $args{phwidth} // 8;
     my $spk = $args{speak};
 
     for my $i (1..$n) {
         my $num;
+        my $fmt;
         if ($pho) {
-            $min = 10000000;
-            $max = 99999999;
-            $num = int($min + ($max-$min+1)*rand());
+            $num = join("", map {int(10*rand())} 1..$phwidth);
+            $fmt = length($num);
         } else {
             $num = int($min + ($max-$min+1)*rand());
+            $fmt = length($max);
         }
-        my $fmt = length($max);
-        printf "%-${fmt}d    = %s\n", $num,
-            num2word($num, $lang, $pho, $spk);
+        printf "%-${fmt}s    = %s\n", $num,
+            num2word($num, $lang, ($pho ? $phwidth : 0), $spk);
     }
     [200];
 }

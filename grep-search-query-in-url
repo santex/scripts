@@ -91,6 +91,11 @@ while (<>) {
     $site = "ddg";
     $rest =~ /q=(.+?)(?:&|\z)/ or next;
     $query = unesc($1);
+  # 2012-11-29
+  } elsif ($host =~ /amazon\.(com|ca|fr|co\.uk|cn|it|es|es|de)/i) {
+    $site = "amazon";
+    $rest =~ /field-keywords=(.+?)(?:&|\z)/ or next;
+    $query = unesc($1);
   }
 
   next unless $site;
