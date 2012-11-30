@@ -5,8 +5,10 @@ use strict;
 use warnings;
 use Log::Any::App '$log';
 
+use Expect;
 use Log::Any::For::Builtins qw(system);
 use Perinci::CmdLine;
+use SHARYANTO::Proc::ChildError qw(explain_child_error);
 
 our %SPEC;
 
@@ -18,7 +20,25 @@ $SPEC{create_ssl_cert} = {
             req => 1,
             pos => 0,
         },
-        # wildcard - bool - if 1 then Common Name is set to *.hostname
+        ca => {
+            summary => 'path to CA cert file',
+            schema => ['str*'],
+        },
+        ca_key => {
+            summary => 'path to CA key file',
+            schema => ['str*'],
+        },
+        interactive => {
+            schema => [bool => default => 0],
+            cmdline_aliases => {
+                i => {},
+            },
+        },
+        wildcard => {
+            schema => [bool => default => 0],
+            summary => 'If set to 1 then Common Name is set to *.hostname',
+            description => 'Only when non-interactive',
+        },
     },
     deps => {
         exec => 'openssl',
@@ -30,10 +50,51 @@ sub create_ssl_cert {
     my $h = $args{hostname};
 
     system("openssl genrsa 2048 > $h.key");
-    system("openssl req -new -x509 -nodes -sha1 -days 3650 -key $h.key > $h.crt"); # interactive
+    return [500, "Can't generate key: ".explain_child_error()] if $?;
+
+    my $cmd = "openssl req -new -key $h.key -out $h.csr";
+    if ($args{interactive}) {
+        system $cmd;
+        return [500, "Can't generate csr: ".explain_child_error()] if $?;
+    } else {
+        my $exp = Expect->spawn($cmd);
+        return [500, "Can't spawn openssl req"] unless $exp;
+        $exp->expect(
+            30,
+            [ qr!^.+\[[^\]]*\]:!m ,=> sub {
+                  my $exp = shift;
+                  my $prompt = $exp->exp_match;
+                  if ($prompt =~ /common name/i) {
+                      $exp->send("$h\n");
+                  } else {
+                      $exp->send("\n");
+                  }
+                  exp_continue;
+              } ],
+        );
+        $exp->soft_close;
+    }
+
+    # we can provide options later, but for now let's
+    system(join(
+        "",
+        "openssl x509 -req -days 3650 -in $h.csr ",
+        ($args{ca} ? "-CA '$args{ca}' " : ""),
+        ($args{ca_key} ? "-CAkey '$args{ca_key}' " : ""),
+        ($args{ca} ? "-CAcreateserial " : ""),
+        "-out $h.crt",
+    ));
+    return [500, "Can't generate crt: ".explain_child_error()] if $?;
+
     system("openssl x509 -noout -fingerprint -text < $h.crt > $h.info");
+    return [500, "Can't generate info: ".explain_child_error()] if $?;
+
     system("cat $h.crt $h.key > $h.pem");
+    return [500, "Can't generate pem: ".explain_child_error()] if $?;
+
     system("chmod 400 $h.pem");
+
+    $log->info("Your certificate has been created at $h.pem");
 
     [200];
 }

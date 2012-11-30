@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use Log::Any::App '$log';
+
+use Log::Any::For::Builtins qw(system);
+use Perinci::CmdLine;
+
+our %SPEC;
+
+$SPEC{create_root_ca} = {
+    v => 1.1,
+    summary => 'Create your own root CA to sign certificate with',
+    args => {
+        name => {
+            schema => ['str*' => match => qr/\A\w+\z/],
+        },
+    },
+    deps => {
+        exec => 'openssl',
+    },
+};
+sub create_root_ca {
+    my %args = @_;
+
+    my $fr = (defined($args{name}) ? "$args{name}-" : ""). "ca";
+    #my $fi = (defined($args{name}) ? "$args{name}-" : ""). "ia";
+
+    # create root CA
+
+    system("openssl genrsa -out $fr.key 4096");
+    system("openssl req -new -x509 -days 3650 -key $fr.key -out $fr.crt");
+
+    # create intermediate CA to be used for actual signing
+
+    #system("openssl genrsa -out $fi.key 4096");
+    #system("openssl x509 -req -days 3650 -in $fi.csr -CA $fr.crt -CAkey $fr.key -set_serial 01 -out $fi.crt");
+
+    [200];
+}
+
+Perinci::CmdLine->new(url => '/main/create_root_ca')->run;
