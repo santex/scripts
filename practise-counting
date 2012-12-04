@@ -12,7 +12,11 @@ binmode STDOUT, ":utf8";
 our %SPEC;
 
 sub num2word {
-    my ($num, $lang, $pho, $spk) = @_;
+    my ($num, $lang, $opts) = @_;
+    $opts //= {};
+
+    my $pho  = $opts->{phone};
+    my $spk  = $opts->{speak};
 
     my $mbrola=1;
     my $words;
@@ -132,6 +136,16 @@ $SPEC{gen} = {
         phwidth => {schema=>[int => {default=>8}]},
         phone   => {schema=>'bool'},
         speak   => {schema=>'bool'},
+        fr_70_90 => {
+            summary => 'Practise 70-something and 90-something (phone)',
+            description => <<'_',
+
+These two ranges are the problematic ones because they use 60+1x and 80+1x
+formula.
+
+_
+            schema => 'bool',
+        },
     },
     # depends on espeak-mbrola *if* speak=>1
 };
@@ -151,14 +165,30 @@ sub gen {
         my $num;
         my $fmt;
         if ($pho) {
-            $num = join("", map {int(10*rand())} 1..$phwidth);
+            if ($args{fr_70_90}) {
+                my $phwidth = int($phwidth/2);
+                $num = join("", map {
+                    if (rand() < 0.5) {
+                        # 7x
+                        70+int(10*rand()),
+                    } else {
+                        # 9x
+                        90+int(10*rand()),
+                    }
+                } 1..$phwidth);
+            } else {
+                $num = join("", map {int(10*rand())} 1..$phwidth);
+            }
             $fmt = length($num);
         } else {
             $num = int($min + ($max-$min+1)*rand());
             $fmt = length($max);
         }
         printf "%-${fmt}s    = %s\n", $num,
-            num2word($num, $lang, ($pho ? $phwidth : 0), $spk);
+            num2word($num, $lang, {
+                phone => ($pho ? $phwidth : 0),
+                speak => $spk,
+            });
     }
     [200];
 }
