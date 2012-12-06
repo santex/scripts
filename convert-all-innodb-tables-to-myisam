@@ -52,7 +52,7 @@ for my $db (@dbs) {
     # drop dulu foreign key constraints yg ada
     for my $t (@inno) {
         my @r = $dbh->selectrow_array("SHOW CREATE TABLE `$t`");
-        while ($r[1] =~ /^CONSTRAINT `(.+?)` FOREIGN KEY/mg) {
+        while ($r[1] =~ /^\s*CONSTRAINT `(.+?)` FOREIGN KEY/mg) {
             my $fk = $1;
             print "Dropping foreign key constraint $fk on $db.$t ...\n";
             $dbh->do("ALTER TABLE `$t` DROP FOREIGN KEY `$fk`");
