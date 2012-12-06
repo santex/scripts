@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+#use 5.010;
+use strict;
+use warnings;
+#use Log::Any::App '$log';
+
+#use Config::IniFiles;
+use DBI;
+
+my $user;
+my $password;
+
+my $f = "$ENV{HOME}/.my.cnf";
+if (-f $f) {
+    #my $cfg = Config::IniFiles->new(-file => "$ENV{HOME}/.my.cnf");
+    #if ($cfg) {
+    #    $user     = $cfg->val('client', 'user');
+    #    $password = $cfg->val('client', 'password');
+    #}
+    local $/;
+    open my($fh), "<", $f;
+    my $cfg = <$fh>;
+    ($user)     = $cfg =~ /^user\s*=\s*"?(.+?)"?\s*$/m;
+    ($password) = $cfg =~ /^pass(?:word)?\s*=\s*"?(.+?)"?\s*$/m;
+}
+
+my $dbh;
+my $sth;
+
+$dbh = DBI->connect("DBI:mysql:database=mysql", $user, $password);
+
+$sth = $dbh->prepare("SHOW DATABASES");
+$sth->execute;
+my @dbs;
+while (my @r = $sth->fetchrow_array) {
+    next if $r[0] =~ /^(mysql|information_schema)$/;
+    push @dbs, $r[0];
+}
+
+for my $db (@dbs) {
+    #$log->infof("Checking database %s ...", $db);
+    $dbh = DBI->connect("DBI:mysql:database=$db", $user, $password);
+    $sth = $dbh->prepare("SHOW TABLE STATUS");
+    $sth->execute;
+    while (my @r = $sth->fetchrow_array) {
+        #$log->tracef("row: %s", \@r);
+        next unless ($r[1]||"") =~ /innodb/i;
+        print "$db.$r[0] $r[1]\n";
+    }
+}

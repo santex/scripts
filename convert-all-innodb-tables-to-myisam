@@ -1,0 +1,67 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+#use Log::Any::App '$log';
+
+#use Config::IniFiles;
+use DBI;
+
+my $user;
+my $password;
+
+my $f = "$ENV{HOME}/.my.cnf";
+if (-f $f) {
+    #my $cfg = Config::IniFiles->new(-file => "$ENV{HOME}/.my.cnf");
+    #if ($cfg) {
+    #    $user     = $cfg->val('client', 'user');
+    #    $password = $cfg->val('client', 'password');
+    #}
+    local $/;
+    open my($fh), "<", $f;
+    my $cfg = <$fh>;
+    ($user)     = $cfg =~ /^user\s*=\s*"?(.+?)"?\s*$/m;
+    ($password) = $cfg =~ /^pass(?:word)?\s*=\s*"?(.+?)"?\s*$/m;
+}
+
+my $dbh;
+my $sth;
+
+$dbh = DBI->connect("DBI:mysql:database=mysql", $user, $password);
+
+$sth = $dbh->prepare("SHOW DATABASES");
+$sth->execute;
+my @dbs;
+while (my @r = $sth->fetchrow_array) {
+    next if $r[0] =~ /^(mysql|information_schema)$/;
+    push @dbs, $r[0];
+}
+
+for my $db (@dbs) {
+    #$log->infof("Checking database %s ...", $db);
+    $dbh = DBI->connect("DBI:mysql:database=$db", $user, $password);
+    $sth = $dbh->prepare("SHOW TABLE STATUS");
+    $sth->execute;
+    my @inno;
+    while (my @r = $sth->fetchrow_array) {
+        #$log->tracef("row: %s", \@r);
+        next unless ($r[1]||"") =~ /innodb/i;
+        push @inno, $r[0];
+    }
+
+    # drop dulu foreign key constraints yg ada
+    for my $t (@inno) {
+        my @r = $dbh->selectrow_array("SHOW CREATE TABLE `$t`");
+        while ($r[1] =~ /^CONSTRAINT `(.+?)` FOREIGN KEY/mg) {
+            my $fk = $1;
+            print "Dropping foreign key constraint $fk on $db.$t ...\n";
+            $dbh->do("ALTER TABLE `$t` DROP FOREIGN KEY `$fk`");
+        }
+    }
+
+    for my $t (@inno) {
+        #$log->info("Converting table $db.$t to MyISAM ...");
+        print "Converting table $db.$t to MyISAM ...\n";
+        $dbh->do("ALTER TABLE `$t` ENGINE=MyISAM");
+    }
+}
