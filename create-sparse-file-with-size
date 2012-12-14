@@ -1,0 +1,55 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Perinci::CmdLine;
+
+our %SPEC;
+$SPEC{create} = {
+    v => 1.1,
+    args => {
+        name => {
+            schema => ['str*'],
+            req => 1,
+            pos => 0,
+        },
+        size => {
+            summary => 'Size (e.g. 10K, 22.5M)',
+            schema => ['str*' => default => 0],
+            cmdline_aliases => {
+                s => {},
+            },
+        },
+    },
+};
+sub create {
+    my %args = @_;
+
+    # TODO: use Parse::Number::WithPrefix::EN
+    my $size = $args{size} // 0;
+    if ($size =~ s/([A-Za-z])[Bb]?//) {
+        my $prefix = $1;
+        if ($prefix =~ /[Kk]/) {
+            $size *= 1024;
+        } elsif ($prefix =~ /[Mm]/) {
+            $size *= 1024*1024;
+        } elsif ($prefix =~ /[Gg]/) {
+            $size *= 1024*1024*1024;
+        }
+    }
+
+    my $f = $args{name};
+
+    return [409, "File already exists"] if -f $f;
+    open my($fh), ">", $f or return [500, "Can't create $f: $!"];
+    if ($size > 0) {
+        seek $fh, $size-1, 0;
+        print $fh "\0";
+    }
+    [200];
+}
+
+Perinci::CmdLine->new(url => '/main/create')->run;
+
