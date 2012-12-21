@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+# dipakai utk menerima hasil copy paste transaksi dari ledger, lalu menjumlah
+# semua angka yang ada di depan IDR.
+
+use 5.010;
+use strict;
+use warnings;
+
+my $tot = 0;
+while (<>) {
+    while (/(\d+) IDR/g) {
+        $tot += $1;
+    }
+}
+
+say $tot;
