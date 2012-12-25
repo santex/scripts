@@ -1,3 +1,3 @@
 #!/bin/bash
-echo -n "According to MetaCPAN: "; number-of-cpan-dists-from-metacpan "$@"
-echo -n "According to search.cpan.org: "; number-of-cpan-dists-from-searchcpan "$@"
+echo -n "According to MetaCPAN: "; count-cpan-dists-using-metacpan "$@"
+echo -n "According to search.cpan.org: "; count-cpan-dists-using-sco "$@"
