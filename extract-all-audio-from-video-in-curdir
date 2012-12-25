@@ -88,7 +88,7 @@ for my $f (@files) {
   } else {
       push @opts, "-acodec copy";
   }
-  mysystem "ffmpeg ".join(" ", @opts)." -i ".esc($f)." ".esc($d);
+  mysystem "avconv ".join(" ", @opts)." -i ".esc($f)." ".esc($d);
   if ($?) {
     ERROR "Failed extracting audio from `$f': $! ($?), skipped\n";
     next;
