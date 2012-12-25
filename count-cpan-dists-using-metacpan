@@ -17,7 +17,7 @@ binmode STDOUT, ":utf8";
 
 for my $cpanid (@ARGV) {
     my $res = get "http://api.metacpan.org/v0/release/_search?q=author:".
-        uc($ARGV[0])."%20AND%20status:latest&fields=name&size=5000";
+        uc($cpanid)."%20AND%20status:latest&fields=name&size=5000";
     $res = $json->decode($res);
     die "MetaCPAN timed out" if $res->{timed_out};
     my @dists;
