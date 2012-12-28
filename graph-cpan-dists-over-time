@@ -61,7 +61,7 @@ for my $cpanid (@cpanids) {
     $g->add_dataset(@pts);
 }
 
-$g->set( 'title'     => "NUMBER OF CPAN DISTRIBUTIONS TO $gperiods[0] TO $gperiods[-1]" );
+$g->set( 'title'     => "NUMBER OF CPAN DISTRIBUTIONS FROM $gperiods[0] TO $gperiods[-1]" );
 $g->set( 'sub_title' => join(", ", @cpanids) );
 $g->set(
     'colors' => {
