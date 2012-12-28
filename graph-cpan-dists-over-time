@@ -1,0 +1,87 @@
+#!/usr/bin/perl
+
+# plots CPAN author(s)'s number of dists over time
+
+# created: 2012-12-29
+
+use 5.010;
+use strict;
+use warnings;
+
+use Chart::Lines;
+use Data::Dump;
+use File::Temp qw(tempfile);
+use JSON;
+use LWP::Simple;
+
+my $MIN_PERIOD = "2009-01";
+
+my $json = JSON->new->allow_nonref;
+
+my @cpanids = @ARGV;
+die "Usage: $0 <CPANID> ... (up to 3)\n" unless @cpanids && @cpanids <= 3;
+
+my %data;
+my $min_year = 9999;
+my $max_year = 0;
+for my $cpanid (@cpanids) {
+    say "Retrieving data for $cpanid ...";
+    my $res = get "http://api.metacpan.org/v0/release/_search?q=author:".
+        uc($cpanid)."&fields=name%2Cdate&size=5000";
+    $res = $json->decode($res);
+    die "MetaCPAN timed out" if $res->{timed_out};
+    #dd $res->{hits}{hits};
+    for my $hit (@{ $res->{hits}{hits} }) {
+        my $dist = $hit->{fields}{name};
+        my ($year, $mon) = $hit->{fields}{date} =~ /^(\d{4})-(\d{2})/;
+        $dist =~ s/-\d.+//;
+        $data{$cpanid}{$year}{$mon}{$dist} = 1;
+        $min_year = $year if $min_year > $year;
+        $max_year = $year if $max_year < $year;
+    }
+}
+
+say "Generating graph ...";
+my @mons = qw(01 02 03 04 05 06 07 08 09 10 11 12);
+my @periods;
+for my $y ($min_year..$max_year) {
+    for my $m (@mons) { push @periods, "$y-$m" }
+}
+my $g = Chart::Lines->new( 1000, 600 );
+my @gperiods = grep {$_ ge $MIN_PERIOD} @periods;
+$g->add_dataset(@gperiods);
+for my $cpanid (@cpanids) {
+    my @pts;
+    my %dists;
+    for my $period (@periods) {
+        my ($y, $m) = $period =~ /(.+)-(.+)/;
+        $dists{$_} = 1 for keys(%{ $data{$cpanid}{$y}{$m} // {} });
+        push @pts, ~~keys(%dists) if $period ge $MIN_PERIOD;
+    }
+    $g->add_dataset(@pts);
+}
+
+$g->set( 'title'     => "NUMBER OF CPAN DISTRIBUTIONS TO $gperiods[0] TO $gperiods[-1]" );
+$g->set( 'sub_title' => join(", ", @cpanids) );
+$g->set(
+    'colors' => {
+        'y_label'      => [ 0,   0,   255 ],
+        y_label2       => [ 0,   255, 0 ],
+        'y_grid_lines' => [ 127, 127, 0 ],
+        'dataset0'     => [ 127, 0,   0 ],
+        'dataset1'     => [ 0,   127, 0 ],
+        'dataset2'     => [ 0,   0,   127 ]
+    }
+);
+$g->set( 'y_label'      => 'y label 1' );
+$g->set( 'y_label2'     => 'y label 2' );
+$g->set( 'y_grid_lines' => 'true' );
+$g->set( 'legend'       => 'bottom' );
+
+my ($fh, $filename) = tempfile('gcdot-XXXXXX', SUFFIX => '.png');
+$g->png($filename);
+
+say "Viewing graph in browser ...";
+system(($ENV{browser} // "opera"), $filename);
+
+
