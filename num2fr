@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+use 5.010;
+use Lingua::FR::Numbers qw(number_to_fr ordinate_to_fr);
+say "$_ = ", number_to_fr($_) for @ARGV;
+
+
+
