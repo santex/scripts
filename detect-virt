@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use Sys::Detect::Virtualization;
+
+my $detector = eval { Sys::Detect::Virtualization->new() };
+if( $@ ) {
+    print "Detector may not be supported for your platform.  Error was: $@\n";
+}
+
+my @found = $detector->detect();
+if( @found ) {
+    print "Possible virtualized system.  May be running under:\n";
+    print "\t$_\n" for @found;
+}
