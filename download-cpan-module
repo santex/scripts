@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use Log::Any::App qw($log);
 
-BEGIN { $main::Log_Level = 'INFO' }
+BEGIN { no warnings; $main::Log_Level = 'INFO' }
 
 my @mirrors = (
     "file:/cpan",
