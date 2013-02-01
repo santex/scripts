@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+use Log::Any::App qw($log);
+
+BEGIN { $main::Log_Level = 'INFO' }
+
+my @mirrors = (
+    "file:/cpan",
+    "http://archive.or.id/cpan",
+    #"http://cpan.metacpan.org",
+);
+
+#autodeflates
+#use LWP::Simple;
+
+use LWP::UserAgent;
+use MetaCPAN::API;
+
+my $ua = LWP::UserAgent->new;
+my $mcpan = MetaCPAN::API->new;
+
+MOD:
+for my $mod (@ARGV) {
+    $log->infof("Querying MetaCPAN for module %s ...", $mod);
+    my $modinfo = $mcpan->module($mod);
+    #$modinfo->{author} =~ /(.)(.)/;
+    #my $path = "/authors/id/$1/$1$2/$modinfo->{author}/$modinfo->{release}.tar.gz";
+
+    $log->infof("Querying MetaCPAN for dist %s ...", $modinfo->{distribution});
+    my $distinfo = $mcpan->release(distribution => $modinfo->{distribution});
+    my ($path)  = $distinfo->{download_url} =~ m!(/authors/id/.+)!;
+    my ($fname) = $path =~ m!.+/(.+)!;
+
+    # try the mirrors first
+    for my $url ((map {"$_$path"} @mirrors), $distinfo->{download_url}) {
+        $log->infof("Trying URL %s ...", $url);
+        my $res = $ua->get($url);
+        if ($res->is_success) {
+            $log->infof("Writing %s ...", $fname);
+            open my($fh), ">", $fname;
+            print $fh $res->content;
+            close $fh;
+            next MOD;
+        }
+    }
+}

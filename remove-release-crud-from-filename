@@ -68,6 +68,16 @@ EOF
 $re_prefix = qr/(?:$re_prefix)/i;
 
 my $re_suffix = join("|", map {quotemeta} sort {length($b)<=>length($a)} grep {/\S/} split "\n", <<'EOF');
+.GILFS.DSR.x264-FQM
+.REPACK.DSR.XviD-FQM.[VTV]
+ DSR XviD-FQM
+.DVDRip.XviD-EXViD.[UsaBit.com]
+[UsaBit.com]
+[Ac3][Eng-Spa]
+.DVDRip.x264-ic
+.DSR.x264-2HD
+.DSR.x264-EVOLVE
+.DSR.XviD-2HD
 .HDTV.XviD-P0W4
 .hdtv.x264-2hd
 .HDTV.x264-KILLERS
