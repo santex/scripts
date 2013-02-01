@@ -82,6 +82,6 @@ my ($fh, $filename) = tempfile('gcdot-XXXXXX', SUFFIX => '.png');
 $g->png($filename);
 
 say "Viewing graph in browser ...";
-system(($ENV{browser} // "opera"), $filename);
+system(($ENV{BROWSER} // "opera"), $filename);
 
 
