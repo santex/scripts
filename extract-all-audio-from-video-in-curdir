@@ -45,7 +45,7 @@ EOF
 
 my $cwd = getcwd;
 my @files;
-if (@ARGV) { @files = @ARGV } else { @files = (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>, <*.flv>, <*.mp4>) }
+if (@ARGV) { @files = @ARGV } else { @files = (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>, <*.flv>, <*.mp4>, <*.mkv>) }
 for my $f (@files) {
     chdir $cwd;
     $log->info("Processing file '$f' ...");
