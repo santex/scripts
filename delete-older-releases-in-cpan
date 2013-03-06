@@ -31,7 +31,7 @@ for my $author (<*/*/**>) {
         next unless @rel > 1;
         $log->infof("%s has >1 releases: %s", $dist, \@rel);
         pop @rel;
-        $log->warnf("Deleting older releases: %s ...", \@rel);
+        $log->warnf("Deleting older $author releases: %s ...", \@rel);
         unlink @rel;
     }
 }

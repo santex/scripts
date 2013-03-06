@@ -6,6 +6,7 @@ use Log::Any::App qw($log);
 
 use Builtin::Logged qw(system);
 use Cwd;
+use File::Which;
 use Getopt::Long;
 use String::ShellQuote;
 
@@ -43,6 +44,7 @@ EOF
     exit 0;
 }
 
+my $bin = which("avconv") || which("ffmpeg"); die "Can't find avconv/ffmpeg" unless $bin;
 my $cwd = getcwd;
 my @files;
 if (@ARGV) { @files = @ARGV } else { @files = (<*.ogg>, <*.avi>, <*.mpg>, <*.mpeg>, <*.rmvb>, <*.flv>, <*.mp4>, <*.mkv>) }
@@ -60,7 +62,7 @@ for my $f (@files) {
     } else {
         push @opts, "-acodec copy";
     }
-    system "avconv -i ".shell_quote($f)." ".join(" ", @opts)." ".shell_quote($d);
+    system $bin." -i ".shell_quote($f)." ".join(" ", @opts)." ".shell_quote($d);
     if ($?) {
         $log->error("Failed extracting audio from '$f': $! ($?), skipped");
         next;
