@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+use 5.010001;
+use strict;
+use warnings;
+
+use Perl::Stripper;
+
+my $stripper = Perl::Stripper->new(
+    maintain_linum => 0,
+    strip_ws       => 0,
+    strip_comment  => 0,
+);
+
+local $/;
+print $stripper->strip(~~<>);
