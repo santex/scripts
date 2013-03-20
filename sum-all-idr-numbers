@@ -9,7 +9,7 @@ use warnings;
 
 my $tot = 0;
 while (<>) {
-    while (/(\d+) IDR/g) {
+    while (/(-?\d+) IDR/g) {
         $tot += $1;
     }
 }
