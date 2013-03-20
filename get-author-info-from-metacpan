@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+use Data::Dump::Color;
+use MetaCPAN::API;
+
+my $mcpan = MetaCPAN::API->new;
+
+dd $mcpan->author(uc $_) for @ARGV;
