@@ -9,20 +9,59 @@ $SPEC{calc_hours_minutes} = {
     v => 1.1,
     args => {
         str => {
+            summary => 'durations specification',
             schema => 'str*',
             req => 0,
             pos => 0,
+            description => <<'_',
+
+Example:
+
+    08:30-10:10 +02:00 -01:00
+
+will result in: +02:40
+
+_
         },
     },
+    result_naked=>1,
 };
 sub calc_hours_minutes {
     my (%args) = @_;
     my $str = $args{str};
 
-    my $hours   = ;
-    my $minutes = ;
+    my ($h, $m);
 
-    my $str = split /\s+/, $parts;
+    for (split /\s+/, $str) {
+        say "part=$_";
+        if (/^\+(\d\d):(\d\d)$/) {
+            $h += $1;
+            $m += $2;
+        } elsif (/^-(\d\d):(\d\d)$/) {
+            $h -= $1;
+            $m -= $2;
+        } elsif (my ($h1,$m1,$h2,$m2) = /^(\d\d):(\d\d)-(\d\d):(\d\d)$/) {
+            if ($h2 < $h1 || $h2 <= $h1 && $m2 <= $m1) {
+                $h2 += 24;
+            }
+            $h += ($h2-$h1);
+            $m += ($m2-$m1);
+        } else {
+            return [400, "Unknown duration specification '$_'"];
+        }
+        say "h=$h, m=$m";
+    }
+
+    while ($m < 0) {
+        $h--;
+        $m += 60;
+    }
+    while ($m >= 60) {
+        $h++;
+        $m -= 60;
+    }
+
+    sprintf "+%02d:%02d", $h, $m;
 }
 
 Perinci::CmdLine->new(url => '/main/calc_hours_minutes')->run;
