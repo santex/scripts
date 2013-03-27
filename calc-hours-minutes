@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+use 5.010;
+use Perinci::CmdLine;
+
+our %SPEC;
+
+$SPEC{calc_hours_minutes} = {
+    v => 1.1,
+    args => {
+        str => {
+            schema => 'str*',
+            req => 0,
+            pos => 0,
+        },
+    },
+};
+sub calc_hours_minutes {
+    my (%args) = @_;
+    my $str = $args{str};
+
+    my $hours   = ;
+    my $minutes = ;
+
+    my $str = split /\s+/, $parts;
+}
+
+Perinci::CmdLine->new(url => '/main/calc_hours_minutes')->run;
