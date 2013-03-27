@@ -33,7 +33,7 @@ sub calc_hours_minutes {
     my ($h, $m);
 
     for (split /\s+/, $str) {
-        say "part=$_";
+        #say "part=$_";
         if (/^\+(\d\d):(\d\d)$/) {
             $h += $1;
             $m += $2;
@@ -49,7 +49,7 @@ sub calc_hours_minutes {
         } else {
             return [400, "Unknown duration specification '$_'"];
         }
-        say "h=$h, m=$m";
+        #say "h=$h, m=$m";
     }
 
     while ($m < 0) {
