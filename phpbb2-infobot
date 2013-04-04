@@ -183,6 +183,7 @@ my @Responses = (
      handler => sub {
          my $sth = $Db->prepare("SELECT * FROM facts");
          $sth->execute;
+         my $ans = "";
          while (my $row = $sth->fetchrow_arrayref) {
              $ans .= join("|", @$row)."\n";
          }
