@@ -819,7 +819,7 @@ my @Responses = (
      }},
 );
 
-$log->info("Starting infobot $App::options{botname} ...");
+$log->info("Starting infobot $App::options{botname} (version $VERSION) ...");
 
 init_db();
 login();
