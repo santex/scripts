@@ -25,7 +25,7 @@ use SHARYANTO::HTML::Extract::ImageLinks qw(extract_image_links);
 use URI::Escape;
 use WWW::Mechanize;
 
-our $VERSION = '2011-06-17';
+our $VERSION = '2013-04-04';
 our $quit = 0;
 
 use App::Options (
@@ -160,6 +160,7 @@ my @Responses = (
               "available",
           );
          $ans .= "\n\nkidding :)\n\n";
+         $ans .= "Program version: $VERSION\n";
          $ans .= sprintf("Real status: Uptime: %.1f jam\nHost: %s\nUser: %s\nPID: %d\nDatabase path: %s\n",
                       (time - $^T) / 3600, ($ENV{HOSTNAME} || "?"), $ENV{USER}, $$, $App::options{db_path});
          my ($nf) = $Db->selectrow_array("SELECT COUNT(*) FROM facts");
