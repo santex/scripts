@@ -107,6 +107,7 @@ my @Responses = (
               "* [b]tutup poll[/b] [i]nama_poll[/i] -> tutup poll (hanya bisa dilakukan oleh pembuat poll)\n",
               "* [b]buka poll[/b] [i]nama_poll[/i] -> buka ulang sebuah poll (hanya bisa dilakukan oleh pembuat poll)\n",
               "* [b]vote[/b] [i]nama_poll[/i] [i]pilihan[/i] -> vote\n",
+              "* [b]dump facts[/b] -> tampilkan data mentah semua fakta yang ada\n",
           );
      }},
 
@@ -173,6 +174,17 @@ my @Responses = (
          }
          $ans .= "\n";
 
+         $ans;
+     }},
+
+    {pat => qr/^dump \s+ facts$/x,
+     name => 'FACTS',
+     handler => sub {
+         my $sth = $Db->prepare("SELECT * FROM facts");
+         $sth->execute;
+         while (my $row = $sth->fetchrow_arrayref) {
+             $ans .= join("|", @$row)."\n";
+         }
          $ans;
      }},
 
